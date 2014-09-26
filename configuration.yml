@@ -1,0 +1,12 @@
+# HTTP server settings.
+http:
+  port: 8080
+  adminPort: 8082
+
+# Logging settings.
+logging:
+  level: DEBUG
+  file:
+    enabled: true
+    currentLogFilename: /var/aurin/acs/log/acs.log
+    archivedLogFilenamePattern: /var/caurin/acs/log/acs-%d.log.gz
