@@ -1,6 +1,7 @@
 package au.com.mutopia.acs.service;
 
 import lombok.extern.log4j.Log4j;
+import au.com.mutopia.acs.resources.AssetsResource;
 import au.com.mutopia.acs.resources.MainResource;
 
 import com.fiestacabin.dropwizard.guice.AutoConfigService;
@@ -10,7 +11,6 @@ import com.google.inject.Injector;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.config.Environment;
-import com.yammer.dropwizard.views.ViewBundle;
 
 /**
  * The main gateway service that provides the REST API for the Catalyst platform.
@@ -58,8 +58,9 @@ public class AcsRestService extends AutoConfigService<Configuration> {
       final Injector injector) throws Exception {
     super.runWithInjector(configuration, environment, injector);
     log.info("Running core service...");
-    
+
     environment.addResource(MainResource.class);
+    environment.addResource(AssetsResource.class);
     
     log.info("Core service running.");
   }
