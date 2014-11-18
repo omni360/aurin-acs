@@ -9,6 +9,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import lombok.extern.log4j.Log4j;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -17,62 +19,44 @@ import au.com.mutopia.acs.models.Asset;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
-@Path("/assets")
+@Path("/convert")
+@Log4j
 public class AssetsResource {
 
   /**
-   * Uploads data and creates a new asset.
-   *
-   * @param uploadedInputStream An input stream to read the upload data.
-   * @param fileDetail The details of the file being uploaded.
-   * @return The asset that was constructed after the upload.
-   * @throws IOException
+   * Converts the given file to the requested target format.
+   * 
+   * @param inputStream A stream of the uploaded file data.
+   * @param fileDetail Metadata about the uploaded file.
+   * @param targetFormat The format to convert the uploaded file to.
+   * @return The generated C3ML document.
    */
   @POST
-  @Path("/upload")
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   @Produces(MediaType.APPLICATION_JSON)
-  public Asset uploadAndCreate(@FormDataParam("file") InputStream uploadedInputStream,
-      @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
-    Asset asset = new Asset();
+  public String synthesize(@FormDataParam("file") InputStream inputStream,
+      @FormDataParam("file") FormDataContentDisposition fileDetail) {
+    Byte[] data;
+    try {
+      data = ArrayUtils.toObject(IOUtils.toByteArray(inputStream));
+    } catch (IOException e) {
+      // TODO(orlade): More descriptive error.
+      return "Failed to read file data";
+    }
 
-    asset.setData(ArrayUtils.toObject(IOUtils.toByteArray(uploadedInputStream)));
-    asset.setFileName(fileDetail.getFileName());
-    asset.setName(fileDetail.getFileName());
+    Asset asset = new Asset(data, fileDetail);
 
-    // TODO(orlade): Create and save.
-
-    return asset;
-
-    // import shapefile
-    // only request certain parameters
-    // send file to server
-    // convert async
-    // poll -> progress update
+    log.debug("Converting " + asset + "...");
+    // Map<String, Object> request = toMap(json);
+    // log.debug("Convert request: " + request);
     //
+    // String userId = authenticationService.getCurrentUser().getIdString();
+    // String jobId = assetService.synthesize(request, null, userId);
+    //
+    // Map<String, Object> response = Maps.newHashMap();
+    // response.put("jobId", jobId);
+    // return getSerializer().deepSerialize(response);
+    return "done";
   }
-
-  /**
-   * Performs the given ACE request.
-   *
-   * @param json The request which contains a set of ACE actions to perform, such as loads,
-   *        transformations and conversions.
-   * @return A response with the job ID corresponding to the Synthesis request.
-   * @throws DaoException
-   */
-  // @POST
-  // @Path("/synthesize")
-  // public String synthesize(String json) {
-  // log.debug("json: " + json);
-  // Map<String, Object> request = toMap(json);
-  // log.debug("Convert request: " + request);
-  //
-  // String userId = authenticationService.getCurrentUser().getIdString();
-  // String jobId = assetService.synthesize(request, null, userId);
-  //
-  // Map<String, Object> response = Maps.newHashMap();
-  // response.put("jobId", jobId);
-  // return getSerializer().deepSerialize(response);
-  // }
 
 }
