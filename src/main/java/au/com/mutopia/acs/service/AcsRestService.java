@@ -1,7 +1,7 @@
 package au.com.mutopia.acs.service;
 
 import lombok.extern.log4j.Log4j;
-import au.com.mutopia.acs.resources.AssetsResource;
+import au.com.mutopia.acs.resources.ConversionResource;
 import au.com.mutopia.acs.resources.MainResource;
 
 import com.fiestacabin.dropwizard.guice.AutoConfigService;
@@ -56,12 +56,13 @@ public class AcsRestService extends AutoConfigService<Configuration> {
   @Override
   protected void runWithInjector(Configuration configuration, Environment environment,
       final Injector injector) throws Exception {
-    super.runWithInjector(configuration, environment, injector);
     log.info("Running core service...");
 
-    environment.addResource(MainResource.class);
-    environment.addResource(AssetsResource.class);
-    
+    environment.addResource(injector.getInstance(MainResource.class));
+    environment.addResource(injector.getInstance(ConversionResource.class));
+
+    super.runWithInjector(configuration, environment, injector);
+
     log.info("Core service running.");
   }
 
@@ -71,7 +72,7 @@ public class AcsRestService extends AutoConfigService<Configuration> {
   @Override
   public void initialize(Bootstrap<Configuration> bootstrap) {
     log.info("Initializing core service...");
-    bootstrap.setName("acs");
+    bootstrap.setName("Asset Conversion Service");
     log.info("Core service initialized.");
   }
 }

@@ -14,14 +14,23 @@ import lombok.extern.log4j.Log4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
+import au.com.mutopia.acs.conversion.ConverterMap;
 import au.com.mutopia.acs.models.Asset;
 
+import com.google.inject.Inject;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
 @Path("/convert")
 @Log4j
-public class AssetsResource {
+public class ConversionResource {
+
+  private ConverterMap converters;
+
+  @Inject
+  public ConversionResource(ConverterMap converters) {
+    this.converters = converters;
+  }
 
   /**
    * Converts the given file to the requested target format.
@@ -47,6 +56,9 @@ public class AssetsResource {
     Asset asset = new Asset(data, fileDetail);
 
     log.debug("Converting " + asset + "...");
+    
+    this.converters.get(asset.getMimeType());
+    
     // Map<String, Object> request = toMap(json);
     // log.debug("Convert request: " + request);
     //
