@@ -15,18 +15,22 @@ import au.com.mutopia.acs.conversion.impl.ShapefileConverter;
 
 import com.google.inject.AbstractModule;
 
+/**
+ * Configures the injection context with a map of format converters.
+ */
 public class AcsModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    Map<String, Converter> converters = new HashMap<String, Converter>();
-    converters.put("c3ml", new ShapefileConverter());
+    KmlConverter kmlConverter = new KmlConverter();
+    Map<String, Converter> converters = new HashMap<>();
+
     converters.put("dae", new ColladaConverter());
     converters.put("ifc", new IfcConverter());
-    converters.put("json", new GeoJsonConverter());
-    converters.put("kml", new KmlConverter());
+    converters.put("json", new GeoJsonConverter(kmlConverter));
+    converters.put("kml", kmlConverter);
     converters.put("kmz", new KmzConverter());
-    converters.put("shp", new ShapefileConverter());
+    converters.put("shp", new ShapefileConverter(kmlConverter));
 
     ConverterMap converterMap = new ConverterMapImpl(converters);
     bind(ConverterMap.class).toInstance(converterMap);
