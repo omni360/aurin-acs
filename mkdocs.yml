@@ -1,0 +1,8 @@
+site_name: Asset Conversion Service Documentation
+repo_url: https://github.com/urbanetic/aurin-acs
+
+site_description: Documentation for the Asset Conversion Service component of the AURIN Volumetric Module.
+site_author: Oliver Lade
+site_favicon: img/favicon.png
+
+markdown_extensions: [smartypants]

@@ -18,4 +18,5 @@ tmp/
 
 target
 /out
+/site
 atlassian-ide-plugin.xml
