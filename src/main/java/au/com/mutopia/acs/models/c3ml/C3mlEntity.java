@@ -1,15 +1,14 @@
 package au.com.mutopia.acs.models.c3ml;
 
+import lombok.Getter;
+import lombok.Setter;
+
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import com.dddviewr.collada.states.param;
-
-import lombok.Getter;
-import lombok.Setter;
 
 /**
  * An object representing the contents of a C3ML document.
@@ -29,7 +28,7 @@ public class C3mlEntity {
 
   /** A list of coordinates of points making up the entity geometry (2D entities only). */
   private List<Vertex3D> coordinates;
-  private List<Integer> color;
+  private List<Integer> color = new ArrayList<>();
   private List<Double> scale;
   private List<Double> rotation;
 
@@ -55,4 +54,11 @@ public class C3mlEntity {
     parameters.put(name, value);
   }
 
+  public void setColorData(Color colorData) {
+    color = new ArrayList<>();
+    color.add(colorData.getRed());
+    color.add(colorData.getGreen());
+    color.add(colorData.getBlue());
+    color.add(colorData.getAlpha());
+  }
 }
