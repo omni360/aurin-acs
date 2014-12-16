@@ -12,6 +12,7 @@ import au.com.mutopia.acs.conversion.impl.IfcConverter;
 import au.com.mutopia.acs.conversion.impl.KmlConverter;
 import au.com.mutopia.acs.conversion.impl.KmzConverter;
 import au.com.mutopia.acs.conversion.impl.ShapefileConverter;
+import au.com.mutopia.acs.models.Format;
 
 import com.google.inject.AbstractModule;
 
@@ -22,15 +23,15 @@ public class AcsModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    KmlConverter kmlConverter = new KmlConverter();
+    final KmlConverter kmlConverter = new KmlConverter();
     Map<String, Converter> converters = new HashMap<>();
 
-    converters.put("dae", new ColladaConverter());
-    converters.put("ifc", new IfcConverter());
-    converters.put("json", new GeoJsonConverter(kmlConverter));
-    converters.put("kml", kmlConverter);
-    converters.put("kmz", new KmzConverter());
-    converters.put("shp", new ShapefileConverter(kmlConverter));
+    converters.put(Format.COLLADA.toString(), new ColladaConverter());
+    converters.put(Format.GEOJSON.toString(), new GeoJsonConverter(kmlConverter));
+    converters.put(Format.IFC.toString(), new IfcConverter());
+    converters.put(Format.KML.toString(), kmlConverter);
+    converters.put(Format.KMZ.toString(), new KmzConverter());
+    converters.put(Format.SHP.toString(), new ShapefileConverter(kmlConverter));
 
     ConverterMap converterMap = new ConverterMapImpl(converters);
     bind(ConverterMap.class).toInstance(converterMap);

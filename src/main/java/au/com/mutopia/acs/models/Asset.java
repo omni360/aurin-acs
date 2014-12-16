@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 
 /**
- * A file that has been uploladed or converted from another file.
+ * A file that has been uploaded or converted from another file.
  */
 @Getter
 @Setter
