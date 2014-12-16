@@ -9,15 +9,21 @@ import java.util.List;
 
 import org.junit.Test;
 
-import au.com.mutopia.acs.conversion.impl.KmlConverter;
 import au.com.mutopia.acs.models.Asset;
 import au.com.mutopia.acs.models.c3ml.C3mlData;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 
 
 /**
- * Tests a {@link Converter} implementation by converting a fixture and comparing it with a
- * known-good output.
+ * Tests a {@link Converter} implementation by converting a fixture and comparing it with a known
+ * output. There are three pre-defined fixtures that test the converters in different ways:
+ * 
+ * <ol>
+ * <li>Simple: A single polygon entity with a parameter.</li>
+ * <li>Broad: One of each type of entity with different parameters.</li>
+ * <li>Complex: A large hierarchy of entities, including textured meshes, with a variety of
+ * parameters.</li>
+ * </ol>
  */
 public abstract class ConverterTest {
 
