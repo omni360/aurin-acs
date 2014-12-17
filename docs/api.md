@@ -33,4 +33,7 @@ And response:
 
     {...}
 
+For more details on the structure of the response, refer to the [Design of C3ML](design.md#c3ml).
+
+
 [jquery]: https://api.jquery.com/jquery.post/

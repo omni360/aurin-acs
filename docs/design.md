@@ -26,9 +26,33 @@ Shapefiles and GeoJSON files are first converted to KML with the `ogr2ogr` tool 
 2D format that needs to be parsed. KML needs to be parsed anyway when used in KMZ files, so this
 reduces the number of converters that need to be implemented.
 
+## C3ML
+
+The output of the conversion is the custom **C3ML** format. C3ML is a non-standard but simple data
+structure that contains other standard formats, such as [WKT][wkt] and [glTF][gltf]. The basic
+structure of a C3ML document is:
+
+    {
+        "entities": [...]
+    }
+
+The key property is `entities`, which contains a document for each entity in the converted file.
+Each entity has the following structure:
+
+    {
+        "id": ...
+    }
+
+[Atlas][atlas] is designed to parse entities in this format into objects it understands.
+
+
 [dw]: http://dropwizard.io/
 [jetty]: http://www.eclipse.org/jetty/
 [jersey]: https://jersey.java.net/
 [jackson]: http://wiki.fasterxml.com/JacksonHome
 [guava]: https://github.com/google/guava
 [guice]: https://github.com/google/guice
+
+[wkt]: TODO
+[gltf]: TODO
+[atlas]: http://atlasjs.org/
