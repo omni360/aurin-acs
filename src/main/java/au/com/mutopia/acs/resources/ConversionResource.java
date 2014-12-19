@@ -69,7 +69,7 @@ public class ConversionResource {
     stopWatch.start();
 
     // Convert the data.
-    Converter converter = this.converters.get(asset.getMimeType());
+    Converter converter = this.converters.get(asset.getFormat());
     List<C3mlEntity> entities = converter.convert(asset);
 
     stopWatch.stop();

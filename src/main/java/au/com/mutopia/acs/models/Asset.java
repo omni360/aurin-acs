@@ -7,9 +7,11 @@ import lombok.Getter;
 import lombok.Setter;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.base.Strings;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 
 /**
@@ -26,8 +28,8 @@ public class Asset {
   @JsonIgnore
   private byte[] data;
 
-  /** The MIME type of the underlying data. */
-  private String mimeType;
+  /** The format of the underlying data. */
+  private Format format;
 
   /** The filename of the asset uploaded or created. */
   private String fileName;
@@ -42,6 +44,7 @@ public class Asset {
     setData(data);
     setFileName(fileDetails.getFileName());
     setFileSize(fileDetails.getSize());
+    setFormat(determineFormat());
   }
 
   public Asset(Byte[] data, FormDataContentDisposition fileDetails) {
@@ -52,6 +55,7 @@ public class Asset {
     setData(FileUtils.readFileToByteArray(file));
     setFileName(file.getName());
     setFileSize(file.length());
+    setFormat(determineFormat());
   }
 
   public void setData(byte[] data) {
@@ -65,9 +69,21 @@ public class Asset {
     }
   }
 
+  /**
+   * Attempts to determine which format the {@link Asset} is.
+   * 
+   * @return A guess of the {@link Asset}'s format based on all set properties.
+   */
+  private Format determineFormat() {
+    if (Strings.isNullOrEmpty(getFileName())) return null;
+    String ext = FilenameUtils.getExtension(getFileName());
+    return Format.getByValue(ext);
+  }
+
   @Override
   public String toString() {
     return String.format("Asset[%s (%s)]", getFileName(),
         FileUtils.byteCountToDisplaySize(getFileSize()));
   }
+
 }

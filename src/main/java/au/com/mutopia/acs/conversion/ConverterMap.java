@@ -1,6 +1,7 @@
 package au.com.mutopia.acs.conversion;
 
 import au.com.mutopia.acs.models.Asset;
+import au.com.mutopia.acs.models.Format;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 
 /**
@@ -12,6 +13,6 @@ public interface ConverterMap {
   /**
    * Returns the {@link Converter} for the given format.
    */
-  public Converter get(String format);
+  public Converter get(Format format);
 
 }
