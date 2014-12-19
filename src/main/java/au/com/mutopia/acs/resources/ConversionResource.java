@@ -53,7 +53,7 @@ public class ConversionResource {
   @POST
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   @Produces(MediaType.APPLICATION_JSON)
-  public C3mlData synthesize(@FormDataParam("file") InputStream inputStream,
+  public C3mlData convert(@FormDataParam("file") InputStream inputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) throws ConversionException {
     Byte[] data;
     try {
