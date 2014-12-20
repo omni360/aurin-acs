@@ -4,6 +4,7 @@ import java.util.Map;
 
 import au.com.mutopia.acs.conversion.Converter;
 import au.com.mutopia.acs.conversion.ConverterMap;
+import au.com.mutopia.acs.models.Format;
 
 /**
  * A simple implementation of a {@link ConverterMap} mapping file formats to appropriate
@@ -12,13 +13,13 @@ import au.com.mutopia.acs.conversion.ConverterMap;
 public class ConverterMapImpl implements ConverterMap {
 
   /** The map from which {@link Converter}s are retrieved. */
-  private Map<String, Converter> map;
+  private Map<Format, Converter> map;
 
-  public ConverterMapImpl(Map<String, Converter> map) {
+  public ConverterMapImpl(Map<Format, Converter> map) {
     this.map = map;
   }
 
-  public Converter get(String format) {
+  public Converter get(Format format) {
     return map.get(format);
   }
 

@@ -2,14 +2,11 @@ package au.com.mutopia.acs.resources;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 
 /**
  * Serves HTML for the index page.
  */
 @Path("/")
-@Produces(MediaType.TEXT_HTML)
 public class MainResource {
 
   /** The URL to the source code repository. */

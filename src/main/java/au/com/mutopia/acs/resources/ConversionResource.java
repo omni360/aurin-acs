@@ -53,7 +53,7 @@ public class ConversionResource {
   @POST
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   @Produces(MediaType.APPLICATION_JSON)
-  public C3mlData synthesize(@FormDataParam("file") InputStream inputStream,
+  public C3mlData convert(@FormDataParam("file") InputStream inputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) throws ConversionException {
     Byte[] data;
     try {
@@ -69,7 +69,7 @@ public class ConversionResource {
     stopWatch.start();
 
     // Convert the data.
-    Converter converter = this.converters.get(asset.getMimeType());
+    Converter converter = this.converters.get(asset.getFormat());
     List<C3mlEntity> entities = converter.convert(asset);
 
     stopWatch.stop();

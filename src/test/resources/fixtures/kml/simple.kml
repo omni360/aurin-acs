@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+	<name>simple.kml</name>
+	<Placemark>
+		<name>melbourne_cbd</name>
+		<Polygon>
+			<tessellate>1</tessellate>
+			<outerBoundaryIs>
+				<LinearRing>
+					<coordinates>
+						144.9750826126445,-37.81548625281237,0 144.9710060006769,-37.80735973465846,0 144.9512328118604,-37.81305802727754,0 144.9551041535812,-37.82116100732942,0 144.9750826126445,-37.81548625281237,0 
+					</coordinates>
+				</LinearRing>
+			</outerBoundaryIs>
+		</Polygon>
+	</Placemark>
+</Document>
+</kml>
