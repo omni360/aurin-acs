@@ -20,13 +20,27 @@ public class C3mlData {
 
   private Map<String, Map<String, String>> params = new HashMap<>();
 
+  public C3mlData() {}
+
   public C3mlData(List<C3mlEntity> c3mls) {
+    setEntities(c3mls);
+  }
+
+  public void setEntities(List<C3mlEntity> c3mls) {
+    this.c3mls = c3mls;
     if (c3mls != null) {
-      this.c3mls = c3mls;
       for (C3mlEntity entity : c3mls) {
         extractEntityParameters(entity);
       }
     }
+  }
+
+  public boolean addEntity(C3mlEntity entity) {
+    return c3mls.add(entity);
+  }
+
+  public boolean removeEntity(C3mlEntity entity) {
+    return c3mls.remove(entity);
   }
 
   /**
@@ -35,7 +49,14 @@ public class C3mlData {
    * @param entity The {@link C3mlEntity} to extract parameters from.
    */
   private void extractEntityParameters(C3mlEntity entity) {
-    // TODO(orlade): Extract parameters from entities.
+    for (String name : entity.getParameters().keySet()) {
+      Map<String, String> param = params.get(name);
+      if (param == null) {
+        param = new HashMap<>();
+        params.put(name, param);
+      }
+      param.put(entity.getId().toString(), entity.getParameters().get(name));
+    }
   }
 
   @Override

@@ -1,0 +1,11 @@
+{
+"type": "FeatureCollection",
+"features": [
+{ "type": "Feature", "properties": { "Name": "Melbourne CBD", "Description": "Footprint of the Melbourne CBD." }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 144.975083, -37.815486 ], [ 144.971006, -37.807360 ], [ 144.951233, -37.813058 ], [ 144.955104, -37.821161 ], [ 144.975083, -37.815486 ] ] ] } }
+,
+{ "type": "Feature", "properties": { "Name": "Etihad Stadium", "Description": "Etihad Stadium in Docklands." }, "geometry": { "type": "Point", "coordinates": [ 144.947531, -37.816667, 0.000000 ] } }
+,
+{ "type": "Feature", "properties": { "Name": "Train Track", "Description": "A test segment of train track ending in Southern Cross Station." }, "geometry": { "type": "LineString", "coordinates": [ [ 144.945732, -37.811681 ], [ 144.948733, -37.814002 ], [ 144.950682, -37.816120 ], [ 144.951826, -37.817367 ], [ 144.952732, -37.818560 ] ] } }
+
+]
+}

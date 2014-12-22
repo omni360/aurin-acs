@@ -20,4 +20,8 @@ public class Vertex3D {
     this.altitude = altitude;
   }
 
+  public String toString() {
+    return String.format("Vertex3D[%f, %f, %f]", longitude, latitude, altitude);
+  }
+
 }
