@@ -13,7 +13,7 @@ import com.google.common.collect.ImmutableList;
  * type of entity (point, line, polygon, mesh), each with different styles and custom parameters.
  */
 public class BroadC3mlFixture extends C3mlData {
-
+  
   public BroadC3mlFixture() {
     setEntities(ImmutableList.of(buildPoint(), buildLine(), buildPolygon(), buildMesh()));
   }

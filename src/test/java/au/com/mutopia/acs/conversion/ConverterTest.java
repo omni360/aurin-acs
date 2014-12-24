@@ -84,6 +84,13 @@ public abstract class ConverterTest {
    */
   protected abstract String getExtension();
 
+  /**
+   * Returns a copy of the given {@link C3mlData} object without any meshes contained in the input.
+   * 
+   * @param data The data to filter the mesh entities out of.
+   * @return A copy of the input data without the mesh entities, and without any of the parameters
+   *         and values that applied only to them.
+   */
   protected C3mlData withoutMeshes(C3mlData data) {
     List<C3mlEntity> nonMeshes =
         data.getC3mls().stream().filter(e -> "mesh".equals(e.getType()))
