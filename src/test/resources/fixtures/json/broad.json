@@ -1,11 +1,52 @@
 {
-"type": "FeatureCollection",
-"features": [
-{ "type": "Feature", "properties": { "Name": "Melbourne CBD", "Description": "Footprint of the Melbourne CBD." }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 144.975083, -37.815486 ], [ 144.971006, -37.807360 ], [ 144.951233, -37.813058 ], [ 144.955104, -37.821161 ], [ 144.975083, -37.815486 ] ] ] } }
-,
-{ "type": "Feature", "properties": { "Name": "Etihad Stadium", "Description": "Etihad Stadium in Docklands." }, "geometry": { "type": "Point", "coordinates": [ 144.947531, -37.816667, 0.000000 ] } }
-,
-{ "type": "Feature", "properties": { "Name": "Train Track", "Description": "A test segment of train track ending in Southern Cross Station." }, "geometry": { "type": "LineString", "coordinates": [ [ 144.945732, -37.811681 ], [ 144.948733, -37.814002 ], [ 144.950682, -37.816120 ], [ 144.951826, -37.817367 ], [ 144.952732, -37.818560 ] ] } }
-
-]
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "Melbourne CBD",
+        "Description": "Footprint of the Melbourne CBD."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [144.9750826126445, -37.81548625281237],
+            [144.9710060006769, -37.80735973465846],
+            [144.9512328118604, -37.81305802727754],
+            [144.9551041535812, -37.82116100732942],
+            [144.9750826126445, -37.81548625281237]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "Etihad Stadium",
+        "Description": "Etihad Stadium in Docklands."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [144.947531183432, -37.81666683012415, 0.000000 ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "Train Track",
+        "Description": "A test segment of train track ending in Southern Cross Station."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [144.9457316659238, -37.81168134092717],
+          [144.9487326064075, -37.81400168495323],
+          [144.9506817996335, -37.81611997711855],
+          [144.951826258271, -37.81736651679314],
+          [144.9527318758136, -37.81856014007646]
+        ]
+      }
+    }
+  ]
 }

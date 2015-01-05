@@ -6,7 +6,6 @@ import au.com.mutopia.acs.models.Asset;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
 import au.com.mutopia.acs.models.c3ml.Vertex3D;
-import au.com.mutopia.acs.util.FileUtils;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -30,6 +29,7 @@ import de.micromata.opengis.kml.v_2_2_0.StyleMap;
 import de.micromata.opengis.kml.v_2_2_0.StyleSelector;
 import de.micromata.opengis.kml.v_2_2_0.StyleState;
 import lombok.extern.log4j.Log4j;
+import org.apache.commons.io.FileUtils;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -80,7 +80,7 @@ public class KmlConverter implements Converter {
    */
   public List<C3mlEntity> convert(Asset asset) throws ConversionException {
     try {
-      File kmlFile = FileUtils.createTemporaryFileWithContent(asset.getData());
+      File kmlFile = asset.getTemporaryFile();
       fixXmlSchema(kmlFile);
       return getEntities(kmlFile);
     } catch (IOException e) {
@@ -101,6 +101,21 @@ public class KmlConverter implements Converter {
     generateStyleMaps(kml);
     List<C3mlEntity> c3mlEntities = new ArrayList<>();
     Feature kmlFeature = kml.getFeature();
+    if (kmlFeature.getName() == null) {
+      if (kmlFeature instanceof Folder) {
+        Folder folder = (Folder) kmlFeature;
+        List<Feature> features = folder.getFeature();
+        if (features.size() == 1) {
+          kmlFeature = features.get(0);
+        }
+      } else if (kmlFeature instanceof Document) {
+        Document document = (Document) kmlFeature;
+        List<Feature> features = document.getFeature();
+        if (features.size() == 1) {
+          kmlFeature = features.get(0);
+        }
+      }
+    }
     if (kmlFeature instanceof Folder) {
       Folder folder = (Folder) kmlFeature;
       for (Feature feature : folder.getFeature()) {
@@ -182,7 +197,7 @@ public class KmlConverter implements Converter {
     C3mlEntity entity = new C3mlEntity();
     entity.setName(placemark.getName());
     String description = placemark.getDescription();
-    if (description != null) {
+    if (!Strings.isNullOrEmpty(description)) {
       entity.addParameter("description", description);
     }
     Color color = getColor(placemark);
@@ -322,6 +337,8 @@ public class KmlConverter implements Converter {
    * Generate style maps from KML file for CZML conversion.
    */
   public void generateStyleMaps(Kml kml) {
+    mapForStyleColor = Maps.newHashMap();
+    mapForStyleMap = Maps.newHashMap();
     // Check if feature is a document.
     // Style maps are absent if feature is not a document.
     if (kml.getFeature() instanceof Document) {
@@ -489,7 +506,7 @@ public class KmlConverter implements Converter {
 
       transformer.transform(source, result);
 
-      org.apache.commons.io.FileUtils.copyFile(tmpKmlFile, kmlFile);
+      FileUtils.copyFile(tmpKmlFile, kmlFile);
     } catch (ParserConfigurationException | SAXException | TransformerException | IOException e) {
       log.error(e);
     }

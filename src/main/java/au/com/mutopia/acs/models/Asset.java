@@ -1,18 +1,16 @@
 package au.com.mutopia.acs.models;
 
-import java.io.File;
-import java.io.IOException;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.base.Strings;
+import com.sun.jersey.core.header.FormDataContentDisposition;
 import lombok.Getter;
 import lombok.Setter;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Strings;
-import com.sun.jersey.core.header.FormDataContentDisposition;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * A file that has been uploaded or converted from another file.
@@ -86,4 +84,11 @@ public class Asset {
         FileUtils.byteCountToDisplaySize(getFileSize()));
   }
 
+  /**
+   * @return A temporary file with the asset's filename and content.
+   * @throws IOException
+   */
+  public File getTemporaryFile() throws IOException {
+    return au.com.mutopia.acs.util.FileUtils.createTemporaryFileWithContent(fileName, data);
+  }
 }

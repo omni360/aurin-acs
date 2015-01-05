@@ -1,7 +1,24 @@
 {
-"type": "FeatureCollection",
-"features": [
-{ "type": "Feature", "properties": { "Name": "melbourne_cbd", "Description": "" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 144.975083, -37.815486 ], [ 144.971006, -37.807360 ], [ 144.951233, -37.813058 ], [ 144.955104, -37.821161 ], [ 144.975083, -37.815486 ] ] ] } }
-
-]
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "melbourne_cbd",
+        "Description": ""
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [144.9750826126445, -37.81548625281237],
+            [144.9710060006769, -37.80735973465846],
+            [144.9512328118604, -37.81305802727754],
+            [144.9551041535812, -37.82116100732942],
+            [144.9750826126445, -37.81548625281237]
+          ]
+        ]
+      }
+    }
+  ]
 }

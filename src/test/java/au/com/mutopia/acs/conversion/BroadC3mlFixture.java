@@ -64,7 +64,6 @@ public class BroadC3mlFixture extends C3mlData {
     entity.addParameter("description", "St Patrick's Cathedral in Melbourne.");
     entity.setType(C3mlEntityType.MESH);
     return entity;
-
   }
 
 }
