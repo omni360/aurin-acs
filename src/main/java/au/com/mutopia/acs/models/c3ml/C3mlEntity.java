@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * An object representing the contents of a C3ML document.
@@ -22,7 +23,7 @@ public class C3mlEntity {
   private String name;
 
   /** The name of the type of the entity. */
-  private String type;
+  private C3mlEntityType type;
 
   /** The ID of this entity's parent entity. */
   private String parentId;
@@ -75,6 +76,9 @@ public class C3mlEntity {
   /** The glTF mesh data in binary format, if applicable. */
   private Byte[] gltfData;
 
+  public C3mlEntity() {
+    this.id = UUID.randomUUID().toString();
+  }
 
   public C3mlEntity(String id) {
     this.id = id;

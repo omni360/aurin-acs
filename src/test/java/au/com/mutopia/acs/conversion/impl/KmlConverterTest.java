@@ -1,9 +1,11 @@
 package au.com.mutopia.acs.conversion.impl;
 
-import org.junit.Before;
-
 import au.com.mutopia.acs.conversion.ConverterTest;
 import au.com.mutopia.acs.models.Format;
+import au.com.mutopia.acs.models.c3ml.C3mlData;
+import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
+import com.google.common.collect.ImmutableList;
+import org.junit.Before;
 
 /**
  * Tests conversion logic for KML files.
@@ -25,4 +27,9 @@ public class KmlConverterTest extends ConverterTest {
     return Format.KML.toString();
   }
 
+  @Override
+  public void assertThatC3mlBroadDataIsEqual(C3mlData actual, C3mlData expected) {
+    assertThatC3mlBroadDataIsEqualByComparingTypes(actual, expected,
+        ImmutableList.of(C3mlEntityType.POINT, C3mlEntityType.LINE, C3mlEntityType.POLYGON));
+  }
 }

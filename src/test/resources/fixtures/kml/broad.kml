@@ -122,53 +122,49 @@
 			<hotSpot x="20" y="2" xunits="pixels" yunits="pixels"/>
 		</IconStyle>
 	</Style>
-	<Folder>
-		<name>My Places</name>
-		<open>1</open>
-		<Placemark>
-			<name>Melbourne CBD</name>
-			<description>Footprint of the Melbourne CBD.</description>
-			<styleUrl>#m_ylw-pushpin</styleUrl>
-			<Polygon>
-				<tessellate>1</tessellate>
-				<outerBoundaryIs>
-					<LinearRing>
-						<coordinates>
-							144.9750826126445,-37.81548625281237,0 144.9710060006769,-37.80735973465846,0 144.9512328118604,-37.81305802727754,0 144.9551041535812,-37.82116100732942,0 144.9750826126445,-37.81548625281237,0 
-						</coordinates>
-					</LinearRing>
-				</outerBoundaryIs>
-			</Polygon>
-		</Placemark>
-		<Placemark>
-			<name>Etihad Stadium</name>
-			<description>Etihad Stadium in Docklands.</description>
-			<LookAt>
-				<longitude>144.9495091860697</longitude>
-				<latitude>-37.81734280413562</latitude>
-				<altitude>0</altitude>
-				<heading>0.007105521490702356</heading>
-				<tilt>34.1926994799176</tilt>
-				<range>720.9302551915143</range>
-				<gx:altitudeMode>relativeToSeaFloor</gx:altitudeMode>
-			</LookAt>
-			<styleUrl>#msn_ylw-pushpin</styleUrl>
-			<Point>
-				<gx:drawOrder>1</gx:drawOrder>
-				<coordinates>144.947531183432,-37.81666683012415,0</coordinates>
-			</Point>
-		</Placemark>
-		<Placemark>
-			<name>Train Track</name>
-			<description>A test segment of train track ending in Southern Cross Station.</description>
-			<styleUrl>#m_ylw-pushpin0</styleUrl>
-			<LineString>
-				<tessellate>1</tessellate>
-				<coordinates>
-					144.9457316659238,-37.81168134092717,0 144.9487326064075,-37.81400168495323,0 144.9506817996335,-37.81611997711855,0 144.951826258271,-37.81736651679314,0 144.9527318758136,-37.81856014007646,0 
-				</coordinates>
-			</LineString>
-		</Placemark>
-	</Folder>
+    <Placemark>
+        <name>Melbourne CBD</name>
+        <description>Footprint of the Melbourne CBD.</description>
+        <styleUrl>#m_ylw-pushpin</styleUrl>
+        <Polygon>
+            <tessellate>1</tessellate>
+            <outerBoundaryIs>
+                <LinearRing>
+                    <coordinates>
+                        144.9750826126445,-37.81548625281237,0 144.9710060006769,-37.80735973465846,0 144.9512328118604,-37.81305802727754,0 144.9551041535812,-37.82116100732942,0 144.9750826126445,-37.81548625281237,0
+                    </coordinates>
+                </LinearRing>
+            </outerBoundaryIs>
+        </Polygon>
+    </Placemark>
+    <Placemark>
+        <name>Etihad Stadium</name>
+        <description>Etihad Stadium in Docklands.</description>
+        <LookAt>
+            <longitude>144.9495091860697</longitude>
+            <latitude>-37.81734280413562</latitude>
+            <altitude>0</altitude>
+            <heading>0.007105521490702356</heading>
+            <tilt>34.1926994799176</tilt>
+            <range>720.9302551915143</range>
+            <gx:altitudeMode>relativeToSeaFloor</gx:altitudeMode>
+        </LookAt>
+        <styleUrl>#msn_ylw-pushpin</styleUrl>
+        <Point>
+            <gx:drawOrder>1</gx:drawOrder>
+            <coordinates>144.947531183432,-37.81666683012415,0</coordinates>
+        </Point>
+    </Placemark>
+    <Placemark>
+        <name>Train Track</name>
+        <description>A test segment of train track ending in Southern Cross Station.</description>
+        <styleUrl>#m_ylw-pushpin0</styleUrl>
+        <LineString>
+            <tessellate>1</tessellate>
+            <coordinates>
+                144.9457316659238,-37.81168134092717,0 144.9487326064075,-37.81400168495323,0 144.9506817996335,-37.81611997711855,0 144.951826258271,-37.81736651679314,0 144.9527318758136,-37.81856014007646,0
+            </coordinates>
+        </LineString>
+    </Placemark>
 </Document>
 </kml>
