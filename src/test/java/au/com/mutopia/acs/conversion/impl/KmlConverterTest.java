@@ -10,6 +10,11 @@ import au.com.mutopia.acs.models.Format;
  */
 public class KmlConverterTest extends ConverterTest {
 
+  public KmlConverterTest() {
+    // Remove meshes from the expected output fixtures, since the KML inputs won't have them.
+    BROAD_DATA = withoutMeshes(BROAD_DATA);
+  }
+
   @Before
   public void setUp() {
     converter = new KmlConverter();

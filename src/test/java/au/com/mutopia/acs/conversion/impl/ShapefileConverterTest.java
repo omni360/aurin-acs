@@ -10,6 +10,11 @@ import au.com.mutopia.acs.models.Format;
  */
 public class ShapefileConverterTest extends ConverterTest {
 
+  public ShapefileConverterTest() {
+    // Remove meshes from the expected output fixtures, since the Shapefile inputs won't have them.
+    BROAD_DATA = withoutMeshes(BROAD_DATA);
+  }
+
   @Before
   public void setUp() {
     converter = new KmlConverter();

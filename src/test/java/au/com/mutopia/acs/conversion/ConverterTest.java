@@ -6,16 +6,13 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.util.List;
-import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 
 import au.com.mutopia.acs.models.Asset;
 import au.com.mutopia.acs.models.c3ml.C3mlData;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
-import au.com.mutopia.acs.models.c3ml.Vertex3D;
-
-import com.google.common.collect.ImmutableList;
 
 
 /**
@@ -32,7 +29,10 @@ import com.google.common.collect.ImmutableList;
 public abstract class ConverterTest {
 
   /** The expected {@link C3mlData} structure of the simple test fixture. */
-  protected final C3mlData SIMPLE_DATA = buildSimpleData();
+  protected C3mlData SIMPLE_DATA = new SimpleC3mlFixture();
+
+  /** The expected {@link C3mlData} structure of the broad test fixture. */
+  protected C3mlData BROAD_DATA = new BroadC3mlFixture();
 
   /** The {@link Converter} used to convert the fixture. Populated by the test subclass. */
   protected Converter converter;
@@ -40,6 +40,8 @@ public abstract class ConverterTest {
   /**
    * Performs a conversion of a simple fixture in the appropriate format to an expected
    * {@link C3mlData} output.
+   * 
+   * @see SimpleC3mlFixture
    */
   @Test
   public void testSimple() throws IOException {
@@ -47,6 +49,20 @@ public abstract class ConverterTest {
     List<C3mlEntity> entities = converter.convert(asset);
     C3mlData data = new C3mlData(entities);
     assertThat(data).isEqualTo(SIMPLE_DATA);
+  }
+
+  /**
+   * Performs a conversion of a broad fixture in the appropriate format to an expected
+   * {@link C3mlData} output.
+   * 
+   * @see BroadC3mlFixture
+   */
+  @Test
+  public void testBroad() throws IOException {
+    Asset asset = createResourceAsset("/fixtures/" + getExtension() + "/broad." + getExtension());
+    List<C3mlEntity> entities = converter.convert(asset);
+    C3mlData data = new C3mlData(entities);
+    assertThat(data).isEqualTo(BROAD_DATA);
   }
 
   /**
@@ -69,20 +85,17 @@ public abstract class ConverterTest {
   protected abstract String getExtension();
 
   /**
-   * Constructs a {@link C3mlData} object that represents the simple fixture.
+   * Returns a copy of the given {@link C3mlData} object without any meshes contained in the input.
    * 
-   * @return The simple fixture as C3ML.
+   * @param data The data to filter the mesh entities out of.
+   * @return A copy of the input data without the mesh entities, and without any of the parameters
+   *         and values that applied only to them.
    */
-  protected C3mlData buildSimpleData() {
-    Vertex3D a = new Vertex3D(-37.81548625281237, 144.9750826126445, 0);
-    Vertex3D b = new Vertex3D(-37.80735973465846, 144.9710060006769, 0);
-    Vertex3D c = new Vertex3D(-37.81305802727754, 144.9512328118604, 0);
-    Vertex3D d = new Vertex3D(-37.82116100732942, 144.9551041535812, 0);
-    List<Vertex3D> coords = ImmutableList.of(a, b, c, d, a);
-
-    C3mlEntity entity = new C3mlEntity(UUID.randomUUID());
-    entity.setCoordinates(coords);
-    return new C3mlData(ImmutableList.of(entity));
+  protected C3mlData withoutMeshes(C3mlData data) {
+    List<C3mlEntity> nonMeshes =
+        data.getC3mls().stream().filter(e -> "mesh".equals(e.getType()))
+            .collect(Collectors.toList());
+    return new C3mlData(nonMeshes);
   }
 
 }

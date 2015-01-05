@@ -19,46 +19,87 @@ are the most useful:
 * Package for manual deployment: `mvn package` (also runs tests)
 * Compile the Javadocs: `mvn site`
 
+## Installation
 
-## Deployment
+### Pre-requisites
 
-### Automated
+* A server with access to temporary file storage.
+    * This guide assumes your server is running a recent version of Ubuntu.
+* Java 8 runtime environment (JRE8)
+* An HTTP server application such as [Apache][apache].
+* [ogr2ogr][ogr] for converting common 2D data formats. A binary version of ogr2ogr is included in
+the open-source [FWTools][fwt] toolkit.
 
-ACS uses [Travis][travis] for continuous integration and deployment. This means a build is run every
-time we push to Git, which compiles and runs all of the tests. If pushing to the master branch with
-a version tag, Travis also deploys the system to [Heroku][heroku].
+### Process
 
-The configuration for Travis is contained within the [.travis.yml][travis.yml] file. You will need
-to modify this to configure your own Travis deployment.
+1. [Download the JRE 8 from Oracle][jre8], accepting the license agreement, and [follow these instructions][jre8install] to install it.
 
-TODO: `.travis.yml` for Heroku.
+2. [Download FWTools for Linux][fwt] and [follow these instructions][fwtinstall] to install it.
 
-### Manual
+3. If building ACS from source, run `mvn package` to compile a [shaded JAR][shade].
 
-To deploy manually, run `mvn package`, which will compile a [shaded JAR][shade] called
-`aurin-acs-<version>.jar`. This JAR file contains all of the conversion logic, as well as a
-[Jetty][jetty] server that can be run on any server with Java installed. 
+4. Install ACS by copying the shaded `aurin-acs.jar` to the server.
 
-To run the server, run the command:
+5. Start the ACS server by executing the command:
 
-    $ java -jar /path/to/aurin-acs/target/aurin-acs-<version>.jar server /path/to/aurin-acs/configuration.yml
+    `java -jar aurin-acs.jar server configuration.yml`
 
-### Heroku
+The server is now running on port 8080 and ready to handle conversion requests.
 
-To deploy the ACS to Heroku, create a [`Procfile`][procfile] with:
+### Mapping to port 80
 
-    web    java $JAVA_OPTS -Ddw.http.port=$PORT -Ddw.http.adminPort=$PORT -jar target/aurin-acs-<version>.jar server configuration.yml
+To serve requests on the standard HTTP port 80 instead, you can use Apache's reverse proxy. Setting this up requires a few simple steps.
 
-Push the repository to your Heroku remote, wait a couple of minutes, and the service should be
-available.
+First, create a configuration file at `/etc/apache2/conf/acs-reverse-proxy.conf` containing:
+
+```
+<IfModule mod_proxy_http.c>
+   ProxyRequests Off
+   ProxyPreserveHost On
+
+   ProxyPass /acs http://localhost:8080
+   ProxyPassReverse /acs http://localhost:8080
+</IfModule>
+```
+
+2. Open `/etc/apache2/conf/httpd.conf` for editing.
+
+3. Ensure the following lines are uncommented:
+
+    * `LoadModule deflate_module modules/mod_deflate.so`
+    * `LoadModule proxy_module modules/mod_proxy.so`
+    * `LoadModule proxy_html_module modules/mod_proxy_html.so`
+    * `LoadModule proxy_http_module modules/mod_proxy_http.so`
+    * `LoadModule xml2enc_module modules/mod_xml2enc.so`
+
+4. Insert the following line at the end of the file:
+
+    `Include conf/acs-reverse-proxy.conf`
+    
+5. Restart the Apache server:
+
+    `sudo service apache2 restart`
+
+6. You can now access the ACS API at `http://<hostname>/acs`.
+
+## Testing
+
+To check that the installation was successful, visit `http://<hostname>/acs`. Although the ACS
+does not have a Web application GUI, it should display a message telling you that.
 
 
+[apache]: https://httpd.apache.org/
+[fwt]: http://fwtools.loskot.net/FWTools-linux-2.0.6.tar.gz
+[fwtinstall]: http://fwtools.maptools.org/linux-main.html
 [github]: https://github.com/urbanetic/aurin-acs
+[heroku]: https://heroku.com/
 [javadocs]: http://javadocs.acs.urbanetic.net
+[jetty]: http://eclipse.org/jetty/
+[jre8]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
+[jre8install]: http://docs.oracle.com/javase/8/docs/technotes/guides/install/linux_server_jre.html
 [maven]: https://maven.apache.org/
+[ogr]: http://www.gdal.org/ogr2ogr.html
+[procfile]: https://devcenter.heroku.com/articles/procfile
+[shade]: https://maven.apache.org/plugins/maven-shade-plugin/
 [travis]: https://travis-ci.org/
 [travis.yml]: https://github.com/urbanetic/aurin-acs/blob/develop/.travis.yml
-[heroku]: https://heroku.com/
-[shade]: https://maven.apache.org/plugins/maven-shade-plugin/
-[jetty]: http://eclipse.org/jetty/
-[procfile]: https://devcenter.heroku.com/articles/procfile
