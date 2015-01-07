@@ -1,6 +1,7 @@
 package au.com.mutopia.acs.conversion.impl;
 
 import org.junit.Before;
+import org.junit.Ignore;
 
 import au.com.mutopia.acs.conversion.ConverterTest;
 import au.com.mutopia.acs.models.Format;
@@ -8,6 +9,7 @@ import au.com.mutopia.acs.models.Format;
 /**
  * Tests conversion logic for Shapefiles.
  */
+@Ignore
 public class ShapefileConverterTest extends ConverterTest {
 
   public ShapefileConverterTest() {
