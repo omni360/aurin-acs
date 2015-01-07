@@ -222,7 +222,7 @@ public class KmlConverter implements Converter {
       writeSimpleGeometry(entity, geometry);
     }
 
-    // Polygon includes children and each child should be GeoObject
+    // Polygon includes children and each child should be an entity.
     if (geometry instanceof MultiGeometry) {
       writeMultiGeometry(entity, (MultiGeometry) geometry);
     } else if (geometry instanceof Model) {
