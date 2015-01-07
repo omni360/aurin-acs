@@ -1,14 +1,42 @@
 package au.com.mutopia.acs.conversion.impl;
 
+import java.awt.Color;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import lombok.extern.log4j.Log4j;
+
+import org.apache.commons.io.FileUtils;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
 import au.com.mutopia.acs.conversion.Converter;
 import au.com.mutopia.acs.exceptions.ConversionException;
 import au.com.mutopia.acs.models.Asset;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
 import au.com.mutopia.acs.models.c3ml.Vertex3D;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import de.micromata.opengis.kml.v_2_2_0.Boundary;
 import de.micromata.opengis.kml.v_2_2_0.Coordinate;
 import de.micromata.opengis.kml.v_2_2_0.Document;
@@ -28,29 +56,6 @@ import de.micromata.opengis.kml.v_2_2_0.Style;
 import de.micromata.opengis.kml.v_2_2_0.StyleMap;
 import de.micromata.opengis.kml.v_2_2_0.StyleSelector;
 import de.micromata.opengis.kml.v_2_2_0.StyleState;
-import lombok.extern.log4j.Log4j;
-import org.apache.commons.io.FileUtils;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import java.awt.*;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 @Log4j
 public class KmlConverter implements Converter {
@@ -89,9 +94,9 @@ public class KmlConverter implements Converter {
   }
 
   /**
-   * Extracts and populates a {@link C3mlEntity} for each element in the given KML. If the
-   * immediate {@link Feature} of the KML file is a {@link Folder} or {@link Document},
-   * the contained children entities are extracted as the top level hierarchy instead.
+   * Extracts and populates a {@link C3mlEntity} for each element in the given KML. If the immediate
+   * {@link Feature} of the KML file is a {@link Folder} or {@link Document}, the contained children
+   * entities are extracted as the top level hierarchy instead.
    *
    * @param kmlFile The KML to extract from.
    * @return A list of the extracted {@link C3mlEntity} objects.
@@ -119,15 +124,15 @@ public class KmlConverter implements Converter {
     if (kmlFeature instanceof Folder) {
       Folder folder = (Folder) kmlFeature;
       for (Feature feature : folder.getFeature()) {
-        c3mlEntities.add(getGeoObjectFromFeature(feature));
+        c3mlEntities.add(buildEntity(feature));
       }
     } else if (kmlFeature instanceof Document) {
       Document document = (Document) kmlFeature;
       for (Feature feature : document.getFeature()) {
-        c3mlEntities.add(getGeoObjectFromFeature(feature));
+        c3mlEntities.add(buildEntity(feature));
       }
     } else {
-      c3mlEntities.add(getGeoObjectFromFeature(kmlFeature));
+      c3mlEntities.add(buildEntity(kmlFeature));
     }
     return c3mlEntities;
   }
@@ -138,13 +143,13 @@ public class KmlConverter implements Converter {
    * @param feature The KML abstract element.
    * @return The constructed {@link C3mlEntity}.
    */
-  private C3mlEntity getGeoObjectFromFeature(Feature feature) {
+  private C3mlEntity buildEntity(Feature feature) {
     if (feature instanceof Folder) {
-      return getGeoObjectFromFolder((Folder) feature);
+      return buildEntity((Folder) feature);
     } else if (feature instanceof Document) {
-      return getEntityFromDocument((Document) feature);
+      return buildEntity((Document) feature);
     } else if (feature instanceof Placemark) {
-      return getGeoObjectFromPlacemark((Placemark) feature);
+      return buildEntity((Placemark) feature);
     }
     return null;
   }
@@ -155,14 +160,14 @@ public class KmlConverter implements Converter {
    * @param document The KML document element.
    * @return The constructed {@link C3mlEntity}.
    */
-  private C3mlEntity getEntityFromDocument(Document document) {
+  private C3mlEntity buildEntity(Document document) {
     C3mlEntity entity = new C3mlEntity();
     entity.setName(document.getName());
     List<Feature> features = document.getFeature();
     for (Feature feature : features) {
-      C3mlEntity childGeoObject = getGeoObjectFromFeature(feature);
-      if (childGeoObject != null) {
-        entity.addChild(childGeoObject);
+      C3mlEntity child = buildEntity(feature);
+      if (child != null) {
+        entity.addChild(child);
       }
     }
     return entity;
@@ -174,14 +179,14 @@ public class KmlConverter implements Converter {
    * @param folder The KML folder element.
    * @return The constructed {@link C3mlEntity}.
    */
-  private C3mlEntity getGeoObjectFromFolder(Folder folder) {
+  private C3mlEntity buildEntity(Folder folder) {
     C3mlEntity entity = new C3mlEntity();
     entity.setName(folder.getName());
     List<Feature> features = folder.getFeature();
     for (Feature feature : features) {
-      C3mlEntity childGeoObject = getGeoObjectFromFeature(feature);
-      if (childGeoObject != null) {
-        entity.addChild(childGeoObject);
+      C3mlEntity child = buildEntity(feature);
+      if (child != null) {
+        entity.addChild(child);
       }
     }
     return entity;
@@ -193,7 +198,7 @@ public class KmlConverter implements Converter {
    * @param placemark The KML placemark element.
    * @return The constructed {@link C3mlEntity}.
    */
-  private C3mlEntity getGeoObjectFromPlacemark(Placemark placemark) {
+  private C3mlEntity buildEntity(Placemark placemark) {
     C3mlEntity entity = new C3mlEntity();
     entity.setName(placemark.getName());
     String description = placemark.getDescription();
@@ -217,11 +222,11 @@ public class KmlConverter implements Converter {
       writeSimpleGeometry(entity, geometry);
     }
 
-    //Polygon includes children and each child should be GeoObject
+    // Polygon includes children and each child should be GeoObject
     if (geometry instanceof MultiGeometry) {
       writeMultiGeometry(entity, (MultiGeometry) geometry);
     } else if (geometry instanceof Model) {
-      //      return getGeoObjectFromModel((Model) geometry, placemark);
+      // return getEntityFromModel((Model) geometry, placemark);
     }
   }
 
@@ -257,7 +262,7 @@ public class KmlConverter implements Converter {
       if (!polygon.getInnerBoundaryIs().isEmpty()) {
         for (int k = 0; k < polygon.getInnerBoundaryIs().size(); k++) {
           Boundary innerBoundaryIs = polygon.getInnerBoundaryIs().get(k);
-          LinearRing linearRingInner = innerBoundaryIs.getLinearRing();
+          // LinearRing linearRingInner = innerBoundaryIs.getLinearRing();
         }
       }
     }
@@ -270,13 +275,13 @@ public class KmlConverter implements Converter {
    * @param entity The {@link C3mlEntity} object.
    * @param multiGeometry The multi geometry containing hierarchy of geometries.
    * @return The constructed {@link C3mlEntity} representing the top level geometry in the hierarchy
-   * extracted from a multi geometry.
+   *         extracted from a multi geometry.
    */
   private void writeMultiGeometry(C3mlEntity entity, MultiGeometry multiGeometry) {
     for (int j = 0; j < multiGeometry.getGeometry().size(); j++) {
-      C3mlEntity childEntity = new C3mlEntity();
-      childEntity.setName(entity.getName() + "_child_" + j);
-      childEntity.setColor(entity.getColor());
+      C3mlEntity child = new C3mlEntity();
+      child.setName(entity.getName() + "_child_" + j);
+      child.setColor(entity.getColor());
       Geometry geometryFromMulti = multiGeometry.getGeometry().get(j);
       writeGeometry(entity, geometryFromMulti);
     }
@@ -287,15 +292,14 @@ public class KmlConverter implements Converter {
    */
   private List<Vertex3D> getVertex3DPointsFromCoordinates(List<Coordinate> coordinates) {
     List<Vertex3D> points = Lists.newArrayList();
-    for (Coordinate coordinate : coordinates) {
-      points.add(new Vertex3D(coordinate.getLatitude(), coordinate.getLongitude(),
-          coordinate.getAltitude()));
+    for (Coordinate coord : coordinates) {
+      points.add(new Vertex3D(coord.getLatitude(), coord.getLongitude(), coord.getAltitude()));
     }
     return points;
   }
 
   /**
-   * @return True if the geometry is an instance of Multi-Geometry or Model.
+   * @return True if the geometry is an instance of {@link MultiGeometry} or {@link Model}.
    */
   private Boolean isMultiGeometryOrModel(Geometry geometry) {
     return (geometry instanceof MultiGeometry || geometry instanceof Model);
@@ -335,6 +339,8 @@ public class KmlConverter implements Converter {
 
   /**
    * Generate style maps from KML file for CZML conversion.
+   * 
+   * @param kml The KML document to generate style maps for.
    */
   public void generateStyleMaps(Kml kml) {
     mapForStyleColor = Maps.newHashMap();
@@ -355,25 +361,24 @@ public class KmlConverter implements Converter {
   private void extractStyleMaps(Iterator<StyleSelector> iterator) {
     while (iterator.hasNext()) {
       StyleSelector selector = iterator.next();
-      if (selector instanceof StyleMap) {
-        List<Pair> pairs = ((StyleMap) selector).getPair();
+      if (!(selector instanceof StyleMap)) continue;
 
-        for (Pair pair : pairs) {
-          StyleState key = pair.getKey();
-          String styleUrl = pair.getStyleUrl();
-          if (styleUrl.startsWith("#")) {
-            styleUrl = styleUrl.replace("#", "");
-          }
+      List<Pair> pairs = ((StyleMap) selector).getPair();
+      for (Pair pair : pairs) {
+        StyleState key = pair.getKey();
+        String styleUrl = pair.getStyleUrl();
+        if (styleUrl.startsWith("#")) {
+          styleUrl = styleUrl.replace("#", "");
+        }
 
-          String color = mapForStyleColor.get(styleUrl);
-          Map<StyleState, String> newMap = Maps.newHashMap();
-          newMap.put(key, color);
+        String color = mapForStyleColor.get(styleUrl);
+        Map<StyleState, String> newMap = Maps.newHashMap();
+        newMap.put(key, color);
 
-          if (mapForStyleMap.get(selector.getId()) == null) {
-            mapForStyleMap.put(selector.getId(), newMap);
-          } else {
-            mapForStyleMap.get(selector.getId()).put(key, color);
-          }
+        if (mapForStyleMap.get(selector.getId()) == null) {
+          mapForStyleMap.put(selector.getId(), newMap);
+        } else {
+          mapForStyleMap.get(selector.getId()).put(key, color);
         }
       }
     }
@@ -413,11 +418,8 @@ public class KmlConverter implements Converter {
    * @return The normal color for the style.
    */
   public String getNormalColor(String styleId) {
-    if (mapForStyleMap.get(styleId) != null) {
-      return mapForStyleMap.get(styleId).get(StyleState.NORMAL);
-    } else {
-      return mapForStyleColor.get(styleId);
-    }
+    Map<StyleState, String> map = mapForStyleMap.get(styleId);
+    return map != null ? map.get(StyleState.NORMAL) : mapForStyleColor.get(styleId);
   }
 
   /**
@@ -453,9 +455,10 @@ public class KmlConverter implements Converter {
 
   /**
    * Fix the XML schema of the KML file so that JAK can read the KML file without errors. The
-   * namespace is rename to one supported by JAK. The element names of nodes are modified to
-   * reflect the new XML namespace.
-   * @param kmlFile
+   * namespace is rename to one supported by JAK. The element names of nodes are modified to reflect
+   * the new XML namespace.
+   * 
+   * @param kmlFile The file to fix the schema of.
    */
   private void fixXmlSchema(File kmlFile) {
     File tmpKmlFile = new File("tmp.kml");
@@ -466,7 +469,6 @@ public class KmlConverter implements Converter {
       dbf.setValidating(false);
       DocumentBuilder db = dbf.newDocumentBuilder();
       org.w3c.dom.Document doc = db.parse(new FileInputStream(kmlFile));
-      Node root = doc.getDocumentElement();
       Element originalDocumentElement = (Element) doc.getElementsByTagName("kml").item(0);
       if (originalDocumentElement == null) {
         return;
@@ -511,7 +513,8 @@ public class KmlConverter implements Converter {
       log.error(e);
     }
 
-    // Once everything is complete, delete temp file..
+    // Once everything is complete, delete temp file.
     tmpKmlFile.delete();
   }
+
 }
