@@ -5,17 +5,17 @@ EXPOSE 80
 
 ENV ACS_DIR /opt/acs
 
-# Install Java 7, Maven and Apache
+# Install Java 7, Maven and Apache.
 RUN apt-get update && apt-get -qq install openjdk-7-jdk maven apache2
 
 ADD . /opt/acs
 ADD acs-reverse-proxy.conf /etc/apache2/conf.d/acs-reverse-proxy.conf
 
-RUN cd $ACS_DIR && mvn package
+# Compile a shaded JAR of ACS to aurin-acs.jar.
+RUN cd $ACS_DIR && mvn package && mv target/aurin-acs-*.jar target/aurin-acs.jar
 
 # Configure Apache's reverse proxy.
 RUN a2enmod deflate proxy proxy_http
 
 # Start Apache, then start the ACS server.
-RUN service apache2 restart
-RUN cd $ACS_DIR && java -jar target/aurin-acs.jar server configuration.yml
+ENTRYPOINT service apache2 restart && java -jar $ACS_DIR/target/aurin-acs.jar server $ACS_DIR/configuration.yml
