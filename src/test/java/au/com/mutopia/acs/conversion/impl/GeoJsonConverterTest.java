@@ -1,20 +1,26 @@
 package au.com.mutopia.acs.conversion.impl;
 
+import au.com.mutopia.acs.annotation.IntegrationTest;
 import au.com.mutopia.acs.conversion.BroadC3mlFixture;
 import au.com.mutopia.acs.models.c3ml.C3mlData;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
+
 import com.google.common.collect.ImmutableList;
+
 import org.junit.Before;
+import org.junit.experimental.categories.Category;
 
 import au.com.mutopia.acs.conversion.ConverterTest;
 import au.com.mutopia.acs.models.Format;
-
 import static org.fest.assertions.api.Assertions.assertThat;
 
 /**
  * Tests conversion logic for GeoJSON files.
+ * 
+ * Note: This is an integration test because it depends on <code>ogr2ogr</code>.
  */
+@Category(IntegrationTest.class)
 public class GeoJsonConverterTest extends ConverterTest {
 
   public GeoJsonConverterTest() {

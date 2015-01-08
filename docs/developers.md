@@ -53,6 +53,9 @@ the open-source [FWTools][fwt] toolkit.
 
 2. [Download FWTools for Linux][fwt] and [follow these instructions][fwtinstall] to install it.
 
+2. For integration tests using `ogr2ogr`, set the `GDAL_DATA` environment variable to the `/data`
+   subdirectory in the FWTools directory.
+
 3. If building ACS from source, run `mvn package` to compile a [shaded JAR][shade].
 
 4. Install ACS by copying the shaded `aurin-acs.jar` to the server.

@@ -9,4 +9,4 @@ logging:
   file:
     enabled: true
     currentLogFilename: /var/aurin/acs/log/acs.log
-    archivedLogFilenamePattern: /var/caurin/acs/log/acs-%d.log.gz
+    archivedLogFilenamePattern: /var/aurin/acs/log/acs-%d.log.gz

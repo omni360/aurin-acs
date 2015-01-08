@@ -29,6 +29,8 @@
   <!-- Main class and version properties -->
   <properties>
     <mainClass>au.com.mutopia.acs.service.AcsRestService</mainClass>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
     <dropwizard.version>0.6.2</dropwizard.version>
 
     <!-- Conversion -->
@@ -58,16 +60,6 @@
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
       <version>1.2.17</version>
-    </dependency>
-    <dependency>
-      <groupId>joda-time</groupId>
-      <artifactId>joda-time</artifactId>
-      <version>2.3</version>
-    </dependency>
-    <dependency>
-      <groupId>net.sf.flexjson</groupId>
-      <artifactId>flexjson</artifactId>
-      <version>3.1</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -103,16 +95,6 @@
     </dependency>
     <dependency>
       <groupId>com.yammer.dropwizard</groupId>
-      <artifactId>dropwizard-testing</artifactId>
-      <version>${dropwizard.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.yammer.dropwizard</groupId>
-      <artifactId>dropwizard-views</artifactId>
-      <version>${dropwizard.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.yammer.dropwizard</groupId>
       <artifactId>dropwizard-jdbi</artifactId>
       <version>${dropwizard.version}</version>
       <exclusions>
@@ -135,11 +117,6 @@
       <artifactId>jersey-multipart</artifactId>
       <!-- TODO(aramk) put in parent -->
       <version>1.17.1</version>
-    </dependency>
-    <dependency>
-      <groupId>org.jvnet</groupId>
-      <artifactId>mimepull</artifactId>
-      <version>1.6</version>
     </dependency>
     <!-- Depends on org.apache.httpcomponents -->
     <dependency>
@@ -273,10 +250,38 @@
         </executions>
       </plugin>
 
+      <!-- Testing -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.18.1</version>
+        <!-- Exclude IntegrationTest classes in the unit testing phase. -->
+        <configuration>
+          <excludedGroups>au.com.mutopia.acs.annotation.IntegrationTest</excludedGroups>
+        </configuration>
+        <executions>
+          <!-- Define an execution in the integration testing phase. -->
+          <execution>
+            <id>integration-test</id>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <phase>integration-test</phase>
+            <configuration>
+              <!-- Override the previous exclusion of IntegrationTest. -->
+              <excludedGroups>au.com.mutopia.acs.annotation.SystemTest</excludedGroups>
+              <!-- Include only IntegrationTest. -->
+              <groups>au.com.mutopia.acs.annotation.IntegrationTest</groups>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
       <!-- JAR execution -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
+        <version>1.3.2</version>
         <executions>
           <execution>
             <id>default-cli</id>
