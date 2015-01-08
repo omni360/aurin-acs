@@ -16,6 +16,11 @@ public class CityGmlConverterTest extends ConverterTest {
   }
 
   @Override
+  protected String getResourceFolder() {
+    return Format.CITYGML.toString();
+  }
+
+  @Override
   protected String getExtension() {
     return Format.CITYGML.toString();
   }

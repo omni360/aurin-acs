@@ -29,6 +29,11 @@ public class GeoJsonConverterTest extends ConverterTest {
   }
 
   @Override
+  protected String getResourceFolder() {
+    return Format.GEOJSON.toString();
+  }
+
+  @Override
   protected String getExtension() {
     return Format.GEOJSON.toString();
   }
@@ -50,7 +55,7 @@ public class GeoJsonConverterTest extends ConverterTest {
    */
   @Override
   public void assertThatC3mlEntityIsLenientlyEqual(C3mlEntity actual, C3mlEntity expected) {
-    assertThat(actual).isLenientEqualsToByAcceptingFields(expected, "name", "parameters",
-        "coordinates");
+    assertThat(actual).isLenientEqualsToByAcceptingFields(expected, "name", "parameters");
+    assertThat(isSameCoordinates(actual.getCoordinates(), expected.getCoordinates())).isTrue();
   }
 }

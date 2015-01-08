@@ -16,6 +16,11 @@ public class ColladaConverterTest extends ConverterTest {
   }
 
   @Override
+  protected String getResourceFolder() {
+    return Format.COLLADA.toString();
+  }
+
+  @Override
   protected String getExtension() {
     return Format.COLLADA.toString();
   }

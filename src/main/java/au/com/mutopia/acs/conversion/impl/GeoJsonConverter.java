@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public class GeoJsonConverter implements Converter {
 
@@ -23,7 +24,14 @@ public class GeoJsonConverter implements Converter {
   public List<C3mlEntity> convert(Asset asset) throws ConversionException {
     try {
       File kml = Ogr2Ogr.convertToKml(asset.getTemporaryFile());
-      return kmlConverter.convert(new Asset(kml));
+      List<C3mlEntity> c3mlEntities = kmlConverter.convert(new Asset(kml));
+      // Remove duplicated 'Name' and 'Description' parameters created when Ogr2Ogr converts to KML.
+      c3mlEntities.forEach(e -> {
+        Map<String, String> parameters = e.getParameters();
+        parameters.remove("Name");
+        parameters.remove("Description");
+        });
+      return c3mlEntities;
     } catch (IOException e) {
       throw new ConversionException("Failed to read converted KML file", e);
     }

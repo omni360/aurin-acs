@@ -16,6 +16,11 @@ public class KmzConverterTest extends ConverterTest {
   }
 
   @Override
+  protected String getResourceFolder() {
+    return Format.KMZ.toString();
+  }
+
+  @Override
   protected String getExtension() {
     return Format.KMZ.toString();
   }

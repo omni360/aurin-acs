@@ -4,13 +4,17 @@ import au.com.mutopia.acs.models.Asset;
 import au.com.mutopia.acs.models.c3ml.C3mlData;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
+import au.com.mutopia.acs.models.c3ml.Vertex3D;
 import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.fest.assertions.api.Assertions.assertThat;
@@ -46,7 +50,7 @@ public abstract class ConverterTest {
    */
   @Test
   public void testSimple() throws IOException {
-    Asset asset = createResourceAsset("/fixtures/" + getExtension() + "/simple." + getExtension());
+    Asset asset = createResourceAsset("/fixtures/" + getResourceFolder() + "/simple." + getExtension());
     List<C3mlEntity> entities = converter.convert(asset);
     C3mlData data = new C3mlData(entities);
     assertThatC3mlSimpleDataIsEqual(data, SIMPLE_DATA);
@@ -60,7 +64,7 @@ public abstract class ConverterTest {
    */
   @Test
   public void testBroad() throws IOException {
-    Asset asset = createResourceAsset("/fixtures/" + getExtension() + "/broad." + getExtension());
+    Asset asset = createResourceAsset("/fixtures/" + getResourceFolder() + "/broad." + getExtension());
     List<C3mlEntity> entities = converter.convert(asset);
     C3mlData data = new C3mlData(entities);
     assertThatC3mlBroadDataIsEqual(data, BROAD_DATA);
@@ -77,6 +81,13 @@ public abstract class ConverterTest {
     String absPath = URLDecoder.decode(Class.class.getResource(filePath).getFile(), "utf-8");
     return new Asset(new File(absPath));
   }
+
+  /**
+   * Returns the name of the folder containing the test fixtures for the test class.
+   *
+   * @return Tested folder name.
+   */
+  protected abstract String getResourceFolder();
 
   /**
    * Returns the extension of the file type handle by the test class.
@@ -117,7 +128,7 @@ public abstract class ConverterTest {
         expectedC3mls.stream().filter(e -> e.getType().equals(C3mlEntityType.POLYGON))
             .findFirst().get();
     assertThatC3mlEntityIsLenientlyEqual(actualPolygon, expectedPolygon);
-    assertThat(actual.getParams().size()).isEqualTo(expected.getParams().size());
+    assertThatParametersAreEqual(actual.getParams(), expected.getParams());
   }
 
   /**
@@ -155,7 +166,18 @@ public abstract class ConverterTest {
           expectedC3mls.stream().filter(e -> e.getType().equals(type)).findFirst().get();
       assertThatC3mlEntityIsLenientlyEqual(actualEntity, expectedEntity);
     }
-    assertThat(actual.getParams().size()).isEqualTo(expected.getParams().size());
+    assertThatParametersAreEqual(actual.getParams(), expected.getParams());
+  }
+
+  /**
+   * Assert that the converted parameters is equal to the expected parameters.
+   *
+   * @param actualParams The converted map of parameters.
+   * @param expectedParams The expected map of parameters.
+   */
+  public void assertThatParametersAreEqual(Map<String, Map<String, String>> actualParams,
+      Map<String, Map<String, String>> expectedParams) {
+    assertThat(actualParams.keySet()).containsAll(expectedParams.keySet());
   }
 
   /**
@@ -166,7 +188,23 @@ public abstract class ConverterTest {
    * @param expected The expected {@link C3mlEntity}.
    */
   public void assertThatC3mlEntityIsLenientlyEqual(C3mlEntity actual, C3mlEntity expected) {
-    assertThat(actual).isLenientEqualsToByAcceptingFields(expected, "name", "parameters",
-        "coordinates", "color");
+    assertThat(actual).isLenientEqualsToByAcceptingFields(expected, "name", "parameters", "color");
+    assertThat(isSameCoordinates(actual.getCoordinates(), expected.getCoordinates())).isTrue();
+  }
+
+  /**
+   * Check that two list of coordinates are the same. Two coordinates are the same if they are
+   * exactly equal or one is exactly equal to the reversed order of another.
+   *
+   * @param actualCoordinates The converted coordinates.
+   * @param expectedCoordinates The expected coordinates.
+   * @return True if both list of coordinates are equals.
+   */
+  public boolean isSameCoordinates(List<Vertex3D> actualCoordinates,
+      List<Vertex3D> expectedCoordinates) {
+    List<Vertex3D> reversedCoordinates = new ArrayList<>(actualCoordinates);
+    Collections.reverse(reversedCoordinates);
+    return actualCoordinates.equals(expectedCoordinates) || reversedCoordinates.equals
+        (expectedCoordinates);
   }
 }

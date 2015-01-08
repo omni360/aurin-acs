@@ -16,6 +16,11 @@ public class IfcConverterTest extends ConverterTest {
   }
 
   @Override
+  protected String getResourceFolder() {
+    return Format.IFC.toString();
+  }
+
+  @Override
   protected String getExtension() {
     return Format.IFC.toString();
   }

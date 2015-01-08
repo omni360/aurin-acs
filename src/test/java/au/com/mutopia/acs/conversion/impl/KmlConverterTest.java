@@ -1,5 +1,6 @@
 package au.com.mutopia.acs.conversion.impl;
 
+import au.com.mutopia.acs.conversion.BroadC3mlFixture;
 import au.com.mutopia.acs.conversion.ConverterTest;
 import au.com.mutopia.acs.models.Format;
 import au.com.mutopia.acs.models.c3ml.C3mlData;
@@ -23,10 +24,21 @@ public class KmlConverterTest extends ConverterTest {
   }
 
   @Override
+  protected String getResourceFolder() {
+    return Format.KML.toString();
+  }
+
+  @Override
   protected String getExtension() {
     return Format.KML.toString();
   }
 
+  /**
+   * Meshes are ignored since KML don't have them.
+   *
+   * @param actual The {@link C3mlData} converted from {@link BroadC3mlFixture}.
+   * @param expected The {@link BroadC3mlFixture}.
+   */
   @Override
   public void assertThatC3mlBroadDataIsEqual(C3mlData actual, C3mlData expected) {
     assertThatC3mlBroadDataIsEqualByComparingTypes(actual, expected,

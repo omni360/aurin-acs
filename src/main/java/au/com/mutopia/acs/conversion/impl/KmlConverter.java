@@ -1,45 +1,18 @@
 package au.com.mutopia.acs.conversion.impl;
 
-import java.awt.Color;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
-import lombok.extern.log4j.Log4j;
-
-import org.apache.commons.io.FileUtils;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-
 import au.com.mutopia.acs.conversion.Converter;
 import au.com.mutopia.acs.exceptions.ConversionException;
 import au.com.mutopia.acs.models.Asset;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
 import au.com.mutopia.acs.models.c3ml.Vertex3D;
-
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import de.micromata.opengis.kml.v_2_2_0.Boundary;
 import de.micromata.opengis.kml.v_2_2_0.Coordinate;
 import de.micromata.opengis.kml.v_2_2_0.Document;
+import de.micromata.opengis.kml.v_2_2_0.ExtendedData;
 import de.micromata.opengis.kml.v_2_2_0.Feature;
 import de.micromata.opengis.kml.v_2_2_0.Folder;
 import de.micromata.opengis.kml.v_2_2_0.Geometry;
@@ -52,10 +25,35 @@ import de.micromata.opengis.kml.v_2_2_0.Pair;
 import de.micromata.opengis.kml.v_2_2_0.Placemark;
 import de.micromata.opengis.kml.v_2_2_0.Point;
 import de.micromata.opengis.kml.v_2_2_0.Polygon;
+import de.micromata.opengis.kml.v_2_2_0.SchemaData;
+import de.micromata.opengis.kml.v_2_2_0.SimpleData;
 import de.micromata.opengis.kml.v_2_2_0.Style;
 import de.micromata.opengis.kml.v_2_2_0.StyleMap;
 import de.micromata.opengis.kml.v_2_2_0.StyleSelector;
 import de.micromata.opengis.kml.v_2_2_0.StyleState;
+import lombok.extern.log4j.Log4j;
+import org.apache.commons.io.FileUtils;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.awt.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 @Log4j
 public class KmlConverter implements Converter {
@@ -140,7 +138,7 @@ public class KmlConverter implements Converter {
   /**
    * Creates a {@link C3mlEntity} from a KML feature.
    *
-   * @param feature The KML abstract element.
+   * @param feature The KML feature element.
    * @return The constructed {@link C3mlEntity}.
    */
   private C3mlEntity buildEntity(Feature feature) {
@@ -161,8 +159,7 @@ public class KmlConverter implements Converter {
    * @return The constructed {@link C3mlEntity}.
    */
   private C3mlEntity buildEntity(Document document) {
-    C3mlEntity entity = new C3mlEntity();
-    entity.setName(document.getName());
+    C3mlEntity entity = createEntity(document);
     List<Feature> features = document.getFeature();
     for (Feature feature : features) {
       C3mlEntity child = buildEntity(feature);
@@ -180,8 +177,7 @@ public class KmlConverter implements Converter {
    * @return The constructed {@link C3mlEntity}.
    */
   private C3mlEntity buildEntity(Folder folder) {
-    C3mlEntity entity = new C3mlEntity();
-    entity.setName(folder.getName());
+    C3mlEntity entity = createEntity(folder);
     List<Feature> features = folder.getFeature();
     for (Feature feature : features) {
       C3mlEntity child = buildEntity(feature);
@@ -199,12 +195,7 @@ public class KmlConverter implements Converter {
    * @return The constructed {@link C3mlEntity}.
    */
   private C3mlEntity buildEntity(Placemark placemark) {
-    C3mlEntity entity = new C3mlEntity();
-    entity.setName(placemark.getName());
-    String description = placemark.getDescription();
-    if (!Strings.isNullOrEmpty(description)) {
-      entity.addParameter("description", description);
-    }
+    C3mlEntity entity = createEntity(placemark);
     Color color = getColor(placemark);
     entity.setColorData(color);
     writeGeometry(entity, placemark.getGeometry());
@@ -451,6 +442,39 @@ public class KmlConverter implements Converter {
       }
     }
     return null;
+  }
+
+  /**
+   * Creates a {@link C3mlEntity} from a KML Feature, populated with name, description and
+   * parameters.
+   *
+   * @param feature The KML feature element.
+   * @return The created {@link C3mlEntity}.
+   */
+  private C3mlEntity createEntity(Feature feature) {
+    C3mlEntity entity = new C3mlEntity();
+    entity.setName(feature.getName());
+    populateParameters(entity, feature.getExtendedData());
+    String description = feature.getDescription();
+    if (!Strings.isNullOrEmpty(description)) {
+      entity.addParameter("description", description);
+    }
+    return entity;
+  }
+
+  /**
+   * Populates entity with parameters from KML extended data element.
+   *
+   * @param entity The {@link C3mlEntity} object.
+   * @param extendedData The KML extended data element, mapping parameter names and values.
+   */
+  private void populateParameters(C3mlEntity entity, ExtendedData extendedData) {
+    if (extendedData == null) return;
+    for (SchemaData schemaData : extendedData.getSchemaData()) {
+      for (SimpleData simpleData : schemaData.getSimpleData()) {
+        entity.addParameter(simpleData.getName(), simpleData.getValue());
+      }
+    }
   }
 
   /**
