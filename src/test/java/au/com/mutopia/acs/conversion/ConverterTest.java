@@ -1,19 +1,21 @@
 package au.com.mutopia.acs.conversion;
 
-import au.com.mutopia.acs.models.Asset;
-import au.com.mutopia.acs.models.c3ml.C3mlData;
-import au.com.mutopia.acs.models.c3ml.C3mlEntity;
-import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
-import com.google.common.collect.ImmutableList;
-import org.junit.Test;
+import static org.fest.assertions.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import static org.fest.assertions.api.Assertions.assertThat;
+import org.junit.Test;
+
+import au.com.mutopia.acs.models.Asset;
+import au.com.mutopia.acs.models.c3ml.C3mlData;
+import au.com.mutopia.acs.models.c3ml.C3mlEntity;
+import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
+
+import com.google.common.collect.ImmutableList;
 
 
 /**
@@ -93,9 +95,12 @@ public abstract class ConverterTest {
    *         and values that applied only to them.
    */
   protected C3mlData withoutMeshes(C3mlData data) {
-    List<C3mlEntity> nonMeshes =
-        data.getC3mls().stream().filter(e -> !e.getType().equals(C3mlEntityType.MESH))
-            .collect(Collectors.toList());
+    List<C3mlEntity> nonMeshes = new ArrayList<>();
+    for (C3mlEntity entity : data.getC3mls()) {
+      if (!entity.getType().equals(C3mlEntityType.MESH)) {
+        nonMeshes.add(entity);
+      }
+    }
     return new C3mlData(nonMeshes);
   }
 
@@ -110,34 +115,30 @@ public abstract class ConverterTest {
     List<C3mlEntity> actualC3mls = actual.getC3mls();
     List<C3mlEntity> expectedC3mls = expected.getC3mls();
     assertThat(actualC3mls.size()).isEqualTo(expectedC3mls.size());
-    C3mlEntity actualPolygon =
-        actualC3mls.stream().filter(e -> e.getType().equals(C3mlEntityType.POLYGON))
-            .findFirst().get();
-    C3mlEntity expectedPolygon =
-        expectedC3mls.stream().filter(e -> e.getType().equals(C3mlEntityType.POLYGON))
-            .findFirst().get();
+
+    C3mlEntity expectedPolygon = getFirstOfType(C3mlEntityType.POLYGON, expectedC3mls);
+    C3mlEntity actualPolygon = getFirstOfType(C3mlEntityType.POLYGON, actualC3mls);
+
     assertThatC3mlEntityIsLenientlyEqual(actualPolygon, expectedPolygon);
     assertThat(actual.getParams().size()).isEqualTo(expected.getParams().size());
   }
 
   /**
-   * Assert that {@link C3mlData} converted from {@link BroadC3mlFixture} is the same as the
-   * fixture with the exception of {@link C3mlEntity} IDs. All {@link C3mlEntityType}s should be
-   * converted.
+   * Assert that {@link C3mlData} converted from {@link BroadC3mlFixture} is the same as the fixture
+   * with the exception of {@link C3mlEntity} IDs. All {@link C3mlEntityType}s should be converted.
    *
    * @param actual The {@link C3mlData} converted from {@link BroadC3mlFixture}.
    * @param expected The {@link BroadC3mlFixture}.
    */
   public void assertThatC3mlBroadDataIsEqual(C3mlData actual, C3mlData expected) {
-    assertThatC3mlBroadDataIsEqualByComparingTypes(actual, expected,
-        ImmutableList.of(C3mlEntityType.POINT, C3mlEntityType.LINE, C3mlEntityType.POLYGON,
-            C3mlEntityType.MESH));
+    assertThatC3mlBroadDataIsEqualByComparingTypes(actual, expected, ImmutableList.of(
+        C3mlEntityType.POINT, C3mlEntityType.LINE, C3mlEntityType.POLYGON, C3mlEntityType.MESH));
   }
 
   /**
-   * Assert that {@link C3mlData} converted from {@link BroadC3mlFixture} is the same as the
-   * fixture with the exception of {@link C3mlEntity} IDs. All {@link C3mlEntityType}s given
-   * should be converted.
+   * Assert that {@link C3mlData} converted from {@link BroadC3mlFixture} is the same as the fixture
+   * with the exception of {@link C3mlEntity} IDs. All {@link C3mlEntityType}s given should be
+   * converted.
    *
    * @param actual The {@link C3mlData} converted from {@link BroadC3mlFixture}.
    * @param expected The {@link BroadC3mlFixture}.
@@ -149,10 +150,8 @@ public abstract class ConverterTest {
     List<C3mlEntity> expectedC3mls = expected.getC3mls();
     assertThat(actualC3mls.size()).isEqualTo(expectedC3mls.size());
     for (C3mlEntityType type : c3mlEntityTypes) {
-      C3mlEntity actualEntity =
-          actualC3mls.stream().filter(e -> e.getType().equals(type)).findFirst().get();
-      C3mlEntity expectedEntity =
-          expectedC3mls.stream().filter(e -> e.getType().equals(type)).findFirst().get();
+      C3mlEntity actualEntity = getFirstOfType(type, actualC3mls);
+      C3mlEntity expectedEntity = getFirstOfType(type, expectedC3mls);
       assertThatC3mlEntityIsLenientlyEqual(actualEntity, expectedEntity);
     }
     assertThat(actual.getParams().size()).isEqualTo(expected.getParams().size());
@@ -169,4 +168,21 @@ public abstract class ConverterTest {
     assertThat(actual).isLenientEqualsToByAcceptingFields(expected, "name", "parameters",
         "coordinates", "color");
   }
+
+  /**
+   * Returns the first {@link C3mlEntity} from the list that is of the given type.
+   * 
+   * @param type The type of {@link C3mlEntity} to search for.
+   * @param c3mls The list to search through.
+   * @return The first {@link C3mlEntity} of the type.
+   */
+  private C3mlEntity getFirstOfType(C3mlEntityType type, Iterable<C3mlEntity> c3mls) {
+    for (C3mlEntity entity : c3mls) {
+      if (entity.getType().equals(type)) {
+        return entity;
+      }
+    }
+    return null;
+  }
+
 }
