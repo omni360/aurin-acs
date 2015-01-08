@@ -1,12 +1,12 @@
 package au.com.mutopia.acs.util;
 
-import org.apache.commons.io.IOUtils;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.UUID;
+
+import org.apache.commons.io.IOUtils;
 
 public class FileUtils {
 

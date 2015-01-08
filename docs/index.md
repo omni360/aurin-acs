@@ -40,7 +40,5 @@ in your own project, or are having any trouble, let us know at [hello@urbanetic.
 [cesium]: https://cesiumjs.org/
 [atlas-cesium]: https://github.com/urbanetic/atlas-cesium
 [urbanetic]: http://www.urbanetic.net/
-[docs]: http://docs.acs.urbanetic.net/
-[jsdocs]: http://javadocs.acs.urbanetic.net
 [aurin]: http://aurin.org.au
 [mail]: mailto:hello@urbanetic.net

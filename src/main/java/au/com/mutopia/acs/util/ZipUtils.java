@@ -1,10 +1,5 @@
 package au.com.mutopia.acs.util;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
-import com.google.common.io.Files;
-import lombok.extern.log4j.Log4j;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -19,6 +14,12 @@ import java.util.zip.InflaterInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+
+import lombok.extern.log4j.Log4j;
+
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 
 @Log4j
 public class ZipUtils {

@@ -259,12 +259,12 @@ public class KmlConverter implements Converter {
 
       // Polygon holes
       // TODO(Brandon) add support for polygon with holes.
-      if (!polygon.getInnerBoundaryIs().isEmpty()) {
-        for (int k = 0; k < polygon.getInnerBoundaryIs().size(); k++) {
-          Boundary innerBoundaryIs = polygon.getInnerBoundaryIs().get(k);
-          // LinearRing linearRingInner = innerBoundaryIs.getLinearRing();
-        }
-      }
+      // if (!polygon.getInnerBoundaryIs().isEmpty()) {
+      // for (int k = 0; k < polygon.getInnerBoundaryIs().size(); k++) {
+      // Boundary innerBoundaryIs = polygon.getInnerBoundaryIs().get(k);
+      // LinearRing linearRingInner = innerBoundaryIs.getLinearRing();
+      // }
+      // }
     }
   }
 
