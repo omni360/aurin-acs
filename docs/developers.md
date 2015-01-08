@@ -1,7 +1,24 @@
 # Developer Guide
 
-This guide provides instructions on how to checkout, build and deploy the ACS. You can also read the
-[ACS Javadocs][javadocs].
+This guide provides instructions on how to deploy the ACS into production. The simplest method is to
+use the ACS Docker image, however instructions to checkout, build and deploy the ACS from source are
+included as well.
+
+For documentation of the source code, check out the [ACS Javadocs][javadocs].
+
+## Docker
+
+[**Docker**][docker] is a lightweight virtualisation platform for Linux that allows applications to
+be installed into an isolated environment with all of their dependencies. These "images" may be
+deployed (and should behave exactly the same) on any Linux machine with Docker installed. Docker
+makes administration a breeze: configure once, run anywhere.
+
+The `Dockerfile` in the ACS repository contains the instructions to build the ACS Docker image. This
+is built automatically on [Dockerhub][dockerhub], but can also be [built manually][docker-build].
+
+To run the ACS as a server, simply execute
+`sudo docker run -d -p 80:80 urbanetic/aurin-acs -D FOREGROUND`.
+
 
 ## Checkout
 
@@ -89,6 +106,9 @@ does not have a Web application GUI, it should display a message telling you tha
 
 
 [apache]: https://httpd.apache.org/
+[docker]: https://www.docker.com/
+[dockerhub]: https://registry.hub.docker.com/u/urbanetic/aurin-acs/
+[docker-build]: https://docs.docker.com/reference/commandline/cli/#build
 [fwt]: http://fwtools.loskot.net/FWTools-linux-2.0.6.tar.gz
 [fwtinstall]: http://fwtools.maptools.org/linux-main.html
 [github]: https://github.com/urbanetic/aurin-acs
