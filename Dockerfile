@@ -7,7 +7,8 @@ ENV ACS_DIR /opt/acs
 ENV APACHE_CONF /etc/apache2/conf
 ENV HTTPD_CONF $APACHE_CONF/httpd.conf
 
-RUN apt-get update && apt-get -y install openjdk-8-jre-headless maven apache2
+# Install Java 7, Maven and Apache
+RUN apt-get update && apt-get -qq install openjdk-7-jdk maven apache2
 
 ADD . /opt/acs
 ADD acs-reverse-proxy.conf $APACHE_CONF/acs-reverse-proxy.conf
