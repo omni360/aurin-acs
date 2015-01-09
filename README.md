@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/urbanetic/aurin-acs.svg)](https://travis-ci.org/urbanetic/aurin-acs)
 [![Documentation Status](https://readthedocs.org/projects/aurin-acs/badge/?version=latest)](https://readthedocs.org/projects/aurin-acs/?badge=latest)
+[![Javadoc Status](https://img.shields.io/badge/Javadoc-latest-brightgreen.svg)](http://javadocs.acs.urbanetic.net/)
 
 The Asset Conversion Service (ACS) is a Web service for converting data in common geospatial formats
 -- both 2D and 3D -- into a format that is compatible with [Atlas-Cesium][atlascesium].
