@@ -11,13 +11,27 @@ For documentation of the source code, check out the [ACS Javadocs][javadocs].
 [**Docker**][docker] is a lightweight virtualisation platform for Linux that allows applications to
 be installed into an isolated environment with all of their dependencies. These "images" may be
 deployed (and should behave exactly the same) on any Linux machine with Docker installed. Docker
-makes administration a breeze: configure once, run anywhere.
+makes administration a breeze: configure once, run anywhere. Install it with
+`apt-get install docker.io`.
 
 The `Dockerfile` in the ACS repository contains the instructions to build the ACS Docker image. This
 is built automatically on [Dockerhub][dockerhub], but can also be [built manually][docker-build].
 
-To run the ACS as a server, simply execute
-`sudo docker run -d -p 80:80 urbanetic/aurin-acs -D FOREGROUND`.
+To run the ACS as a server, simply execute as root
+`docker run -d -p 80:80 urbanetic/aurin-acs -D FOREGROUND`.
+
+To instruct the server to run the ACS image every time it starts, run the following as root:
+
+`crontab -l | { cat; echo "@reboot docker run -d -p 80:80 urbanetic/aurin-acs -D FOREGROUND"; } | crontab -`
+
+To update a running instance of the ACS, run as root:
+
+`docker pull urbanetic/aurin-acs`
+
+This will download the most recently built Docker image, which Dockerhub will have automatically
+built from the latest commit. After that, simply `docker stop` any running ACS containers and use
+the same `docker run` command to start the newly-pulled version. Or if you're lazy, just reboot the
+server.
 
 
 ## Checkout
@@ -25,6 +39,8 @@ To run the ACS as a server, simply execute
 The source code for ACS is managed using Git on [GitHub][github]. You can check it out with:
 
     $ git clone https://github.com/urbanetic/aurin-acs.git
+
+If you don't want or need Git installed, you can download a ZIP from [GitHub][gitzip].
 
 
 ## Build
@@ -42,25 +58,27 @@ are the most useful:
 
 * A server with access to temporary file storage.
     * This guide assumes your server is running a recent version of Ubuntu.
-* Java 8 runtime environment (JRE8)
+* Java 7 runtime environment (JRE7) (JDK required to build from source)
 * An HTTP server application such as [Apache][apache].
 * [ogr2ogr][ogr] for converting common 2D data formats. A binary version of ogr2ogr is included in
 the open-source [FWTools][fwt] toolkit.
 
 ### Process
 
-1. [Download the JRE 8 from Oracle][jre8], accepting the license agreement, and [follow these instructions][jre8install] to install it.
+1. Install OpenJDK 7:
+
+    `sudo apt-get install openjdk-7-jdk`
 
 2. [Download FWTools for Linux][fwt] and [follow these instructions][fwtinstall] to install it.
 
-2. For integration tests using `ogr2ogr`, set the `GDAL_DATA` environment variable to the `/data`
+3. For integration tests using `ogr2ogr`, set the `GDAL_DATA` environment variable to the `/data`
    subdirectory in the FWTools directory.
 
-3. If building ACS from source, run `mvn package` to compile a [shaded JAR][shade].
+4. If building ACS from source, run `mvn package` to compile a [shaded JAR][shade].
 
-4. Install ACS by copying the shaded `aurin-acs.jar` to the server.
+5. Install ACS by copying the shaded `aurin-acs.jar` to the server.
 
-5. Start the ACS server by executing the command:
+6. Start the ACS server by executing the command:
 
     `java -jar aurin-acs.jar server configuration.yml`
 
@@ -68,39 +86,31 @@ The server is now running on port 8080 and ready to handle conversion requests.
 
 ### Mapping to port 80
 
-To serve requests on the standard HTTP port 80 instead, you can use Apache's reverse proxy. Setting this up requires a few simple steps.
+To serve requests on the standard HTTP port 80 instead, you can use Apache's reverse proxy. Setting
+this up requires a few simple steps. Of course, if you prefer, you can simply change the application
+server to serve on port 80 directly in `configuration.yml`.
 
-First, create a configuration file at `/etc/apache2/conf/acs-reverse-proxy.conf` containing:
+First, create a configuration file at `/etc/apache2/conf.d/acs-reverse-proxy.conf` containing:
 
 ```
 <IfModule mod_proxy_http.c>
    ProxyRequests Off
    ProxyPreserveHost On
 
-   ProxyPass /acs http://localhost:8080
-   ProxyPassReverse /acs http://localhost:8080
+   ProxyPass / http://localhost:8080/
+   ProxyPassReverse / http://localhost:8080/
 </IfModule>
 ```
 
-2. Open `/etc/apache2/conf/httpd.conf` for editing.
+2. Enable the necessary Apache proxy mods:
 
-3. Ensure the following lines are uncommented:
-
-    * `LoadModule deflate_module modules/mod_deflate.so`
-    * `LoadModule proxy_module modules/mod_proxy.so`
-    * `LoadModule proxy_html_module modules/mod_proxy_html.so`
-    * `LoadModule proxy_http_module modules/mod_proxy_http.so`
-    * `LoadModule xml2enc_module modules/mod_xml2enc.so`
-
-4. Insert the following line at the end of the file:
-
-    `Include conf/acs-reverse-proxy.conf`
+    `sudo a2enmod deflate proxy proxy_http`
     
-5. Restart the Apache server:
+3. Restart the Apache server:
 
     `sudo service apache2 restart`
 
-6. You can now access the ACS API at `http://<hostname>/acs`.
+4. You can now access the ACS API at `http://<hostname>/`.
 
 ## Testing
 
@@ -115,11 +125,10 @@ does not have a Web application GUI, it should display a message telling you tha
 [fwt]: http://fwtools.loskot.net/FWTools-linux-2.0.6.tar.gz
 [fwtinstall]: http://fwtools.maptools.org/linux-main.html
 [github]: https://github.com/urbanetic/aurin-acs
+[gitzip]: https://github.com/urbanetic/aurin-acs/archive/develop.zip
 [heroku]: https://heroku.com/
 [javadocs]: http://javadocs.acs.urbanetic.net
 [jetty]: http://eclipse.org/jetty/
-[jre8]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
-[jre8install]: http://docs.oracle.com/javase/8/docs/technotes/guides/install/linux_server_jre.html
 [maven]: https://maven.apache.org/
 [ogr]: http://www.gdal.org/ogr2ogr.html
 [procfile]: https://devcenter.heroku.com/articles/procfile
