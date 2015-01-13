@@ -22,8 +22,8 @@ public class C3mlEntity {
   private String id;
   private String name;
 
-  /** The name of the type of the entity. */
-  private C3mlEntityType type;
+  /** The name of the type of the entity, default to empty container without geometries. */
+  private C3mlEntityType type = C3mlEntityType.CONTAINER;
 
   /** The ID of this entity's parent entity. */
   private String parentId;
@@ -85,6 +85,9 @@ public class C3mlEntity {
   }
 
   public void addChild(C3mlEntity child) {
+    if (child == null) {
+      return;
+    }
     children.add(child);
     child.setParentId(getId());
   }

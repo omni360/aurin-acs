@@ -3,12 +3,15 @@ package au.com.mutopia.acs.conversion.impl;
 import au.com.mutopia.acs.conversion.Converter;
 import au.com.mutopia.acs.exceptions.ConversionException;
 import au.com.mutopia.acs.models.Asset;
+import au.com.mutopia.acs.models.Format;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
 import au.com.mutopia.acs.models.c3ml.Vertex3D;
+import au.com.mutopia.acs.util.ZipUtils;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.io.Files;
 import de.micromata.opengis.kml.v_2_2_0.Boundary;
 import de.micromata.opengis.kml.v_2_2_0.Coordinate;
 import de.micromata.opengis.kml.v_2_2_0.Document;
@@ -19,12 +22,15 @@ import de.micromata.opengis.kml.v_2_2_0.Geometry;
 import de.micromata.opengis.kml.v_2_2_0.Kml;
 import de.micromata.opengis.kml.v_2_2_0.LineString;
 import de.micromata.opengis.kml.v_2_2_0.LinearRing;
+import de.micromata.opengis.kml.v_2_2_0.Location;
 import de.micromata.opengis.kml.v_2_2_0.Model;
 import de.micromata.opengis.kml.v_2_2_0.MultiGeometry;
+import de.micromata.opengis.kml.v_2_2_0.Orientation;
 import de.micromata.opengis.kml.v_2_2_0.Pair;
 import de.micromata.opengis.kml.v_2_2_0.Placemark;
 import de.micromata.opengis.kml.v_2_2_0.Point;
 import de.micromata.opengis.kml.v_2_2_0.Polygon;
+import de.micromata.opengis.kml.v_2_2_0.Scale;
 import de.micromata.opengis.kml.v_2_2_0.SchemaData;
 import de.micromata.opengis.kml.v_2_2_0.SimpleData;
 import de.micromata.opengis.kml.v_2_2_0.Style;
@@ -58,9 +64,10 @@ import java.util.Map;
 @Log4j
 public class KmlConverter implements Converter {
   /**
-   * Default white color if material color is absent.
+   * Reference to the KML folder path, used to find the path to COLLADA (.dae) file and texture
+   * files.
    */
-  protected static final Color DEFAULT_COLOR = Color.WHITE;
+  private String kmlFolderPath;
 
   /** KML namespace supported by JAK. */
   public static final String KML_DEFAULT_NAMESPACE = "http://www.opengis.net/kml/2.2";
@@ -76,18 +83,60 @@ public class KmlConverter implements Converter {
   private Map<String, Map<StyleState, String>> mapForStyleMap = Maps.newHashMap();
 
   /**
-   * Converts the zipped Shapefile {@link Asset} into a {@link C3mlEntity}.
+   * Converts the KML {@link Asset} into a list of {@link C3mlEntity}s.
    *
-   * @param asset An {@link Asset} representing a zipped bundle of Shapefile files.
-   * @return A {@link C3mlEntity} containing the same information as the Shapefile.
+   * @param asset An {@link Asset} representing a KML file.
+   * @return A {@link C3mlEntity} containing the same information as the KML.
    */
   public List<C3mlEntity> convert(Asset asset) throws ConversionException {
     try {
       File kmlFile = asset.getTemporaryFile();
-      fixXmlSchema(kmlFile);
-      return getEntities(kmlFile);
+      return convert(kmlFile);
     } catch (IOException e) {
       throw new ConversionException("Error reading content from KML file.");
+    }
+  }
+
+  /**
+   * Converts the KML file into a list of {@link C3mlEntity}s.
+   *
+   * @param kmlFile The KML to be converted.
+   * @return A {@link C3mlEntity} containing the same information as the KML.
+   * @throws ConversionException
+   */
+  public List<C3mlEntity> convert(File kmlFile) throws ConversionException {
+    fixXmlSchema(kmlFile);
+    return getEntities(kmlFile);
+  }
+
+  /**
+   * Converts the KMZ file into a list of {@link C3mlEntity}s.
+   *
+   * @param asset An {@link Asset} representing a KMZ file.
+   * @return A {@link C3mlEntity} containing the same information as the KMZ file.
+   * @throws ConversionException
+   */
+  public List<C3mlEntity> convertKmz(Asset asset) throws ConversionException {
+    try {
+      // Extract all KML files to be converted. A KMZ file may have multiple KML.
+      List<File> kmlFiles = new ArrayList<>();
+      File assetTemporaryFile = asset.getTemporaryFile();
+      List<File> unzippedFiles = ZipUtils.unzipToTempDirectory(assetTemporaryFile);
+      for (File unzippedFile : unzippedFiles) {
+        if (Files.getFileExtension(unzippedFile.getName()).equals(Format.KML.toString())) {
+          kmlFiles.add(unzippedFile);
+        }
+      }
+      if (kmlFiles.isEmpty()) {
+        throw new ConversionException("Failed to find .kml file.");
+      }
+      List<C3mlEntity> c3mlEntities = new ArrayList<>();
+      for (File kml : kmlFiles) {
+        c3mlEntities.addAll(convert(kml));
+      }
+      return c3mlEntities;
+    } catch (IOException e) {
+      throw new ConversionException("Failed to read converted KMZ file", e);
     }
   }
 
@@ -99,7 +148,8 @@ public class KmlConverter implements Converter {
    * @param kmlFile The KML to extract from.
    * @return A list of the extracted {@link C3mlEntity} objects.
    */
-  private List<C3mlEntity> getEntities(File kmlFile) {
+  private List<C3mlEntity> getEntities(File kmlFile) throws ConversionException {
+    kmlFolderPath = kmlFile.getParentFile().getPath();
     Kml kml = Kml.unmarshal(kmlFile);
     generateStyleMaps(kml);
     List<C3mlEntity> c3mlEntities = new ArrayList<>();
@@ -141,7 +191,7 @@ public class KmlConverter implements Converter {
    * @param feature The KML feature element.
    * @return The constructed {@link C3mlEntity}.
    */
-  private C3mlEntity buildEntity(Feature feature) {
+  private C3mlEntity buildEntity(Feature feature) throws ConversionException {
     if (feature instanceof Folder) {
       return buildEntity((Folder) feature);
     } else if (feature instanceof Document) {
@@ -158,7 +208,7 @@ public class KmlConverter implements Converter {
    * @param document The KML document element.
    * @return The constructed {@link C3mlEntity}.
    */
-  private C3mlEntity buildEntity(Document document) {
+  private C3mlEntity buildEntity(Document document) throws ConversionException {
     C3mlEntity entity = createEntity(document);
     List<Feature> features = document.getFeature();
     for (Feature feature : features) {
@@ -176,7 +226,7 @@ public class KmlConverter implements Converter {
    * @param folder The KML folder element.
    * @return The constructed {@link C3mlEntity}.
    */
-  private C3mlEntity buildEntity(Folder folder) {
+  private C3mlEntity buildEntity(Folder folder) throws ConversionException {
     C3mlEntity entity = createEntity(folder);
     List<Feature> features = folder.getFeature();
     for (Feature feature : features) {
@@ -194,7 +244,7 @@ public class KmlConverter implements Converter {
    * @param placemark The KML placemark element.
    * @return The constructed {@link C3mlEntity}.
    */
-  private C3mlEntity buildEntity(Placemark placemark) {
+  private C3mlEntity buildEntity(Placemark placemark) throws ConversionException {
     C3mlEntity entity = createEntity(placemark);
     Color color = getColor(placemark);
     entity.setColorData(color);
@@ -208,7 +258,7 @@ public class KmlConverter implements Converter {
    * @param entity The {@link C3mlEntity} object.
    * @param geometry The geometry embedded in the KML element.
    */
-  private void writeGeometry(C3mlEntity entity, Geometry geometry) {
+  private void writeGeometry(C3mlEntity entity, Geometry geometry) throws ConversionException {
     if (!isMultiGeometryOrModel(geometry)) {
       writeSimpleGeometry(entity, geometry);
     }
@@ -217,7 +267,7 @@ public class KmlConverter implements Converter {
     if (geometry instanceof MultiGeometry) {
       writeMultiGeometry(entity, (MultiGeometry) geometry);
     } else if (geometry instanceof Model) {
-      // return getEntityFromModel((Model) geometry, placemark);
+      writeModel(entity, (Model) geometry);
     }
   }
 
@@ -265,16 +315,49 @@ public class KmlConverter implements Converter {
    *
    * @param entity The {@link C3mlEntity} object.
    * @param multiGeometry The multi geometry containing hierarchy of geometries.
-   * @return The constructed {@link C3mlEntity} representing the top level geometry in the hierarchy
-   *         extracted from a multi geometry.
    */
-  private void writeMultiGeometry(C3mlEntity entity, MultiGeometry multiGeometry) {
+  private void writeMultiGeometry(C3mlEntity entity, MultiGeometry multiGeometry)
+      throws ConversionException {
     for (int j = 0; j < multiGeometry.getGeometry().size(); j++) {
       C3mlEntity child = new C3mlEntity();
       child.setName(entity.getName() + "_child_" + j);
       child.setColor(entity.getColor());
       Geometry geometryFromMulti = multiGeometry.getGeometry().get(j);
       writeGeometry(entity, geometryFromMulti);
+    }
+  }
+
+  /**
+   * Writes the model for the {@link C3mlEntity} object. Objects containing the geometry of the
+   * model are added to the {@link C3mlEntity} as children.
+   *
+   * @param entity The {@link C3mlEntity} object.
+   * @param model The model containing complex geometry shapes.
+   * @throws ConversionException
+   */
+  private void writeModel(C3mlEntity entity, Model model) throws ConversionException {
+    try {
+      String daeFilePath =
+          kmlFolderPath + File.separator + model.getLink().getHref();
+
+      File daeFile = new File(daeFilePath);
+      ColladaConverter colladaConverter = new ColladaConverter();
+      Location modelOrigin = model.getLocation();
+      Scale modelScale = model.getScale();
+      // KML's positive rotation is in the clockwise direction.
+      Orientation modelOrientation = model.getOrientation();
+
+      List<Double> rotation = Lists.newArrayList(-1 * modelOrientation.getTilt(),
+          -1 * modelOrientation.getRoll(), -1 * modelOrientation.getHeading());
+      List<Double> scale = Lists.newArrayList(modelScale.getX(), modelScale.getY(), modelScale.getZ());
+      List<Double> geoLocation = Lists.newArrayList(modelOrigin.getLongitude(),
+          modelOrigin.getLatitude(), modelOrigin.getAltitude());
+      List<C3mlEntity> modelEntities = colladaConverter.convert(daeFile, rotation, scale, geoLocation);
+      for (C3mlEntity modelEntity : modelEntities) {
+        entity.addChild(modelEntity);
+      }
+    } catch (ConversionException e) {
+      throw new ConversionException("Error reading model from Collada file.", e);
     }
   }
 

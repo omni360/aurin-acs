@@ -56,7 +56,7 @@ public class ShapefileConverter implements Converter {
       });
       return c3mlEntities;
     } catch (IOException e) {
-      throw new ConversionException("Failed to read converted KML file", e);
+      throw new ConversionException("Failed to read converted SHP file", e);
     }
   }
 

@@ -12,7 +12,8 @@ public class KmzConverterTest extends ConverterTest {
 
   @Before
   public void setUp() {
-    converter = new KmlConverter();
+    KmlConverter kmlConverter = new KmlConverter();
+    converter = new KmzConverter(kmlConverter);
   }
 
   @Override

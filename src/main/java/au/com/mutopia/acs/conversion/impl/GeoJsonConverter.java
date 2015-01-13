@@ -33,7 +33,7 @@ public class GeoJsonConverter implements Converter {
         });
       return c3mlEntities;
     } catch (IOException e) {
-      throw new ConversionException("Failed to read converted KML file", e);
+      throw new ConversionException("Failed to read converted GeoJson file", e);
     }
   }
 

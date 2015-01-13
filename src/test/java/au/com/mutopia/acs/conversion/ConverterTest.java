@@ -111,6 +111,20 @@ public abstract class ConverterTest {
   }
 
   /**
+   * Returns a copy of the given {@link C3mlData} object containing only the selected types.
+   *
+   * @param data The data to filter.
+   * @param includedTypes The {@link C3mlEntityType} to be included in the data.
+   * @return A copy of the input data containing only entities with the filtered types.
+   */
+  protected C3mlData filter(C3mlData data, List<C3mlEntityType> includedTypes) {
+    List<C3mlEntity> filteredEntities =
+        data.getC3mls().stream().filter(e -> includedTypes.contains(e.getType()))
+            .collect(Collectors.toList());
+    return new C3mlData(filteredEntities);
+  }
+
+  /**
    * Assert that {@link C3mlData} converted from {@link SimpleC3mlFixture} is the same as the
    * fixture with the exception of {@link C3mlEntity} IDs.
    *
@@ -142,7 +156,8 @@ public abstract class ConverterTest {
   public void assertThatC3mlBroadDataIsEqual(C3mlData actual, C3mlData expected) {
     assertThatC3mlBroadDataIsEqualByComparingTypes(actual, expected,
         ImmutableList.of(C3mlEntityType.POINT, C3mlEntityType.LINE, C3mlEntityType.POLYGON,
-            C3mlEntityType.MESH));
+            C3mlEntityType.CONTAINER)
+    );
   }
 
   /**
@@ -164,9 +179,37 @@ public abstract class ConverterTest {
           actualC3mls.stream().filter(e -> e.getType().equals(type)).findFirst().get();
       C3mlEntity expectedEntity =
           expectedC3mls.stream().filter(e -> e.getType().equals(type)).findFirst().get();
+      if (type.equals(C3mlEntityType.CONTAINER)) {
+        // Check that the mesh container entity is equal to expected.
+        assertThatBroadDataContainerMeshAreEqual(actualEntity, expectedEntity);
+        continue;
+      }
       assertThatC3mlEntityIsLenientlyEqual(actualEntity, expectedEntity);
     }
     assertThatParametersAreEqual(actual.getParams(), expected.getParams());
+  }
+
+  /**
+   * Asserts that the converted Broad Data mesh is leniently equals to the expected data.
+   *
+   * @param actual The converted {@link C3mlEntity} containing mesh.
+   * @param expected The expected {@link C3mlEntity}.
+   */
+  public void assertThatBroadDataContainerMeshAreEqual(C3mlEntity actual, C3mlEntity expected) {
+    assertThat(actual).isLenientEqualsToByAcceptingFields(expected, "name", "parameters");
+    assertThat(actual.getChildren().size()).isEqualTo(expected.getChildren().size());
+    C3mlEntity actualChildEntity = actual.getChildren().get(0);
+    C3mlEntity expectedChildEntity = expected.getChildren().get(0);
+    assertThat(actualChildEntity).
+        isLenientEqualsToByAcceptingFields(expectedChildEntity, "name", "parameters");
+    assertThat(actualChildEntity.getChildren().size())
+        .isEqualTo(expectedChildEntity.getChildren().size());
+    C3mlEntity actualMeshEntity = actualChildEntity.getChildren().get(0);
+    C3mlEntity expectedMeshEntity = expectedChildEntity.getChildren().get(0);
+    assertThat(actualMeshEntity.getType()).isEqualTo(C3mlEntityType.MESH);
+    assertThat(actualMeshEntity).
+        isLenientEqualsToByAcceptingFields(expectedMeshEntity, "name", "parameters", "color",
+            "positions", "triangles", "geoLocation");
   }
 
   /**

@@ -5,6 +5,8 @@ import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
 import au.com.mutopia.acs.models.c3ml.Vertex3D;
 import com.google.common.collect.ImmutableList;
+import com.google.common.primitives.Doubles;
+import com.google.common.primitives.Ints;
 
 import java.util.UUID;
 
@@ -59,10 +61,34 @@ public class BroadC3mlFixture extends C3mlData {
   }
 
   private C3mlEntity buildMesh() {
+    // Most mesh are constructed from a collection of 'children' entities, with each representing
+    // a part of the mesh.
     C3mlEntity entity = new C3mlEntity(UUID.randomUUID().toString());
-    entity.setName("St Patrick's Cathedral");
-    entity.addParameter("description", "St Patrick's Cathedral in Melbourne.");
-    entity.setType(C3mlEntityType.MESH);
+    entity.setName("Federation Square");
+    entity.addParameter("description", "Federation Square in Melbourne.");
+    entity.setType(C3mlEntityType.CONTAINER);
+
+    C3mlEntity childEntity = new C3mlEntity(UUID.randomUUID().toString());
+    childEntity.setName("Cube");
+    childEntity.setType(C3mlEntityType.CONTAINER);
+    entity.addChild(childEntity);
+
+    C3mlEntity childMeshEntity = new C3mlEntity(UUID.randomUUID().toString());
+    childMeshEntity.setName("Cube");
+    childMeshEntity.setColor(ImmutableList.of(163, 163, 163, 255));
+    childMeshEntity.setType(C3mlEntityType.MESH);
+    double[] positions = new double[]
+        {10.0, 10.0, -10.0, 10.0, -10.0, -10.0, -10.0, -10.0, -10.0, -10.0, 10.0, -10.0, 10.0, 10.0,
+            10.0, 10.0, -10.0, 10.0, -10.0, -10.0, 10.0, -10.0, 10.0, 10.0};
+    childMeshEntity.setPositions(Doubles.asList(positions));
+    int[] triangles = new int[]
+        {0, 1, 2, 7, 6, 5, 4, 5, 1, 5, 6, 2, 2, 6, 7, 4, 0, 3, 3, 0, 2, 4, 7, 5, 0, 4, 1, 1, 5,
+            2, 3, 2, 7, 7, 4, 3};
+    childMeshEntity.setTriangles(Ints.asList(triangles));
+    double[] geoLocation = new double[] {144.9679449048048, -37.81765634739649, 0.0};
+    childMeshEntity.setGeoLocation(Doubles.asList(geoLocation));
+    childEntity.addChild(childMeshEntity);
+
     return entity;
   }
 

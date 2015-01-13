@@ -6,6 +6,7 @@ import au.com.mutopia.acs.models.Format;
 import au.com.mutopia.acs.models.c3ml.C3mlData;
 import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import org.junit.Before;
 
 /**
@@ -15,7 +16,8 @@ public class KmlConverterTest extends ConverterTest {
 
   public KmlConverterTest() {
     // Remove meshes from the expected output fixtures, since the KML inputs won't have them.
-    BROAD_DATA = withoutMeshes(BROAD_DATA);
+    BROAD_DATA = filter(BROAD_DATA,
+        Lists.newArrayList(C3mlEntityType.POINT, C3mlEntityType.LINE, C3mlEntityType.POLYGON));
   }
 
   @Before
