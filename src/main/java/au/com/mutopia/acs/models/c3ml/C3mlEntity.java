@@ -1,14 +1,14 @@
 package au.com.mutopia.acs.models.c3ml;
 
-import lombok.Getter;
-import lombok.Setter;
-
-import java.awt.*;
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * An object representing the contents of a C3ML document.

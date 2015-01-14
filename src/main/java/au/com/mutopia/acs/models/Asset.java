@@ -1,16 +1,18 @@
 package au.com.mutopia.acs.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Strings;
-import com.sun.jersey.core.header.FormDataContentDisposition;
+import java.io.File;
+import java.io.IOException;
+
 import lombok.Getter;
 import lombok.Setter;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.io.File;
-import java.io.IOException;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.base.Strings;
+import com.sun.jersey.core.header.FormDataContentDisposition;
 
 /**
  * A file that has been uploaded or converted from another file.

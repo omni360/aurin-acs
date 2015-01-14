@@ -3,7 +3,6 @@ package au.com.mutopia.acs.resources;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.Timer;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -25,7 +24,6 @@ import au.com.mutopia.acs.models.Asset;
 import au.com.mutopia.acs.models.c3ml.C3mlData;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 
-import com.dddviewr.collada.states.newparam;
 import com.google.inject.Inject;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;

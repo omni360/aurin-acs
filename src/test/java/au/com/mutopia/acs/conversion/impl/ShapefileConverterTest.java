@@ -1,6 +1,11 @@
 package au.com.mutopia.acs.conversion.impl;
 
 import au.com.mutopia.acs.conversion.BroadC3mlFixture;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.experimental.categories.Category;
+
+import au.com.mutopia.acs.annotation.IntegrationTest;
 import au.com.mutopia.acs.conversion.ConverterTest;
 import au.com.mutopia.acs.models.Format;
 import au.com.mutopia.acs.models.c3ml.C3mlData;
@@ -16,7 +21,11 @@ import static org.fest.assertions.api.Assertions.assertThat;
 
 /**
  * Tests conversion logic for Shapefiles.
+ * 
+ * Note: This is an integration test because it depends on <code>ogr2ogr</code>.
  */
+@Ignore
+@Category(IntegrationTest.class)
 public class ShapefileConverterTest extends ConverterTest {
 
   public ShapefileConverterTest() {
