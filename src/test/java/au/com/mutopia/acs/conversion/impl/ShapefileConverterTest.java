@@ -1,11 +1,7 @@
 package au.com.mutopia.acs.conversion.impl;
 
-import au.com.mutopia.acs.conversion.BroadC3mlFixture;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.experimental.categories.Category;
-
 import au.com.mutopia.acs.annotation.IntegrationTest;
+import au.com.mutopia.acs.conversion.BroadC3mlFixture;
 import au.com.mutopia.acs.conversion.ConverterTest;
 import au.com.mutopia.acs.models.Format;
 import au.com.mutopia.acs.models.c3ml.C3mlData;
@@ -14,6 +10,7 @@ import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.junit.Before;
+import org.junit.experimental.categories.Category;
 
 import java.util.Map;
 
@@ -24,18 +21,17 @@ import static org.fest.assertions.api.Assertions.assertThat;
  * 
  * Note: This is an integration test because it depends on <code>ogr2ogr</code>.
  */
-@Ignore
 @Category(IntegrationTest.class)
 public class ShapefileConverterTest extends ConverterTest {
 
   public ShapefileConverterTest() {
     // Rename 'description' parameter for Shapefile expected fixtures, since Shapefile header has
     // a limit of 10 characters.
-    BROAD_DATA.getC3mls().forEach(e -> {
-      Map<String, String> newParameters = e.getParameters();
+    for (C3mlEntity c3mlEntity : BROAD_DATA.getC3mls()) {
+      Map<String, String> newParameters = c3mlEntity.getParameters();
       newParameters.put("Descriptio", newParameters.get("description"));
       newParameters.remove("description");
-      });
+    }
     // Remove meshes from the expected output fixtures, since the Shapefile inputs won't have them.
     BROAD_DATA = filter(BROAD_DATA,
         Lists.newArrayList(C3mlEntityType.POINT, C3mlEntityType.LINE, C3mlEntityType.POLYGON));

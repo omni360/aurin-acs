@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 
@@ -121,9 +120,12 @@ public abstract class ConverterTest {
    * @return A copy of the input data containing only entities with the filtered types.
    */
   protected C3mlData filter(C3mlData data, List<C3mlEntityType> includedTypes) {
-    List<C3mlEntity> filteredEntities =
-        data.getC3mls().stream().filter(e -> includedTypes.contains(e.getType()))
-            .collect(Collectors.toList());
+    List<C3mlEntity> filteredEntities = new ArrayList<>();
+    for (C3mlEntity entity : data.getC3mls()) {
+      if (includedTypes.contains(entity.getType())) {
+        filteredEntities.add(entity);
+      }
+    }
     return new C3mlData(filteredEntities);
   }
 
