@@ -16,6 +16,7 @@ import au.com.mutopia.acs.exceptions.InvalidColladaException;
 import au.com.mutopia.acs.models.Asset;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
+import au.com.mutopia.acs.util.ColladaExtraElement;
 import au.com.mutopia.acs.util.CollectionUtils;
 import au.com.mutopia.acs.util.mesh.VecMathUtil;
 
@@ -210,6 +211,20 @@ public class ColladaConverter implements Converter {
   }
 
   /**
+   * Populates entity with parameters from COLLADA's <code>&lt;extra&gt;</code> tag.
+   *
+   * @param entity The {@link C3mlEntity} object.
+   * @param extra The COLLADA's <code>&lt;extra&gt;</code> element, mapping parameter names and
+   *        values.
+   * 
+   * @see <a href="https://collada.org/mediawiki/index.php/Extension#Extension_by_addition">COLLADA
+   *      docs for the &lt;extra&gt; tag</a>
+   */
+  private void populateParameters(C3mlEntity entity, ColladaExtraElement extra) {
+    // TODO(orlade): Implement extra parsing.
+  }
+
+  /**
    * Gets the node from the LibraryNodes that matches given node reference ID.
    *
    * @param id The node reference ID.
@@ -336,6 +351,9 @@ public class ColladaConverter implements Converter {
       Node childNode = getNodeFromLibraryNodes(instanceNode.getUrl());
       c3mlEntity.addChild(buildEntityFromNode(childNode, currentMatrix));
     }
+
+    // TODO(orlade): Parse custom parameters from any <extra> nodes with #populateParameters.
+
     // Propagate to children nodes.
     List<Node> childNodes = node.getChildNodes();
     for (Node childNode : childNodes) {

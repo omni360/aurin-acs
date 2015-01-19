@@ -557,10 +557,13 @@ public class KmlConverter implements Converter {
   }
 
   /**
-   * Populates entity with parameters from KML extended data element.
+   * Populates entity with parameters from KML's <code>&lt;ExtendedData&gt;</code> tag.
    *
    * @param entity The {@link C3mlEntity} object.
    * @param extendedData The KML extended data element, mapping parameter names and values.
+   * 
+   * @see <a href="https://developers.google.com/kml/documentation/extendeddata">KML docs for
+   *      &lt;ExtendedData&gt;</a>
    */
   private void populateParameters(C3mlEntity entity, ExtendedData extendedData) {
     if (extendedData == null) return;
