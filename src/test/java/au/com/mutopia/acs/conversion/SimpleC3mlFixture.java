@@ -1,12 +1,13 @@
 package au.com.mutopia.acs.conversion;
 
+import java.util.UUID;
+
 import au.com.mutopia.acs.models.c3ml.C3mlData;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
 import au.com.mutopia.acs.models.c3ml.Vertex3D;
-import com.google.common.collect.ImmutableList;
 
-import java.util.UUID;
+import com.google.common.collect.ImmutableList;
 
 /**
  * A simple {@link C3mlEntity} fixture for testing. Contains a single entity with no style

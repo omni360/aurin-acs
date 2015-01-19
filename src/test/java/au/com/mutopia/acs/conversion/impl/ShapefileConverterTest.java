@@ -1,5 +1,12 @@
 package au.com.mutopia.acs.conversion.impl;
 
+import static org.fest.assertions.api.Assertions.assertThat;
+
+import java.util.Map;
+
+import org.junit.Before;
+import org.junit.experimental.categories.Category;
+
 import au.com.mutopia.acs.annotation.IntegrationTest;
 import au.com.mutopia.acs.conversion.BroadC3mlFixture;
 import au.com.mutopia.acs.conversion.ConverterTest;
@@ -7,14 +14,9 @@ import au.com.mutopia.acs.models.Format;
 import au.com.mutopia.acs.models.c3ml.C3mlData;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import org.junit.Before;
-import org.junit.experimental.categories.Category;
-
-import java.util.Map;
-
-import static org.fest.assertions.api.Assertions.assertThat;
 
 /**
  * Tests conversion logic for Shapefiles.

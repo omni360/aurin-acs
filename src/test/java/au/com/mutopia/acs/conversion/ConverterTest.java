@@ -1,12 +1,6 @@
 package au.com.mutopia.acs.conversion;
 
-import au.com.mutopia.acs.models.Asset;
-import au.com.mutopia.acs.models.c3ml.C3mlData;
-import au.com.mutopia.acs.models.c3ml.C3mlEntity;
-import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
-import au.com.mutopia.acs.models.c3ml.Vertex3D;
-import com.google.common.collect.ImmutableList;
-import org.junit.Test;
+import static org.fest.assertions.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +10,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.fest.assertions.api.Assertions.assertThat;
+import org.junit.Test;
+
+import au.com.mutopia.acs.models.Asset;
+import au.com.mutopia.acs.models.c3ml.C3mlData;
+import au.com.mutopia.acs.models.c3ml.C3mlEntity;
+import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
+import au.com.mutopia.acs.models.c3ml.Vertex3D;
+
+import com.google.common.collect.ImmutableList;
 
 
 /**

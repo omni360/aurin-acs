@@ -1,11 +1,11 @@
 package au.com.mutopia.acs.conversion;
 
+import java.awt.Color;
+import java.util.List;
+
 import au.com.mutopia.acs.exceptions.ConversionException;
 import au.com.mutopia.acs.models.Asset;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
-
-import java.awt.*;
-import java.util.List;
 
 /**
  * Converts an {@link Asset} into a {@link C3mlEntity}.

@@ -1,14 +1,15 @@
 package au.com.mutopia.acs.conversion;
 
+import java.util.UUID;
+
 import au.com.mutopia.acs.models.c3ml.C3mlData;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
 import au.com.mutopia.acs.models.c3ml.Vertex3D;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Ints;
-
-import java.util.UUID;
 
 /**
  * A {@link C3mlEntity} fixture with a broad range of features for testing. Contains one of each

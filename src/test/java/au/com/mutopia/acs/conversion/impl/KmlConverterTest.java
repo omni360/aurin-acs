@@ -1,13 +1,15 @@
 package au.com.mutopia.acs.conversion.impl;
 
+import org.junit.Before;
+
 import au.com.mutopia.acs.conversion.BroadC3mlFixture;
 import au.com.mutopia.acs.conversion.ConverterTest;
 import au.com.mutopia.acs.models.Format;
 import au.com.mutopia.acs.models.c3ml.C3mlData;
 import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import org.junit.Before;
 
 /**
  * Tests conversion logic for KML files.
