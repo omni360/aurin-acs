@@ -110,7 +110,7 @@ public class KmlConverter implements Converter {
    *
    * @param kmlFile The KML to be converted.
    * @return A {@link C3mlEntity} containing the same information as the KML.
-   * @throws ConversionException
+   * @throws ConversionException if the conversion failed.
    */
   public List<C3mlEntity> convert(File kmlFile) throws ConversionException {
     fixXmlSchema(kmlFile);
@@ -122,7 +122,7 @@ public class KmlConverter implements Converter {
    *
    * @param asset An {@link Asset} representing a KMZ file.
    * @return A {@link C3mlEntity} containing the same information as the KMZ file.
-   * @throws ConversionException
+   * @throws ConversionException if the conversion failed.
    */
   public List<C3mlEntity> convertKmz(Asset asset) throws ConversionException {
     try {
@@ -341,7 +341,7 @@ public class KmlConverter implements Converter {
    *
    * @param entity The {@link C3mlEntity} object.
    * @param model The model containing complex geometry shapes.
-   * @throws ConversionException
+   * @throws ConversionException if the conversion failed.
    */
   private void writeModel(C3mlEntity entity, Model model) throws ConversionException {
     try {

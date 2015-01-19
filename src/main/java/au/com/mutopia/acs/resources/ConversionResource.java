@@ -53,9 +53,8 @@ public class ConversionResource {
    * 
    * @param inputStream A stream of the uploaded file data.
    * @param fileDetail Metadata about the uploaded file.
-   * @param targetFormat The format to convert the uploaded file to.
    * @return The generated C3ML document.
-   * @throws ConversionException
+   * @throws ConversionException if the conversion failed.
    */
   @POST
   @Consumes(MediaType.MULTIPART_FORM_DATA)

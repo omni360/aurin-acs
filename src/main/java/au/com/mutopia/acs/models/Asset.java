@@ -118,7 +118,7 @@ public class Asset {
 
   /**
    * @return A temporary file with the asset's filename and content.
-   * @throws IOException
+   * @throws IOException if the file cannot be created.
    */
   public File getTemporaryFile() throws IOException {
     return au.com.mutopia.acs.util.FileUtils.createTemporaryFileWithContent(fileName, data);

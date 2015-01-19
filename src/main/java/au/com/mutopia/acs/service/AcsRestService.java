@@ -37,8 +37,8 @@ public class AcsRestService extends AutoConfigService<Configuration> {
   }
 
   /**
-   * Creates the Guice dependency injector for the service using the {@link CatalystCoreModule}
-   * configuration modules.
+   * Creates the Guice dependency injector for the service using the {@link AcsModule} configuration
+   * module.
    *
    * @param configuration The service configuration information read out of the Dropwizard YAML
    *        file.
@@ -57,7 +57,8 @@ public class AcsRestService extends AutoConfigService<Configuration> {
   /**
    * Runs the service using Guice to create the context.
    *
-   * @see #run(AcsConfig, Environment)
+   * @throws Exception if anything goes wrong.
+   * @see #run(Configuration, Environment)
    */
   @Override
   protected void runWithInjector(Configuration configuration, Environment environment,
@@ -81,4 +82,5 @@ public class AcsRestService extends AutoConfigService<Configuration> {
     bootstrap.setName("Asset Conversion Service");
     log.info("Core service initialized.");
   }
+
 }

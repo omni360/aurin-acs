@@ -26,7 +26,7 @@ public class FileUtils {
    * @param fileName The name of the file to be created.
    * @param contents The contents of the file.
    * @return The temporary file created.
-   * @throws IOException
+   * @throws IOException If the file cannot be created or written to.
    */
   public static File createTemporaryFileWithContent(String fileName, byte[] contents)
       throws IOException {
@@ -78,11 +78,11 @@ public class FileUtils {
   }
 
   /**
-   * Retrieves the contents from File as byte array.
+   * Retrieves the contents from the given file as byte array.
    *
-   * @param file The file.
-   * @return The byte array of the File contents.
-   * @throws IOException
+   * @param file The file to read.
+   * @return The byte array of the file contents.
+   * @throws IOException If the file cannot be read.
    */
   public static byte[] bytesFromFile(File file) throws IOException {
     return IOUtils.toByteArray(new FileInputStream(file));
