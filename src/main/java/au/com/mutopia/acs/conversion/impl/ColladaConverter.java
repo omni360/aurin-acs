@@ -1,12 +1,24 @@
 package au.com.mutopia.acs.conversion.impl;
 
+import java.awt.Color;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import javax.vecmath.Matrix4d;
+
+import org.xml.sax.SAXException;
+
 import au.com.mutopia.acs.conversion.Converter;
 import au.com.mutopia.acs.exceptions.ConversionException;
+import au.com.mutopia.acs.exceptions.InvalidColladaException;
 import au.com.mutopia.acs.models.Asset;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
 import au.com.mutopia.acs.util.CollectionUtils;
 import au.com.mutopia.acs.util.mesh.VecMathUtil;
+
 import com.dddviewr.collada.Collada;
 import com.dddviewr.collada.Input;
 import com.dddviewr.collada.effects.Effect;
@@ -31,55 +43,32 @@ import com.dddviewr.collada.visualscene.VisualScene;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.primitives.Floats;
-import org.xml.sax.SAXException;
 
-import javax.vecmath.Matrix4d;
-import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
+/**
+ * Converts COLLADA files into collections of {@link C3mlEntity} objects.
+ */
 public class ColladaConverter implements Converter {
-  private static final CollectionUtils collectionUtils = new CollectionUtils();
 
-  /**
-   * Default Geographic location for COLLADA model.
-   */
+  /** Default Geographic location for COLLADA model. */
   private static final List<Double> defaultGeolocation = Lists.newArrayList(0.0, 0.0, 0.0);
 
-  /**
-   * Float array of identity matrix used by COLLADA.
-   */
-  private static final float[] IDENTITY = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-      0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+  /** Float array of identity matrix used by COLLADA. */
+  private static final float[] IDENTITY = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+      0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 
-  /**
-   * String identifier for vertex inputs.
-   */
+  /** String identifier for vertex inputs. */
   private static final String VERTEX_STRING = "VERTEX";
 
-  /**
-   * Constants for COLLADA up_Axis field.
-   */
-  private static final String X_UP = "X_UP";
-  private static final String Y_UP = "Y_UP";
-  private static final String Z_UP = "Z_UP";
+  /** Constants for COLLADA up-axis field. */
+  private static final String X_UP = "X_UP", Y_UP = "Y_UP", Z_UP = "Z_UP";
 
-  /**
-   * String label specifying the axis of upward direction of COLLADA model.
-   */
+  /** String label specifying the axis of upward direction of COLLADA model. */
   private String upAxis;
 
-  /**
-   * The unit of meter measurement to be applied to the COLLADA model.
-   */
+  /** The unit of meter measurement to be applied to the COLLADA model. */
   private double unitMeter = 1.0;
 
-  /**
-   * The top level hierarchy visual scene of the COLLADA model, contains hierarchy of nodes.
-   */
+  /** The top level hierarchy visual scene of the COLLADA model, contains hierarchy of nodes. */
   private VisualScene visualScene;
 
   /**
@@ -175,17 +164,17 @@ public class ColladaConverter implements Converter {
    * @throws IOException
    * @throws SAXException
    */
-  private void populateLibraryMaps(String filePath)
-      throws IOException, SAXException {
+  private void populateLibraryMaps(String filePath) throws IOException, SAXException {
     Collada collada = Collada.readFile(filePath);
-    visualScene = collada.getLibraryVisualScenes().getScene(
-        collada.getScene().getInstanceVisualScene().getUrl());
+    visualScene =
+        collada.getLibraryVisualScenes().getScene(
+            collada.getScene().getInstanceVisualScene().getUrl());
     unitMeter = collada.getUnit().getMeter();
     upAxis = collada.getUpAxis();
     LibraryEffects libraryEffects = collada.getLibraryEffects();
     if (libraryEffects != null) {
       List<Effect> effects = libraryEffects.getEffects();
-      if (!collectionUtils.isNullOrEmpty(effects)) {
+      if (!CollectionUtils.isNullOrEmpty(effects)) {
         for (Effect effect : effects) {
           effectMap.put(effect.getId(), effect);
         }
@@ -194,7 +183,7 @@ public class ColladaConverter implements Converter {
     LibraryGeometries libraryGeometries = collada.getLibraryGeometries();
     if (libraryGeometries != null) {
       List<Geometry> geometries = libraryGeometries.getGeometries();
-      if (!collectionUtils.isNullOrEmpty(geometries)) {
+      if (!CollectionUtils.isNullOrEmpty(geometries)) {
         for (Geometry geometry : geometries) {
           geometryMap.put(geometry.getId(), geometry);
         }
@@ -203,7 +192,7 @@ public class ColladaConverter implements Converter {
     LibraryMaterials libraryMaterials = collada.getLibraryMaterials();
     if (libraryMaterials != null) {
       List<Material> materials = libraryMaterials.getMaterials();
-      if (!collectionUtils.isNullOrEmpty(materials)) {
+      if (!CollectionUtils.isNullOrEmpty(materials)) {
         for (Material material : materials) {
           materialMap.put(material.getId(), material);
         }
@@ -212,7 +201,7 @@ public class ColladaConverter implements Converter {
     LibraryNodes libraryNodes = collada.getLibraryNodes();
     if (libraryNodes != null) {
       List<Node> nodes = libraryNodes.getNodes();
-      if (!collectionUtils.isNullOrEmpty(nodes)) {
+      if (!CollectionUtils.isNullOrEmpty(nodes)) {
         for (Node node : nodes) {
           nodeMap.put(node.getId(), node);
         }
@@ -335,7 +324,7 @@ public class ColladaConverter implements Converter {
       Geometry geom = getGeomFromLibraryGeometries(instanceGeom.getUrl());
       List<InstanceMaterial> instanceMaterials = instanceGeom.getInstanceMaterials();
       Color colorData;
-      if (collectionUtils.isNullOrEmpty(instanceMaterials)) {
+      if (CollectionUtils.isNullOrEmpty(instanceMaterials)) {
         colorData = DEFAULT_COLOR;
       } else {
         colorData = getColorFromLibraryMaterials(instanceMaterials.get(0).getTarget());
@@ -367,7 +356,7 @@ public class ColladaConverter implements Converter {
     List<Primitives> primitives = geom.getMesh().getPrimitives();
     float[] positions = null;
     float[] normals = null;
-    //input indices used by COLLADA.
+    // input indices used by COLLADA.
     List<Integer> inputIndices = Lists.newArrayList();
     C3mlEntityType type = null;
     if (primitives.size() < 1) {
@@ -407,8 +396,8 @@ public class ColladaConverter implements Converter {
    */
   private void buildEntityFromMesh(C3mlEntity entity, float[] positions, float[] normals,
       List<Integer> inputIndices, Matrix matrix) {
-    List<Double> positionsAsDoubles = collectionUtils.doublesFromFloats(Floats.asList(positions));
-    List<Double> normalAsDoubles = collectionUtils.doublesFromFloats(Floats.asList(normals));
+    List<Double> positionsAsDoubles = CollectionUtils.doublesFromFloats(Floats.asList(positions));
+    List<Double> normalAsDoubles = CollectionUtils.doublesFromFloats(Floats.asList(normals));
 
     Matrix4d matrix4d = VecMathUtil.matrix4dFromFloats(matrix.getData());
     List<Double> transformedPositions =
@@ -423,8 +412,7 @@ public class ColladaConverter implements Converter {
     List<Double> upAxisNormals = VecMathUtil.transformMeshNormals(transformedNormal, upAxisMatrix);
 
     Matrix4d scaleMatrix = VecMathUtil.createScaleMatrix(unitMeter);
-    List<Double> scaledPositions =
-        VecMathUtil.transformMeshPositions(upAxisPositions, scaleMatrix);
+    List<Double> scaledPositions = VecMathUtil.transformMeshPositions(upAxisPositions, scaleMatrix);
     List<Double> scaledNormals = VecMathUtil.transformMeshNormals(upAxisNormals, scaleMatrix);
 
     entity.setType(C3mlEntityType.MESH);
@@ -488,7 +476,7 @@ public class ColladaConverter implements Converter {
 
   /**
    * @return A 4x4 matrix that can be used to transform the COLLADA geometry so that the positive Z
-   * axis is facing up.
+   *         axis is facing up.
    */
   private Matrix4d convertUpAxisMatrix() {
     if (upAxis.equals(X_UP)) {
@@ -530,21 +518,12 @@ public class ColladaConverter implements Converter {
    * @return The input offset.
    */
   private int getOffsetFromInputs(List<Input> inputs, String semantic) {
-    Optional<Input> matchedInput =
-        inputs.stream().filter(e -> e.getSemantic().equals(semantic)).findFirst();
-    if (matchedInput.isPresent()) {
-      return matchedInput.get().getOffset();
+    for (Input input : inputs) {
+      if (input.getSemantic().equals(semantic)) {
+        return input.getOffset();
+      }
     }
     return 0;
   }
 
-  private class InvalidColladaException extends Throwable {
-    public InvalidColladaException(String message) {
-      super(message);
-    }
-
-    public InvalidColladaException(String message, Throwable cause) {
-      super(message, cause);
-    }
-  }
 }

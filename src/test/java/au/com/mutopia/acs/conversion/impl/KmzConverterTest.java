@@ -16,7 +16,8 @@ public class KmzConverterTest extends ConverterTest {
   @Before
   public void setUp() {
     KmlConverter kmlConverter = new KmlConverter();
-    converter = new KmzConverter(kmlConverter);
+    ColladaConverter daeConverter = new ColladaConverter();
+    converter = new KmzConverter(kmlConverter, daeConverter);
   }
 
   @Override

@@ -118,7 +118,7 @@ public class KmlConverter implements Converter {
   }
 
   /**
-   * Converts the KMZ file into a list of {@link C3mlEntity}s.
+   * Converts the KMZ file into a list of {@link C3mlEntity} objects.
    *
    * @param asset An {@link Asset} representing a KMZ file.
    * @return A {@link C3mlEntity} containing the same information as the KMZ file.
@@ -345,8 +345,7 @@ public class KmlConverter implements Converter {
    */
   private void writeModel(C3mlEntity entity, Model model) throws ConversionException {
     try {
-      String daeFilePath =
-          kmlFolderPath + File.separator + model.getLink().getHref();
+      String daeFilePath = kmlFolderPath + File.separator + model.getLink().getHref();
 
       File daeFile = new File(daeFilePath);
       ColladaConverter colladaConverter = new ColladaConverter();
@@ -355,12 +354,16 @@ public class KmlConverter implements Converter {
       // KML's positive rotation is in the clockwise direction.
       Orientation modelOrientation = model.getOrientation();
 
-      List<Double> rotation = Lists.newArrayList(-1 * modelOrientation.getTilt(),
-          -1 * modelOrientation.getRoll(), -1 * modelOrientation.getHeading());
-      List<Double> scale = Lists.newArrayList(modelScale.getX(), modelScale.getY(), modelScale.getZ());
-      List<Double> geoLocation = Lists.newArrayList(modelOrigin.getLongitude(),
-          modelOrigin.getLatitude(), modelOrigin.getAltitude());
-      List<C3mlEntity> modelEntities = colladaConverter.convert(daeFile, rotation, scale, geoLocation);
+      List<Double> rotation =
+          Lists.newArrayList(-1 * modelOrientation.getTilt(), -1 * modelOrientation.getRoll(), -1
+              * modelOrientation.getHeading());
+      List<Double> scale =
+          Lists.newArrayList(modelScale.getX(), modelScale.getY(), modelScale.getZ());
+      List<Double> geoLocation =
+          Lists.newArrayList(modelOrigin.getLongitude(), modelOrigin.getLatitude(),
+              modelOrigin.getAltitude());
+      List<C3mlEntity> modelEntities =
+          colladaConverter.convert(daeFile, rotation, scale, geoLocation);
       for (C3mlEntity modelEntity : modelEntities) {
         entity.addChild(modelEntity);
       }

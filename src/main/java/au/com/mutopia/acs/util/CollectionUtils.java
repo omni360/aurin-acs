@@ -1,7 +1,7 @@
 package au.com.mutopia.acs.util;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class CollectionUtils {
   /**
@@ -9,7 +9,7 @@ public class CollectionUtils {
    * @param <T>
    * @return True if the list is null or empty.
    */
-  public <T> boolean isNullOrEmpty(List<T> list) {
+  public static <T> boolean isNullOrEmpty(List<T> list) {
     return list == null || list.isEmpty();
   }
 
@@ -17,7 +17,11 @@ public class CollectionUtils {
    * @param floats The list of {@link Float}s to be converted to {@link Double}s.
    * @return A list of {@link Double}s from a list of {@link Float}s.
    */
-  public List<Double> doublesFromFloats(List<Float> floats) {
-    return floats.stream().mapToDouble(e -> e.doubleValue()).boxed().collect(Collectors.toList());
+  public static List<Double> doublesFromFloats(List<Float> floats) {
+    List<Double> doubles = new ArrayList<>();
+    for (Float f : floats) {
+      doubles.add(f.doubleValue());
+    }
+    return doubles;
   }
 }

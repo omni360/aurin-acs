@@ -1,15 +1,17 @@
 package au.com.mutopia.acs.util.mesh;
 
-import com.google.common.collect.Lists;
-import com.google.common.primitives.Doubles;
-import com.google.common.primitives.Floats;
+import java.util.List;
 
 import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Tuple3d;
 import javax.vecmath.Vector3d;
-import java.util.List;
-import java.util.stream.Collectors;
+
+import au.com.mutopia.acs.util.CollectionUtils;
+
+import com.google.common.collect.Lists;
+import com.google.common.primitives.Doubles;
+import com.google.common.primitives.Floats;
 
 /**
  * Utility class containing common method for accessing and converting VecMath classes.
@@ -105,9 +107,7 @@ public class VecMathUtil {
     if (floats.length != 16) {
       throw new IllegalArgumentException("Invalid array length for matrix data.");
     }
-    List<Float> floatList = Floats.asList(floats);
-    List<Double> doubleList =
-        floatList.stream().mapToDouble(Float::doubleValue).boxed().collect(Collectors.toList());
+    List<Double> doubleList = CollectionUtils.doublesFromFloats(Floats.asList(floats));
     return new Matrix4d(Doubles.toArray(doubleList));
   }
 
@@ -175,7 +175,7 @@ public class VecMathUtil {
   public static List<Point3d> point3dsFromDoubles(List<Double> doubles) {
     List<Point3d> point3ds = Lists.newArrayList();
     for (int i = 0; i < doubles.size(); i += 3) {
-      Point3d point3d = new Point3d(doubles.get(i),doubles.get(i + 1),doubles.get(i + 2));
+      Point3d point3d = new Point3d(doubles.get(i), doubles.get(i + 1), doubles.get(i + 2));
       point3ds.add(point3d);
     }
     return point3ds;
@@ -190,7 +190,7 @@ public class VecMathUtil {
   public static List<Vector3d> vector3dsFromDoubles(List<Double> doubles) {
     List<Vector3d> vector3ds = Lists.newArrayList();
     for (int i = 0; i < doubles.size(); i += 3) {
-      Vector3d vector3d = new Vector3d(doubles.get(i),doubles.get(i + 1),doubles.get(i + 2));
+      Vector3d vector3d = new Vector3d(doubles.get(i), doubles.get(i + 1), doubles.get(i + 2));
       vector3ds.add(vector3d);
     }
     return vector3ds;
