@@ -63,10 +63,11 @@ public class C3mlData {
   public boolean equals(Object other) {
     if (!(other instanceof C3mlData)) return false;
     C3mlData otherData = (C3mlData) other;
-    if (c3mls.size() == otherData.getC3mls().size() && params.equals(otherData.getParams())
-        && c3mls.stream().allMatch(e -> otherData.getC3mls().contains(e))) {
-      return true;
+    if (c3mls.size() == otherData.getC3mls().size() && params.equals(otherData.getParams())) {
+      for (C3mlEntity entity : c3mls) {
+        if (!otherData.getC3mls().contains(entity)) return false;
+      }
     }
-    return false;
+    return true;
   }
 }

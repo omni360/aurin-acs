@@ -1,5 +1,6 @@
 package au.com.mutopia.acs.conversion.impl;
 
+import au.com.mutopia.acs.annotation.IntegrationTest;
 import au.com.mutopia.acs.conversion.BroadC3mlFixture;
 import au.com.mutopia.acs.conversion.ConverterTest;
 import au.com.mutopia.acs.models.Format;
@@ -9,21 +10,27 @@ import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.junit.Before;
+import org.junit.experimental.categories.Category;
 
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 
 /**
  * Tests conversion logic for COLLADA (DAE) files.
  */
+@Category(IntegrationTest.class)
 public class ColladaConverterTest extends ConverterTest {
 
   public ColladaConverterTest() {
     // Remove KMZ specific container entity for mesh.
-    BROAD_DATA.setC3mls(BROAD_DATA.getC3mls().stream()
-        .map(e -> e.getType().equals(C3mlEntityType.CONTAINER) ? e.getChildren().get(0) : e)
-        .collect(Collectors.toList()));
+    List<C3mlEntity> editedEntities = new ArrayList<>();
+    for (C3mlEntity entity : BROAD_DATA.getC3mls()) {
+      editedEntities.add(
+          entity.getType().equals(C3mlEntityType.CONTAINER) ? entity.getChildren().get(0) : entity);
+    }
+    BROAD_DATA.setC3mls(editedEntities);
     // Remove non meshes from the expected output fixtures, since the COLLADA inputs only have
     // meshes.
     BROAD_DATA = filter(BROAD_DATA,

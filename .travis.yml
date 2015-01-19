@@ -1,0 +1,26 @@
+# See http://docs.travis-ci.com/user/languages/javascript-with-nodejs/
+language: java
+jdk:
+  - oraclejdk8
+ 
+after_success:
+  - mvn site
+  - mvn clean test jacoco:report coveralls:report
+
+# Deploy JavaDocs to S3 static site.
+# See http://docs.travis-ci.com/user/deployment/s3/
+deploy:
+  provider: s3
+  # Access key is the public key.
+  access_key_id: AKIAJCBJHLNERAVXIURA
+  # Secret access key is the private key, encrypted for Travis.
+  secret_access_key:
+    secure: X5NDAzi8AoIPIgZ5GeFScuVQzHzX88iyvLpxGWbUmfqyR8o0n/4dCciuWMiEI4LnHXox9QiFf/L1/p6nYjf8pUSjqLWsQDWw+1HWjhNQ7f6mRnG2X9DFEq/qtOL40iGVt0+HewJaCBYUZMDFoXVdGdiTVPydJioMH7wU4J2QsR0=
+  bucket: javadocs.acs.urbanetic.net
+  endpoint: javadocs.acs.urbanetic.net.s3-website-ap-southeast-2.amazonaws.com
+  region: ap-southeast-2
+  local-dir: target/site/apidocs
+  skip_cleanup: true
+  on:
+    all_branches: true
+#    tags: true

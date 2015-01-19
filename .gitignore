@@ -21,3 +21,4 @@ target
 /out
 /site
 atlassian-ide-plugin.xml
+dependency-reduced-pom.xml
