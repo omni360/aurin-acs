@@ -15,6 +15,11 @@ public class ConverterMapImpl implements ConverterMap {
   /** The map from which {@link Converter}s are retrieved. */
   private Map<Format, Converter> map;
 
+  /**
+   * Creates the conversion map with the given map of formats to {@link Converter}s.
+   * 
+   * @param map The map of available converters.
+   */
   public ConverterMapImpl(Map<Format, Converter> map) {
     this.map = map;
   }

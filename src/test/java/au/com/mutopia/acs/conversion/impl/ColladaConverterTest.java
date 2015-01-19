@@ -25,20 +25,26 @@ import com.google.common.collect.Lists;
 @Category(IntegrationTest.class)
 public class ColladaConverterTest extends ConverterTest {
 
+  /**
+   * Sets up the fixtures to compare the conversions against.
+   */
   public ColladaConverterTest() {
     // Remove KMZ specific container entity for mesh.
     List<C3mlEntity> editedEntities = new ArrayList<>();
     for (C3mlEntity entity : BROAD_DATA.getC3mls()) {
-      editedEntities.add(
-          entity.getType().equals(C3mlEntityType.CONTAINER) ? entity.getChildren().get(0) : entity);
+      editedEntities.add(entity.getType().equals(C3mlEntityType.CONTAINER) ? entity.getChildren()
+          .get(0) : entity);
     }
     BROAD_DATA.setC3mls(editedEntities);
     // Remove non meshes from the expected output fixtures, since the COLLADA inputs only have
     // meshes.
-    BROAD_DATA = filter(BROAD_DATA,
-        Lists.newArrayList(C3mlEntityType.MESH, C3mlEntityType.CONTAINER));
+    BROAD_DATA =
+        filter(BROAD_DATA, Lists.newArrayList(C3mlEntityType.MESH, C3mlEntityType.CONTAINER));
   }
 
+  /**
+   * Sets up the test case with a {@link ColladaConverter}.
+   */
   @Before
   public void setUp() {
     converter = new ColladaConverter();
@@ -55,8 +61,7 @@ public class ColladaConverterTest extends ConverterTest {
   }
 
   @Override
-  public void testSimple() {
-  }
+  public void testSimple() {}
 
   /**
    * Only mesh containers are checked.
@@ -71,21 +76,20 @@ public class ColladaConverterTest extends ConverterTest {
   }
 
   /**
-   * Asserts that the converted Broad Data mesh is leniently equals to the expected data.
-   * Geographic location is ignored because COLLADA doesn't have it.
+   * Asserts that the converted Broad Data mesh is leniently equals to the expected data. Geographic
+   * location is ignored because COLLADA doesn't have it.
    *
    * @param actual The converted {@link C3mlEntity} containing mesh.
    * @param expected The expected {@link C3mlEntity}.
    */
-  @Override public void assertThatBroadDataContainerMeshAreEqual(C3mlEntity actual,
-      C3mlEntity expected) {
+  @Override
+  public void assertThatBroadDataContainerMeshAreEqual(C3mlEntity actual, C3mlEntity expected) {
     assertThat(actual).isLenientEqualsToByAcceptingFields(expected, "name", "parameters");
     assertThat(actual.getChildren().size()).isEqualTo(expected.getChildren().size());
     C3mlEntity actualMeshEntity = actual.getChildren().get(0);
     C3mlEntity expectedMeshEntity = expected.getChildren().get(0);
     assertThat(actualMeshEntity.getType()).isEqualTo(C3mlEntityType.MESH);
-    assertThat(actualMeshEntity).
-        isLenientEqualsToByAcceptingFields(expectedMeshEntity, "name", "color",
-            "positions", "triangles");
+    assertThat(actualMeshEntity).isLenientEqualsToByAcceptingFields(expectedMeshEntity, "name",
+        "color", "positions", "triangles");
   }
 }

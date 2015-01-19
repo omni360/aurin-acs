@@ -26,6 +26,9 @@ import com.google.common.collect.Lists;
 @Category(IntegrationTest.class)
 public class ShapefileConverterTest extends ConverterTest {
 
+  /**
+   * Sets up the test with the fixtures to test against.
+   */
   public ShapefileConverterTest() {
     // Rename 'description' parameter for Shapefile expected fixtures, since Shapefile header has
     // a limit of 10 characters.
@@ -35,10 +38,15 @@ public class ShapefileConverterTest extends ConverterTest {
       newParameters.remove("description");
     }
     // Remove meshes from the expected output fixtures, since the Shapefile inputs won't have them.
-    BROAD_DATA = filter(BROAD_DATA,
-        Lists.newArrayList(C3mlEntityType.POINT, C3mlEntityType.LINE, C3mlEntityType.POLYGON));
+    BROAD_DATA =
+        filter(BROAD_DATA,
+            Lists.newArrayList(C3mlEntityType.POINT, C3mlEntityType.LINE, C3mlEntityType.POLYGON));
   }
 
+  /**
+   * Sets up the test case with a {@link ShapefileConverter} and a {@link KmlConverter} to delegate
+   * to.
+   */
   @Before
   public void setUp() {
     KmlConverter kmlConverter = new KmlConverter();

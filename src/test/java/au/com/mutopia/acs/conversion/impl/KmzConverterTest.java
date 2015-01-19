@@ -13,6 +13,10 @@ import au.com.mutopia.acs.models.Format;
 @Category(IntegrationTest.class)
 public class KmzConverterTest extends ConverterTest {
 
+  /**
+   * Sets up the {@link KmzConverter} with a {@link KmlConverter} and {@link ColladaConverter} to
+   * delegate to.
+   */
   @Before
   public void setUp() {
     KmlConverter kmlConverter = new KmlConverter();

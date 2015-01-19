@@ -112,6 +112,7 @@ public class ColladaConverter implements Converter {
    *
    * @param asset An {@link Asset} representing a COLLADA file.
    * @return A {@link C3mlEntity} containing the same information as the COLLADA file.
+   * @throws ConversionException if the conversion failed.
    */
   public List<C3mlEntity> convert(Asset asset) throws ConversionException {
     try {
@@ -132,7 +133,7 @@ public class ColladaConverter implements Converter {
    * @param scale The global scale to be applied on the geometries, in X, Y and Z axis.
    * @param geoLocation The global geographic location to be applied (lon, lat, alt).
    * @return A {@link C3mlEntity} with global transformations applied to the COLLADA file.
-   * @throws ConversionException
+   * @throws ConversionException if the conversion failed.
    */
   public List<C3mlEntity> convert(File colladaFile, List<Double> rotation, List<Double> scale,
       List<Double> geoLocation) throws ConversionException {
@@ -147,7 +148,7 @@ public class ColladaConverter implements Converter {
    *
    * @param colladaFile The COLLADA file containing geometries to be converted.
    * @return A {@link C3mlEntity} containing the same information as the COLLADA file.
-   * @throws ConversionException
+   * @throws ConversionException if the conversion failed.
    */
   public List<C3mlEntity> convert(File colladaFile) throws ConversionException {
     try {
@@ -162,8 +163,8 @@ public class ColladaConverter implements Converter {
    * Populate all mappings of COLLADA element IDs with their respective element.
    *
    * @param filePath The path to COLLADA file.
-   * @throws IOException
-   * @throws SAXException
+   * @throws IOException if the COLLADA file cannot be read.
+   * @throws SAXException if the XML in the COLLADA file cannot be parsed.
    */
   private void populateLibraryMaps(String filePath) throws IOException, SAXException {
     Collada collada = Collada.readFile(filePath);
@@ -229,11 +230,12 @@ public class ColladaConverter implements Converter {
    *
    * @param id The node reference ID.
    * @return Node if the library contains a node with the given ID.
+   * @throws InvalidColladaException if the given ID doesn't exist in the COLLADA nodes.
    */
   private Node getNodeFromLibraryNodes(String id) throws InvalidColladaException {
     Node node = nodeMap.get(id.replace("#", ""));
     if (node == null) {
-      throw new InvalidColladaException("Unable to find node with id: " + id);
+      throw new InvalidColladaException("Unable to find node with ID: " + id);
     }
     return node;
   }
@@ -243,11 +245,12 @@ public class ColladaConverter implements Converter {
    *
    * @param id The geometry reference ID.
    * @return GeoLeaf The GeoLeaf (geometry) mapped with the given ID.
+   * @throws InvalidColladaException if the given ID doesn't exist in the COLLADA geometries.
    */
   private Geometry getGeomFromLibraryGeometries(String id) throws InvalidColladaException {
     Geometry geometry = geometryMap.get(id.replace("#", ""));
     if (geometry == null) {
-      throw new InvalidColladaException("Unable to find geometry with id: " + id);
+      throw new InvalidColladaException("Unable to find geometry with ID: " + id);
     }
     return geometry;
   }
@@ -306,6 +309,7 @@ public class ColladaConverter implements Converter {
    * entity in their respective hierarchy of the 3D object model.
    *
    * @return A list of {@link C3mlEntity} representing the model in COLLADA file.
+   * @throws InvalidColladaException if the given ID doesn't exist in the COLLADA.
    */
   private List<C3mlEntity> buildEntities() throws InvalidColladaException {
     List<C3mlEntity> c3mlEntities = Lists.newArrayList();
@@ -326,6 +330,7 @@ public class ColladaConverter implements Converter {
    * @param node A node from COLLADA file, represents a point on the COLLADA scene.
    * @param parentMatrix The matrix transformation from parent node.
    * @return A list of {@link C3mlEntity} representing the COLLADA node.
+   * @throws InvalidColladaException if required COLLADA data is missing.
    */
   private C3mlEntity buildEntityFromNode(Node node, Matrix parentMatrix)
       throws InvalidColladaException {

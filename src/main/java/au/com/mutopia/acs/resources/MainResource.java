@@ -14,6 +14,8 @@ public class MainResource {
 
   /**
    * Serves the HTML for browsers on the index page.
+   * 
+   * @return A simple string explaining that the service doesn't have a GUI.
    */
   @GET
   public String main() {

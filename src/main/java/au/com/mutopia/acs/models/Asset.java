@@ -37,9 +37,17 @@ public class Asset {
   /** The file size in bytes of the file. */
   private Long fileSize;
 
-
+  /**
+   * Creates an empty {@link Asset} object.
+   */
   public Asset() {}
 
+  /**
+   * Creates an {@link Asset} populated with the given data and details.
+   * 
+   * @param data The binary data from the uploaded file.
+   * @param fileDetails Metadata of the uploaded file.
+   */
   public Asset(byte[] data, FormDataContentDisposition fileDetails) {
     setData(data);
     setFileName(fileDetails.getFileName());
@@ -47,10 +55,22 @@ public class Asset {
     setFormat(determineFormat());
   }
 
+  /**
+   * Creates an {@link Asset} populated with the given data and details.
+   * 
+   * @param data The binary data from the uploaded file.
+   * @param fileDetails Metadata of the uploaded file.
+   */
   public Asset(Byte[] data, FormDataContentDisposition fileDetails) {
     this(ArrayUtils.toPrimitive(data), fileDetails);
   }
 
+  /**
+   * Creates an {@link Asset} populated with the data and details of the given file.
+   * 
+   * @param file The file as a Java object.
+   * @throws IOException if the file cannot be read.
+   */
   public Asset(File file) throws IOException {
     setData(FileUtils.readFileToByteArray(file));
     setFileName(file.getName());
@@ -58,10 +78,20 @@ public class Asset {
     setFormat(determineFormat());
   }
 
+  /**
+   * Sets the asset data from a primitive byte array. Delegates to set the file size as well.
+   * 
+   * @param data The binary data to set.
+   */
   public void setData(byte[] data) {
     setDataValue(data);
   }
 
+  /**
+   * Sets the binary data as well as its file size.
+   * 
+   * @param data The data to set.
+   */
   private void setDataValue(byte[] data) {
     this.data = data;
     if (data != null) {

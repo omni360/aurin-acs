@@ -5,13 +5,21 @@ package au.com.mutopia.acs.models;
  * Enumerates the supported file formats.
  */
 public enum Format {
+  /** CityGML. */
   CITYGML("citygml"),
+  /** COLLADA. */
   COLLADA("dae"),
+  /** IFC BIM. */
   IFC("ifc"),
+  /** GeoJSON. */
   GEOJSON("json"),
+  /** KML. */
   KML("kml"),
+  /** KMZ. */
   KMZ("kmz"),
+  /** Shapefile. */
   SHP("shp"),
+  /** Arbitrary zipped file. */
   ZIP("zip");
 
   private final String value;

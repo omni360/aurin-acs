@@ -21,6 +21,9 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
+/**
+ * Utility functions for working with ZIP archives.
+ */
 @Log4j
 public class ZipUtils {
 
@@ -34,7 +37,7 @@ public class ZipUtils {
   /**
    * Zips the list of files to the given directory file.
    *
-   * @param files   The list of files to be zipped.
+   * @param files The list of files to be zipped.
    * @param zipFile The destination zip file.
    */
   public static void zipFilesToDirectory(List<File> files, File zipFile) {
@@ -47,8 +50,7 @@ public class ZipUtils {
       for (File file : files) {
         ZipEntry ze = new ZipEntry(file.getName());
         zos.putNextEntry(ze);
-        FileInputStream in =
-            new FileInputStream(file);
+        FileInputStream in = new FileInputStream(file);
         int len;
         while ((len = in.read(buffer)) > 0) {
           zos.write(buffer, 0, len);
@@ -58,15 +60,14 @@ public class ZipUtils {
 
       zos.closeEntry();
       zos.close();
-
     } catch (IOException e) {
-      log.error("{}", e);
+      log.error("Failed to zip " + files.size() + " files", e);
     }
   }
 
   /**
-   * Unzips the contents of a zip file into a temporary directory and returns the list of
-   * unzipped files.
+   * Unzips the contents of a zip file into a temporary directory and returns the list of unzipped
+   * files.
    *
    * @param zipFile The zip file to be extracted.
    * @return The list of files extracted from the zip file.
@@ -84,7 +85,7 @@ public class ZipUtils {
         File file = new File(tmpDir, entryName);
 
         String fileExtension = Files.getFileExtension(file.getName());
-        if(Strings.isNullOrEmpty(fileExtension)){
+        if (Strings.isNullOrEmpty(fileExtension)) {
           ze = zis.getNextEntry();
           continue;
         }
@@ -107,13 +108,17 @@ public class ZipUtils {
       zis.close();
       return unzipFiles;
     } catch (IOException e) {
-      log.error("{}",e);
+      log.error("{}", e);
     }
     return null;
   }
 
   /**
-   *  http://stackoverflow.com/questions/10572398
+   * Compresses the given string into a byte array.
+   * 
+   * @param text The text to compress.
+   * @return The string compressed into a byte array.
+   * @see <a href="http://stackoverflow.com/questions/10572398">Stack Overflow answer</a>
    */
   public static byte[] compressString(String text) {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -128,19 +133,25 @@ public class ZipUtils {
   }
 
   /**
-   *  http://stackoverflow.com/questions/10572398
+   * Decompresses the given bytes into a UTF-8 string.
+   * 
+   * @param data The bytes to decompress.
+   * @return The string encoded by the bytes.
+   * 
+   * @see <a href="http://stackoverflow.com/questions/10572398">Stack Overflow answer</a>
    */
-  public static String decompressString(byte[] bytes) {
-    InputStream in = new InflaterInputStream(new ByteArrayInputStream(bytes));
+  public static String decompressString(byte[] data) {
+    InputStream in = new InflaterInputStream(new ByteArrayInputStream(data));
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     try {
       byte[] buffer = new byte[BYTE_BUFFER_SIZE];
       int len;
-      while((len = in.read(buffer))>0)
+      while ((len = in.read(buffer)) > 0)
         baos.write(buffer, 0, len);
       return new String(baos.toByteArray(), "UTF-8");
     } catch (IOException e) {
       throw new AssertionError(e);
     }
   }
+
 }

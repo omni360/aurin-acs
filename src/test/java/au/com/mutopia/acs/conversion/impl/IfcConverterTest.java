@@ -17,9 +17,12 @@ import au.com.mutopia.acs.models.Format;
 @Category(IntegrationTest.class)
 public class IfcConverterTest extends ConverterTest {
 
+  /**
+   * Sets up the test case with an {@link IfcConverter}.
+   */
   @Before
   public void setUp() {
-    converter = new KmlConverter();
+    converter = new IfcConverter();
   }
 
   @Override

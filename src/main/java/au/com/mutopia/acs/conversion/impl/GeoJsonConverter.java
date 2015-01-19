@@ -23,6 +23,11 @@ public class GeoJsonConverter implements Converter {
   /** The {@link KmlConverter} to delegate the conversion operation to. */
   private final KmlConverter kmlConverter;
 
+  /**
+   * Creates the converter with a {@link KmlConverter} to delegate to.
+   * 
+   * @param kmlConverter A converter to use once the GeoJSON is converted to KML.
+   */
   @Inject
   public GeoJsonConverter(KmlConverter kmlConverter) {
     this.kmlConverter = kmlConverter;

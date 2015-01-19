@@ -15,6 +15,9 @@ import com.google.common.collect.ImmutableList;
  */
 public class SimpleC3mlFixture extends C3mlData {
 
+  /**
+   * Creates the simple fixture of {@link C3mlData}.
+   */
   public SimpleC3mlFixture() {
     setEntities(ImmutableList.of(buildPolygon()));
   }

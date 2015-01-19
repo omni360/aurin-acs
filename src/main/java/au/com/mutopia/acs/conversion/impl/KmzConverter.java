@@ -24,6 +24,12 @@ public class KmzConverter implements Converter {
   /** The {@link ColladaConverter} to delegate the mesh conversion operation to. */
   private final ColladaConverter colladaConverter;
 
+  /**
+   * Creates the converter with the delegate {@link Converter}s for KML and COLLADA.
+   * 
+   * @param kmlConverter A {@link Converter} to delegate KML entities to.
+   * @param colladaConverter A {@link Converter} to delegate COLLADA entities to.
+   */
   @Inject
   public KmzConverter(KmlConverter kmlConverter, ColladaConverter colladaConverter) {
     this.kmlConverter = kmlConverter;

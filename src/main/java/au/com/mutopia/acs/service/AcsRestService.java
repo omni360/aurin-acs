@@ -18,12 +18,18 @@ import com.yammer.dropwizard.config.Environment;
 @Log4j
 public class AcsRestService extends AutoConfigService<Configuration> {
 
+  /**
+   * Creates the ACS service.
+   */
   public AcsRestService() {
     super("Catalyst REST Service", "com.deltarch.catalyst.core.rest");
   }
 
   /**
    * Starts the REST server.
+   * 
+   * @param args The arguments passed in on the command lineS.
+   * @throws Exception if anything goes wrong.
    */
   public static void main(String[] args) throws Exception {
     log.info("Starting core service...");

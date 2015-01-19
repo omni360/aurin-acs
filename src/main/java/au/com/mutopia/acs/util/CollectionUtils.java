@@ -1,16 +1,22 @@
 package au.com.mutopia.acs.util;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
+/**
+ * Utility functions for operating on collections.
+ */
 public class CollectionUtils {
+
   /**
-   * @param list
-   * @param <T>
-   * @return True if the list is null or empty.
+   * Checks the collection for content.
+   * 
+   * @param coll The collection to test.
+   * @return True if the list is null or empty, false if there is any content.
    */
-  public static <T> boolean isNullOrEmpty(List<T> list) {
-    return list == null || list.isEmpty();
+  public static boolean isNullOrEmpty(Collection<?> coll) {
+    return coll == null || coll.isEmpty();
   }
 
   /**

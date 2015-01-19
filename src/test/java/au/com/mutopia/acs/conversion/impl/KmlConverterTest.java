@@ -16,12 +16,19 @@ import com.google.common.collect.Lists;
  */
 public class KmlConverterTest extends ConverterTest {
 
+  /**
+   * Sets up the fixtures to test against.
+   */
   public KmlConverterTest() {
     // Remove meshes from the expected output fixtures, since the KML inputs won't have them.
-    BROAD_DATA = filter(BROAD_DATA,
-        Lists.newArrayList(C3mlEntityType.POINT, C3mlEntityType.LINE, C3mlEntityType.POLYGON));
+    BROAD_DATA =
+        filter(BROAD_DATA,
+            Lists.newArrayList(C3mlEntityType.POINT, C3mlEntityType.LINE, C3mlEntityType.POLYGON));
   }
 
+  /**
+   * Sets up the test case with an {@link KmlConverter}.
+   */
   @Before
   public void setUp() {
     converter = new KmlConverter();

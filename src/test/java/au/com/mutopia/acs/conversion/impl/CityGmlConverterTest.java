@@ -12,9 +12,12 @@ import au.com.mutopia.acs.models.Format;
 @Ignore
 public class CityGmlConverterTest extends ConverterTest {
 
+  /**
+   * Sets up the test case with a {@link CityGmlConverter}.
+   */
   @Before
   public void setUp() {
-    converter = new KmlConverter();
+    converter = new CityGmlConverter();
   }
 
   @Override

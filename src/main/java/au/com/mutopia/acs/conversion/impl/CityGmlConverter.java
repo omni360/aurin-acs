@@ -7,9 +7,9 @@ import au.com.mutopia.acs.models.Asset;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 
 /**
- * Converts IFC files into a collection of {@link C3mlEntity} objects.
+ * Converts CityGML files into a collection of {@link C3mlEntity} objects.
  */
-public class IfcConverter implements Converter {
+public class CityGmlConverter implements Converter {
 
   public List<C3mlEntity> convert(Asset asset) {
     // TODO Auto-generated method stub

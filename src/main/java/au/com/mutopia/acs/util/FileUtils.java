@@ -8,6 +8,9 @@ import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 
+/**
+ * Utility functions for working with files.
+ */
 public class FileUtils {
 
   // TODO(aramk) Remove the files when JVM shuts down.
@@ -40,18 +43,33 @@ public class FileUtils {
   /**
    * Creates a temporary file with a UUID as the name.
    * 
+   * @param contents The contents to write to the temporary file.
+   * @return A handle to the create file.
+   * @throws IOException if the file creation failed.
    * @see #createTemporaryFileWithContent(String, byte[])
    */
   public static File createTemporaryFileWithContent(byte[] contents) throws IOException {
     return createTemporaryFileWithContent(UUID.randomUUID().toString(), contents);
   }
 
+  /**
+   * Creates a temporary file with the given name.
+   * 
+   * @param fileName The name of the file to create.
+   * @return A handle to the create file.
+   * @throws IOException if the file creation failed.
+   */
   public static File createTempFile(String fileName) throws IOException {
     // Generate a subdirectory to allow using the given filename without a random string.
     File subDir = createTempDir();
     return new File(subDir, fileName);
   }
 
+  /**
+   * Creates a file system directory for temporary files with a random UUID as the name.
+   * 
+   * @return A handle to the created directory.
+   */
   public static File createTempDir() {
     String subDirName = UUID.randomUUID().toString();
     File subDir = new File(TEMP_DIR, subDirName);

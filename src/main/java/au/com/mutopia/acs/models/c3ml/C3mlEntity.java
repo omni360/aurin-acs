@@ -13,7 +13,9 @@ import lombok.Setter;
 /**
  * An object representing the contents of a C3ML document.
  * 
- * @see https://docs.google.com/document/d/1dNMQyOjIN6AGPIpUqw0ZdKRrLbrTjws6itGeo4dtHYU
+ * @see <a
+ *      href="https://docs.google.com/document/d/1dNMQyOjIN6AGPIpUqw0ZdKRrLbrTjws6itGeo4dtHYU">Unofficial
+ *      C3ML specification</a>
  */
 @Getter
 @Setter
@@ -76,14 +78,27 @@ public class C3mlEntity {
   /** The glTF mesh data in binary format, if applicable. */
   private Byte[] gltfData;
 
+  /**
+   * Creates a new {@link C3mlEntity} with a random ID.
+   */
   public C3mlEntity() {
     this.id = UUID.randomUUID().toString();
   }
 
+  /**
+   * Creates a new {@link C3mlEntity} with the specified ID.
+   * 
+   * @param id The ID to use for the entity.
+   */
   public C3mlEntity(String id) {
     this.id = id;
   }
 
+  /**
+   * Adds a {@link C3mlEntity} as a child of this one
+   * 
+   * @param child The {@link C3mlEntity} to add.
+   */
   public void addChild(C3mlEntity child) {
     if (child == null) {
       return;
@@ -92,10 +107,21 @@ public class C3mlEntity {
     child.setParentId(getId());
   }
 
+  /**
+   * Adds a parameter to the entity.
+   * 
+   * @param name The name of the parameter.
+   * @param value The entity's parameter value.
+   */
   public void addParameter(String name, String value) {
     parameters.put(name, value);
   }
 
+  /**
+   * Sets the color of the entity.
+   * 
+   * @param colorData The RGBA color values.
+   */
   public void setColorData(Color colorData) {
     color = new ArrayList<>();
     color.add(colorData.getRed());

@@ -49,6 +49,8 @@ public class VecMathUtil {
   }
 
   /**
+   * Creates a matrix representing a rotation of the given angle around the Z axis.
+   * 
    * @param degrees The degree of rotation.
    * @return A matrix transformation rotated about the Z axis.
    */
@@ -59,6 +61,12 @@ public class VecMathUtil {
     return rotationMatrix;
   }
 
+  /**
+   * Creates a matrix representing a scaling by the given value.
+   * 
+   * @param scale The factor to scale by. 1.0 is the identity matrix.
+   * @return A matrix to use for scaling by the given factor.
+   */
   public static Matrix4d createScaleMatrix(double scale) {
     Matrix4d scaleMatrix = createIdentityMatrix();
     scaleMatrix.setScale(scale);
@@ -102,6 +110,7 @@ public class VecMathUtil {
    *
    * @param floats The array of floats to be converted into {@link Matrix4d}.
    * @return The {@link Matrix4d}.
+   * @throws IllegalArgumentException if the given array does not have exactly 16 values.
    */
   public static Matrix4d matrix4dFromFloats(float[] floats) throws IllegalArgumentException {
     if (floats.length != 16) {
@@ -116,6 +125,7 @@ public class VecMathUtil {
    *
    * @param doubles The array of doubles to be converted into {@link Matrix4d}.
    * @return The {@link Matrix4d}.
+   * @throws IllegalArgumentException if the given array does not have exactly 16 values.
    */
   public static Matrix4d matrix4dFromDoubles(double[] doubles) throws IllegalArgumentException {
     if (doubles.length != 16) {

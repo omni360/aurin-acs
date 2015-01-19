@@ -24,12 +24,19 @@ import com.google.common.collect.Lists;
 @Category(IntegrationTest.class)
 public class GeoJsonConverterTest extends ConverterTest {
 
+  /**
+   * Creates the test case with a fixture for the broad conversion test.
+   */
   public GeoJsonConverterTest() {
     // Remove meshes from the expected output fixtures, since the GeoJson inputs won't have them.
-    BROAD_DATA = filter(BROAD_DATA,
-        Lists.newArrayList(C3mlEntityType.POINT, C3mlEntityType.LINE, C3mlEntityType.POLYGON));
+    BROAD_DATA =
+        filter(BROAD_DATA,
+            Lists.newArrayList(C3mlEntityType.POINT, C3mlEntityType.LINE, C3mlEntityType.POLYGON));
   }
 
+  /**
+   * Sets up the test with a {@link GeoJsonConverter} and {@link KmlConverter} delegate.
+   */
   @Before
   public void setUp() {
     KmlConverter kmlConverter = new KmlConverter();

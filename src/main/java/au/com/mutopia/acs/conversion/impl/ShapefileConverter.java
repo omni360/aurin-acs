@@ -27,6 +27,11 @@ public class ShapefileConverter implements Converter {
   /** The {@link KmlConverter} to delegate the conversion operation to. */
   private final KmlConverter kmlConverter;
 
+  /**
+   * Creates the converter with a {@link KmlConverter} to delegate to.
+   * 
+   * @param kmlConverter A converter to use once the Shapefile is converted to KML.
+   */
   @Inject
   public ShapefileConverter(KmlConverter kmlConverter) {
     this.kmlConverter = kmlConverter;

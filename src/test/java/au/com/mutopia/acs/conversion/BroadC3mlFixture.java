@@ -16,7 +16,10 @@ import com.google.common.primitives.Ints;
  * type of entity (point, line, polygon, mesh), each with different styles and custom parameters.
  */
 public class BroadC3mlFixture extends C3mlData {
-  
+
+  /**
+   * Creates the broad C3ML fixture with one of each entity type.
+   */
   public BroadC3mlFixture() {
     setEntities(ImmutableList.of(buildPoint(), buildLine(), buildPolygon(), buildMesh()));
   }
@@ -78,13 +81,13 @@ public class BroadC3mlFixture extends C3mlData {
     childMeshEntity.setName("Cube");
     childMeshEntity.setColor(ImmutableList.of(163, 163, 163, 255));
     childMeshEntity.setType(C3mlEntityType.MESH);
-    double[] positions = new double[]
-        {10.0, 10.0, -10.0, 10.0, -10.0, -10.0, -10.0, -10.0, -10.0, -10.0, 10.0, -10.0, 10.0, 10.0,
-            10.0, 10.0, -10.0, 10.0, -10.0, -10.0, 10.0, -10.0, 10.0, 10.0};
+    double[] positions =
+        new double[] {10.0, 10.0, -10.0, 10.0, -10.0, -10.0, -10.0, -10.0, -10.0, -10.0, 10.0,
+            -10.0, 10.0, 10.0, 10.0, 10.0, -10.0, 10.0, -10.0, -10.0, 10.0, -10.0, 10.0, 10.0};
     childMeshEntity.setPositions(Doubles.asList(positions));
-    int[] triangles = new int[]
-        {0, 1, 2, 7, 6, 5, 4, 5, 1, 5, 6, 2, 2, 6, 7, 4, 0, 3, 3, 0, 2, 4, 7, 5, 0, 4, 1, 1, 5,
-            2, 3, 2, 7, 7, 4, 3};
+    int[] triangles =
+        new int[] {0, 1, 2, 7, 6, 5, 4, 5, 1, 5, 6, 2, 2, 6, 7, 4, 0, 3, 3, 0, 2, 4, 7, 5, 0, 4, 1,
+            1, 5, 2, 3, 2, 7, 7, 4, 3};
     childMeshEntity.setTriangles(Ints.asList(triangles));
     double[] geoLocation = new double[] {144.9679449048048, -37.81765634739649, 0.0};
     childMeshEntity.setGeoLocation(Doubles.asList(geoLocation));

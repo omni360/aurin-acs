@@ -28,12 +28,21 @@ import com.google.inject.Inject;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
+/**
+ * Implements the REST API for file conversion.
+ */
 @Path("/convert")
 @Log4j
 public class ConversionResource {
 
   private ConverterMap converters;
 
+  /**
+   * Creates the resource with the map of available converters injected.
+   * 
+   * @param converters A map of each supported format to the {@link Converter} used to convert files
+   *        of that format.
+   */
   @Inject
   public ConversionResource(ConverterMap converters) {
     this.converters = converters;

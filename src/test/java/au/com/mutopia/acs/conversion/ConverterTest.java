@@ -47,11 +47,14 @@ public abstract class ConverterTest {
    * Performs a conversion of a simple fixture in the appropriate format to an expected
    * {@link C3mlData} output.
    * 
+   * @throws IOException if the simple fixture file cannot be read.
+   * 
    * @see SimpleC3mlFixture
    */
   @Test
   public void testSimple() throws IOException {
-    Asset asset = createResourceAsset("/fixtures/" + getResourceFolder() + "/simple." + getExtension());
+    Asset asset =
+        createResourceAsset("/fixtures/" + getResourceFolder() + "/simple." + getExtension());
     List<C3mlEntity> entities = converter.convert(asset);
     C3mlData data = new C3mlData(entities);
     assertThatC3mlSimpleDataIsEqual(data, SIMPLE_DATA);
@@ -61,11 +64,14 @@ public abstract class ConverterTest {
    * Performs a conversion of a broad fixture in the appropriate format to an expected
    * {@link C3mlData} output.
    * 
+   * @throws IOException if the broad fixture file cannot be read.
+   * 
    * @see BroadC3mlFixture
    */
   @Test
   public void testBroad() throws IOException {
-    Asset asset = createResourceAsset("/fixtures/" + getResourceFolder() + "/broad." + getExtension());
+    Asset asset =
+        createResourceAsset("/fixtures/" + getResourceFolder() + "/broad." + getExtension());
     List<C3mlEntity> entities = converter.convert(asset);
     C3mlData data = new C3mlData(entities);
     assertThatC3mlBroadDataIsEqual(data, BROAD_DATA);
@@ -160,8 +166,7 @@ public abstract class ConverterTest {
   public void assertThatC3mlBroadDataIsEqual(C3mlData actual, C3mlData expected) {
     assertThatC3mlBroadDataIsEqualByComparingTypes(actual, expected,
         ImmutableList.of(C3mlEntityType.POINT, C3mlEntityType.LINE, C3mlEntityType.POLYGON,
-            C3mlEntityType.CONTAINER)
-    );
+            C3mlEntityType.CONTAINER));
   }
 
   /**
@@ -202,16 +207,15 @@ public abstract class ConverterTest {
     assertThat(actual.getChildren().size()).isEqualTo(expected.getChildren().size());
     C3mlEntity actualChildEntity = actual.getChildren().get(0);
     C3mlEntity expectedChildEntity = expected.getChildren().get(0);
-    assertThat(actualChildEntity).
-        isLenientEqualsToByAcceptingFields(expectedChildEntity, "name", "parameters");
-    assertThat(actualChildEntity.getChildren().size())
-        .isEqualTo(expectedChildEntity.getChildren().size());
+    assertThat(actualChildEntity).isLenientEqualsToByAcceptingFields(expectedChildEntity, "name",
+        "parameters");
+    assertThat(actualChildEntity.getChildren().size()).isEqualTo(
+        expectedChildEntity.getChildren().size());
     C3mlEntity actualMeshEntity = actualChildEntity.getChildren().get(0);
     C3mlEntity expectedMeshEntity = expectedChildEntity.getChildren().get(0);
     assertThat(actualMeshEntity.getType()).isEqualTo(C3mlEntityType.MESH);
-    assertThat(actualMeshEntity).
-        isLenientEqualsToByAcceptingFields(expectedMeshEntity, "name", "parameters", "color",
-            "positions", "triangles", "geoLocation");
+    assertThat(actualMeshEntity).isLenientEqualsToByAcceptingFields(expectedMeshEntity, "name",
+        "parameters", "color", "positions", "triangles", "geoLocation");
   }
 
   /**
@@ -266,7 +270,7 @@ public abstract class ConverterTest {
       List<Vertex3D> expectedCoordinates) {
     List<Vertex3D> reversedCoordinates = new ArrayList<>(actualCoordinates);
     Collections.reverse(reversedCoordinates);
-    return actualCoordinates.equals(expectedCoordinates) || reversedCoordinates.equals
-        (expectedCoordinates);
+    return actualCoordinates.equals(expectedCoordinates)
+        || reversedCoordinates.equals(expectedCoordinates);
   }
 }

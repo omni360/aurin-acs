@@ -12,6 +12,9 @@ public interface ConverterMap {
 
   /**
    * Returns the {@link Converter} for the given format.
+   * 
+   * @param format The format to get the {@link Converter} for.
+   * @return A {@link Converter} that can convert files of the given format.
    */
   public Converter get(Format format);
 

@@ -16,6 +16,14 @@ public interface Converter {
    */
   public final Color DEFAULT_COLOR = Color.WHITE;
 
+  /**
+   * Converts the given asset into a collection of {@link C3mlEntity} objects.
+   * 
+   * @param asset The {@link Asset} to convert.
+   * @return A collection of {@link C3mlEntity} objects corresponding to the entities in the
+   *         {@link Asset}.
+   * @throws ConversionException If the conversion failed.
+   */
   public List<C3mlEntity> convert(Asset asset) throws ConversionException;
 
 }
