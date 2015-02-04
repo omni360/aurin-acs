@@ -24,14 +24,13 @@ public class AcsModule extends AbstractModule {
   @Override
   protected void configure() {
     final KmlConverter kmlConverter = new KmlConverter();
-    final ColladaConverter daeConverter = new ColladaConverter();
     Map<Format, Converter> converters = new HashMap<>();
 
-    converters.put(Format.COLLADA, daeConverter);
+    converters.put(Format.COLLADA, new ColladaConverter());
     converters.put(Format.GEOJSON, new GeoJsonConverter(kmlConverter));
     converters.put(Format.IFC, new IfcConverter());
     converters.put(Format.KML, kmlConverter);
-    converters.put(Format.KMZ, new KmzConverter(kmlConverter, daeConverter));
+    converters.put(Format.KMZ, new KmzConverter(kmlConverter));
     converters.put(Format.SHP, new ShapefileConverter(kmlConverter));
 
     ConverterMap converterMap = new ConverterMapImpl(converters);

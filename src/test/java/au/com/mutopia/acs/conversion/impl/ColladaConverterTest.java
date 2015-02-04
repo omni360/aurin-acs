@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.experimental.categories.Category;
 
 import au.com.mutopia.acs.annotation.IntegrationTest;
@@ -60,6 +61,7 @@ public class ColladaConverterTest extends ConverterTest {
     return Format.COLLADA.toString();
   }
 
+  @Ignore("Not applicable for 3D formats")
   @Override
   public void testSimple() {}
 

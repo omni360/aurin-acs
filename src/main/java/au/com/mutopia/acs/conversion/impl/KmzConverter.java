@@ -21,9 +21,6 @@ public class KmzConverter implements Converter {
   /** The {@link KmlConverter} to delegate the 2D conversion operation to. */
   private final KmlConverter kmlConverter;
 
-  /** The {@link ColladaConverter} to delegate the mesh conversion operation to. */
-  private final ColladaConverter colladaConverter;
-
   /**
    * Creates the converter with the delegate {@link Converter}s for KML and COLLADA.
    * 
@@ -31,9 +28,8 @@ public class KmzConverter implements Converter {
    * @param colladaConverter A {@link Converter} to delegate COLLADA entities to.
    */
   @Inject
-  public KmzConverter(KmlConverter kmlConverter, ColladaConverter colladaConverter) {
+  public KmzConverter(KmlConverter kmlConverter) {
     this.kmlConverter = kmlConverter;
-    this.colladaConverter = colladaConverter;
   }
 
   public List<C3mlEntity> convert(Asset asset) throws ConversionException {
