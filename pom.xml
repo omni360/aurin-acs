@@ -29,6 +29,7 @@
   <!-- Main class and version properties -->
   <properties>
     <mainClass>au.com.mutopia.acs.service.AcsRestService</mainClass>
+    <runnableJarName>aurin-acs</runnableJarName>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <dropwizard.version>0.6.2</dropwizard.version>
@@ -287,6 +288,50 @@
             </configuration>
           </execution>
         </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>com.coderplus.maven.plugins</groupId>
+        <artifactId>copy-rename-maven-plugin</artifactId>
+        <version>1.0</version>
+        <executions>
+          <execution>
+            <id>rename-file</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>rename</goal>
+            </goals>
+            <configuration>
+              <sourceFile>${project.build.directory}/${project.build.finalName}.jar</sourceFile>
+              <destinationFile>${project.build.directory}/${runnableJarName}.jar</destinationFile>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Docker image build. -->
+      <plugin>
+        <groupId>com.spotify</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <version>0.1.1</version>
+        <configuration>
+          <imageName>urbanetic/aurin-acs</imageName>
+          <baseImage>urbanetic/collada2gltf</baseImage>
+          <entryPoint>["java", "-jar", "${runnableJarName}.jar", "server", "configuration.yml"]</entryPoint>
+          <!-- <dockerDirectory>docker</dockerDirectory> -->
+          <resources>
+            <resource>
+              <targetPath>/</targetPath>
+              <directory>${project.build.directory}</directory>
+              <include>${runnableJarName}.jar</include>
+            </resource>
+            <resource>
+              <targetPath>/</targetPath>
+              <directory>/${basedir}</directory>
+              <include>configuration.yml</include>
+            </resource>
+          </resources>
+        </configuration>
       </plugin>
     </plugins>
   </build>
