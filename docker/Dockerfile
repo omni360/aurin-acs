@@ -3,8 +3,8 @@ MAINTAINER Oliver Lade <oliver.lade@unimelb.edu.au>
 
 EXPOSE 8080
 
-# Install Java 7 to run the ACS. The Docker Maven plugin will copy the packaged JAR into /opt/acs.
+# Install Java 7 to run the ACS. The Docker Maven plugin will copy the packaged JAR into /.
 RUN apt-get update && apt-get -qq install openjdk-7-jdk
 
-# Start Apache, then start the ACS server.
-ENTRYPOINT java -jar $ACS_DIR/aurin-acs.jar server $ACS_DIR/configuration.yml
+# Start the ACS server.
+CMD ["java", "-jar", "/aurin-acs.jar", "server", "/configuration.yml"]

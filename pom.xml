@@ -316,9 +316,9 @@
         <version>0.1.1</version>
         <configuration>
           <imageName>urbanetic/aurin-acs</imageName>
-          <baseImage>urbanetic/collada2gltf</baseImage>
-          <entryPoint>["java", "-jar", "${runnableJarName}.jar", "server", "configuration.yml"]</entryPoint>
-          <!-- <dockerDirectory>docker</dockerDirectory> -->
+          <!-- <baseImage>urbanetic/collada2gltf</baseImage> -->
+          <!-- <entryPoint>["java", "-jar", "${runnableJarName}.jar", "server", "configuration.yml"]</entryPoint> -->
+          <dockerDirectory>docker</dockerDirectory>
           <resources>
             <resource>
               <targetPath>/</targetPath>
