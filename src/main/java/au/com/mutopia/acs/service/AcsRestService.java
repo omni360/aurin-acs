@@ -1,6 +1,9 @@
 package au.com.mutopia.acs.service;
 
 import lombok.extern.log4j.Log4j;
+
+import org.eclipse.jetty.servlets.CrossOriginFilter;
+
 import au.com.mutopia.acs.resources.ConversionResource;
 import au.com.mutopia.acs.resources.MainResource;
 
@@ -67,6 +70,11 @@ public class AcsRestService extends AutoConfigService<Configuration> {
 
     environment.addResource(injector.getInstance(MainResource.class));
     environment.addResource(injector.getInstance(ConversionResource.class));
+
+    // Support for CORS.
+    environment.addFilter(CrossOriginFilter.class, "/*").setInitParam("allowedOrigins", "*")
+        .setInitParam("allowedHeaders", "X-Requested-With,Content-Type,Accept,Origin")
+        .setInitParam("allowedMethods", "OPTIONS,GET,PUT,POST,DELETE,HEAD");
 
     super.runWithInjector(configuration, environment, injector);
 
