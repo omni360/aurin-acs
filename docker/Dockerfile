@@ -7,4 +7,8 @@ EXPOSE 8080
 RUN apt-get update && apt-get -qq install openjdk-7-jdk
 
 # Start the ACS server.
-CMD ["java", "-jar", "/aurin-acs.jar", "server", "/configuration.yml"]
+ENTRYPOINT ["java", "-jar", "/aurin-acs.jar", "server", "/configuration.yml"]
+
+ADD aurin-acs.jar /
+ADD configuration.yml /
+
