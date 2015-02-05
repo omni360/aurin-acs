@@ -128,11 +128,8 @@ public class ColladaConverter implements Converter {
   public List<C3mlEntity> convert(Asset asset) throws ConversionException {
     log.debug("Converting COLLADA asset " + asset.getName() + "...");
     try {
-      File tempColladaFile = asset.getTemporaryFile();
-      populateLibraryMaps(tempColladaFile.getPath());
-      populateCustomParameterMap(tempColladaFile);
-      return buildEntities();
-    } catch (IOException | SAXException | InvalidColladaException e) {
+      return convert(asset.getTemporaryFile());
+    } catch (IOException e) {
       throw new ConversionException("Error reading content from COLLADA file.");
     }
   }
@@ -166,6 +163,7 @@ public class ColladaConverter implements Converter {
   public List<C3mlEntity> convert(File colladaFile) throws ConversionException {
     try {
       populateLibraryMaps(colladaFile.getPath());
+      populateCustomParameterMap(colladaFile);
       return buildEntities();
     } catch (IOException | SAXException | InvalidColladaException e) {
       throw new ConversionException("Error reading content from COLLADA file.");
