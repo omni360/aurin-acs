@@ -54,6 +54,12 @@ public class C3mlEntity {
   private List<Vertex3D> coordinates;
 
   /**
+   * A list of polygons (each a list of coordinates) specifying the holes in the polygon as polygons
+   * to cut out of the original shape.
+   */
+  private List<List<Vertex3D>> holes;
+
+  /**
    * The color of the entity, if any solid color should be applied. The list of numbers represents
    * an RGBA vector (0 to 255 for red, green, blue and alpha).
    */
@@ -140,6 +146,11 @@ public class C3mlEntity {
     color.add(colorData.getGreen());
     color.add(colorData.getBlue());
     color.add(colorData.getAlpha());
+  }
+
+  @Override
+  public String toString() {
+    return String.format("C3mlEntity[%s]", getName());
   }
 
 }
