@@ -74,24 +74,6 @@ public class ColladaConverterTest extends ConverterTest {
   @Override
   public void assertThatC3mlBroadDataIsEqual(C3mlData actual, C3mlData expected) {
     assertThatC3mlBroadDataIsEqualByComparingTypes(actual, expected,
-        ImmutableList.of(C3mlEntityType.COLLECTION));
-  }
-
-  /**
-   * Asserts that the converted Broad Data mesh is leniently equals to the expected data. Geographic
-   * location is ignored because COLLADA doesn't have it.
-   *
-   * @param actual The converted {@link C3mlEntity} containing mesh.
-   * @param expected The expected {@link C3mlEntity}.
-   */
-  @Override
-  public void assertThatBroadDataContainerMeshAreEqual(C3mlEntity actual, C3mlEntity expected) {
-    assertThat(actual).isLenientEqualsToByAcceptingFields(expected, "name", "parameters");
-    assertThat(actual.getChildren().size()).isEqualTo(expected.getChildren().size());
-    C3mlEntity actualMeshEntity = actual.getChildren().get(0);
-    C3mlEntity expectedMeshEntity = expected.getChildren().get(0);
-    assertThat(actualMeshEntity.getType()).isEqualTo(C3mlEntityType.MESH);
-    assertThat(actualMeshEntity).isLenientEqualsToByAcceptingFields(expectedMeshEntity, "name",
-        "color", "positions", "triangles");
+        ImmutableList.of(C3mlEntityType.MESH));
   }
 }

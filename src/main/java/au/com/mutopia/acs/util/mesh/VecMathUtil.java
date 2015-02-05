@@ -1,17 +1,15 @@
 package au.com.mutopia.acs.util.mesh;
 
-import java.util.List;
+import au.com.mutopia.acs.util.CollectionUtils;
+import com.google.common.collect.Lists;
+import com.google.common.primitives.Doubles;
+import com.google.common.primitives.Floats;
 
 import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Tuple3d;
 import javax.vecmath.Vector3d;
-
-import au.com.mutopia.acs.util.CollectionUtils;
-
-import com.google.common.collect.Lists;
-import com.google.common.primitives.Doubles;
-import com.google.common.primitives.Floats;
+import java.util.List;
 
 /**
  * Utility class containing common method for accessing and converting VecMath classes.
@@ -62,6 +60,34 @@ public class VecMathUtil {
   }
 
   /**
+   * @param x The ratio of rotation for X axis.
+   * @param y The ratio of rotation for Y axis.
+   * @param z The ratio of rotation for Z axis.
+   * @param degrees The degree of rotation.
+   * @return A matrix transformation rotated about the X, Y and Z axis.
+   */
+  public static Matrix4d createXYZAxisRotationMatrix(double x, double y, double z, double degrees) {
+    double radians = Math.toRadians(degrees);
+    Matrix4d rotationMatrix = createIdentityMatrix();
+    rotationMatrix.rotX(x * radians);
+    rotationMatrix.rotY(y * radians);
+    rotationMatrix.rotZ(z * radians);
+    return rotationMatrix;
+  }
+
+  /**
+   * @param x The amount of translation in X axis.
+   * @param y The amount of translation in Y axis.
+   * @param z The amount of translation in Z axis.
+   * @return A matrix transformation translated to X, Y and Z.
+   */
+  public static Matrix4d createTranslationMatrix(double x, double y, double z) {
+    Matrix4d translationMatrix = createIdentityMatrix();
+    translationMatrix.setTranslation(new Vector3d(x, y, z));
+    return translationMatrix;
+  }
+
+  /**
    * Creates a matrix representing a scaling by the given value.
    * 
    * @param scale The factor to scale by. 1.0 is the identity matrix.
@@ -70,6 +96,20 @@ public class VecMathUtil {
   public static Matrix4d createScaleMatrix(double scale) {
     Matrix4d scaleMatrix = createIdentityMatrix();
     scaleMatrix.setScale(scale);
+    return scaleMatrix;
+  }
+
+  /**
+   * @param x Scale in X axis.
+   * @param y Scale in Y axis.
+   * @param z Scale in Z axis.
+   * @return A matrix transformation from scalar values in X, Y and Z axis.
+   */
+  public static Matrix4d createScaleMatrix(double x, double y, double z) {
+    Matrix4d scaleMatrix = createIdentityMatrix();
+    scaleMatrix.setElement(0, 0, x); // x scale
+    scaleMatrix.setElement(1, 1, y); // y scale
+    scaleMatrix.setElement(2, 2, z); // z scale
     return scaleMatrix;
   }
 
