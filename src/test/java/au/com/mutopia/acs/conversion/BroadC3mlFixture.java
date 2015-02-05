@@ -72,11 +72,6 @@ public class BroadC3mlFixture extends C3mlData {
     entity.addParameter("description", "Federation Square in Melbourne.");
     entity.setType(C3mlEntityType.CONTAINER);
 
-    C3mlEntity childEntity = new C3mlEntity(UUID.randomUUID().toString());
-    childEntity.setName("Cube");
-    childEntity.setType(C3mlEntityType.CONTAINER);
-    entity.addChild(childEntity);
-
     C3mlEntity childMeshEntity = new C3mlEntity(UUID.randomUUID().toString());
     childMeshEntity.setName("Cube");
     childMeshEntity.setColor(ImmutableList.of(163, 163, 163, 255));
@@ -91,7 +86,7 @@ public class BroadC3mlFixture extends C3mlData {
     childMeshEntity.setTriangles(Ints.asList(triangles));
     double[] geoLocation = new double[] {144.9679449048048, -37.81765634739649, 0.0};
     childMeshEntity.setGeoLocation(Doubles.asList(geoLocation));
-    childEntity.addChild(childMeshEntity);
+    entity.addChild(childMeshEntity);
 
     return entity;
   }

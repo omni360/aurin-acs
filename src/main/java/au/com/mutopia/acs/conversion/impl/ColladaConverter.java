@@ -50,21 +50,8 @@ import com.dddviewr.collada.visualscene.Rotate;
 import com.dddviewr.collada.visualscene.Scale;
 import com.dddviewr.collada.visualscene.Translate;
 import com.dddviewr.collada.visualscene.VisualScene;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Floats;
-import lombok.extern.log4j.Log4j;
-import org.apache.commons.io.IOUtils;
-import org.xml.sax.SAXException;
-
-import javax.vecmath.Matrix4d;
-import java.awt.*;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Converts COLLADA files into collections of {@link C3mlEntity} objects.

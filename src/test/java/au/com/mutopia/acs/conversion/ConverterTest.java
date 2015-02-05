@@ -190,6 +190,9 @@ public abstract class ConverterTest {
         // Check that the mesh container entity is equal to expected.
         assertThatBroadDataContainerMeshAreEqual(actualEntity, expectedEntity);
         continue;
+      } else if (type.equals(C3mlEntityType.MESH)) {
+        assertThatBroadDataMeshAreEqual(actualEntity, expectedEntity);
+        continue;
       }
       assertThatC3mlEntityIsLenientlyEqual(actualEntity, expectedEntity);
     }
@@ -205,17 +208,21 @@ public abstract class ConverterTest {
   public void assertThatBroadDataContainerMeshAreEqual(C3mlEntity actual, C3mlEntity expected) {
     assertThat(actual).isLenientEqualsToByAcceptingFields(expected, "name", "parameters");
     assertThat(actual.getChildren().size()).isEqualTo(expected.getChildren().size());
-    C3mlEntity actualChildEntity = actual.getChildren().get(0);
-    C3mlEntity expectedChildEntity = expected.getChildren().get(0);
-    assertThat(actualChildEntity).isLenientEqualsToByAcceptingFields(expectedChildEntity, "name",
-        "parameters");
-    assertThat(actualChildEntity.getChildren().size()).isEqualTo(
-        expectedChildEntity.getChildren().size());
-    C3mlEntity actualMeshEntity = actualChildEntity.getChildren().get(0);
-    C3mlEntity expectedMeshEntity = expectedChildEntity.getChildren().get(0);
-    assertThat(actualMeshEntity.getType()).isEqualTo(C3mlEntityType.MESH);
-    assertThat(actualMeshEntity).isLenientEqualsToByAcceptingFields(expectedMeshEntity, "name",
-        "parameters", "color", "positions", "triangles", "geoLocation");
+    C3mlEntity actualMeshEntity = actual.getChildren().get(0);
+    C3mlEntity expectedMeshEntity = expected.getChildren().get(0);
+    assertThatBroadDataMeshAreEqual(actualMeshEntity, expectedMeshEntity);
+  }
+
+  /**
+   * Asserts that the converted Broad Data mesh is leniently equals to the expected data.
+   *
+   * @param actual The converted {@link C3mlEntity} containing mesh.
+   * @param expected The expected {@link C3mlEntity}.
+   */
+  public void assertThatBroadDataMeshAreEqual(C3mlEntity actual, C3mlEntity expected) {
+    assertThat(actual.getType()).isEqualTo(C3mlEntityType.MESH);
+    assertThat(actual).isLenientEqualsToByAcceptingFields(expected, "name",
+        "color", "positions", "triangles");
   }
 
   /**
