@@ -1,20 +1,5 @@
 package au.com.mutopia.acs.conversion.impl;
 
-import java.awt.Color;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.vecmath.Matrix4d;
-
-import lombok.extern.log4j.Log4j;
-
-import org.apache.commons.io.IOUtils;
-import org.xml.sax.SAXException;
-
 import au.com.mutopia.acs.conversion.Converter;
 import au.com.mutopia.acs.exceptions.ConversionException;
 import au.com.mutopia.acs.exceptions.InvalidColladaException;
@@ -24,7 +9,6 @@ import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
 import au.com.mutopia.acs.util.ColladaExtraReader;
 import au.com.mutopia.acs.util.CollectionUtils;
 import au.com.mutopia.acs.util.mesh.VecMathUtil;
-
 import com.dddviewr.collada.Collada;
 import com.dddviewr.collada.Input;
 import com.dddviewr.collada.effects.Effect;
@@ -33,6 +17,7 @@ import com.dddviewr.collada.effects.EffectMaterial;
 import com.dddviewr.collada.effects.LibraryEffects;
 import com.dddviewr.collada.geometry.Geometry;
 import com.dddviewr.collada.geometry.LibraryGeometries;
+import com.dddviewr.collada.geometry.Mesh;
 import com.dddviewr.collada.geometry.PolyList;
 import com.dddviewr.collada.geometry.Primitives;
 import com.dddviewr.collada.geometry.Triangles;
@@ -45,9 +30,24 @@ import com.dddviewr.collada.visualscene.InstanceGeometry;
 import com.dddviewr.collada.visualscene.InstanceMaterial;
 import com.dddviewr.collada.visualscene.InstanceNode;
 import com.dddviewr.collada.visualscene.Matrix;
+import com.dddviewr.collada.visualscene.Rotate;
+import com.dddviewr.collada.visualscene.Scale;
+import com.dddviewr.collada.visualscene.Translate;
 import com.dddviewr.collada.visualscene.VisualScene;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Floats;
+import lombok.extern.log4j.Log4j;
+import org.apache.commons.io.IOUtils;
+import org.xml.sax.SAXException;
+
+import javax.vecmath.Matrix4d;
+import java.awt.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Converts COLLADA files into collections of {@link C3mlEntity} objects.
@@ -61,6 +61,11 @@ public class ColladaConverter implements Converter {
   /** Float array of identity matrix used by COLLADA. */
   private static final float[] IDENTITY = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
       0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+
+  /**
+   * Default white color if material color is absent, float[red, green, blue, alpha].
+   */
+  private static final float[] DEFAULT_COLOR_DATA = {1.0f, 1.0f, 1.0f, 1.0f};
 
   /** String identifier for vertex inputs. */
   private static final String VERTEX_STRING = "VERTEX";
@@ -225,9 +230,7 @@ public class ColladaConverter implements Converter {
   /**
    * Populates entity with parameters from COLLADA's <code>&lt;extra&gt;</code> tag.
    *
-   * @param entity The {@link C3mlEntity} object.
-   * @param extra The COLLADA's <code>&lt;extra&gt;</code> element, mapping parameter names and
-   *        values.
+   * @param daeFile The COLLADA XML file.
    * @return Map of node IDs to maps of <code>{paramName: paramValue}</code> for custom properties.
    * 
    * @see <a href="https://collada.org/mediawiki/index.php/Extension#Extension_by_addition">COLLADA
@@ -286,6 +289,8 @@ public class ColladaConverter implements Converter {
     float[] colorData = null;
     if (material.getInstanceEffect() != null) {
       colorData = getColorFromLibraryEffects(material.getInstanceEffect().getUrl());
+    } else {
+      log.debug("Missing instance effect for material id: " + id);
     }
     if (colorData == null) {
       return DEFAULT_COLOR;
@@ -303,10 +308,44 @@ public class ColladaConverter implements Converter {
     Effect effect = effectMap.get(id.replace("#", ""));
     EffectMaterial effectMaterial = effect.getEffectMaterial();
     if (effectMaterial != null) {
-      EffectAttribute diffuse = effectMaterial.getDiffuse();
-      if (diffuse != null) return diffuse.getData();
+      return getColorDataFromEffectMaterial(effectMaterial);
     }
-    return null;
+    return DEFAULT_COLOR_DATA;
+  }
+
+  /**
+   * Gets the color float[red, green, blue, alpha] from the EffectMaterial.
+   *
+   * @param effectMaterial The COLLADA effect material containing multiple color types {ambient,
+   *        diffuse, emissive, specular}.
+   * @return The float[red, green, blue, alpha] of the material's diffuse color and transparency.
+   */
+  private float[] getColorDataFromEffectMaterial(EffectMaterial effectMaterial) {
+    EffectAttribute diffuse = effectMaterial.getDiffuse();
+    float[] diffuseData;
+    if (diffuse == null) {
+      EffectAttribute ambient = effectMaterial.getAmbient();
+      if (ambient == null) {
+        diffuseData = DEFAULT_COLOR_DATA;
+      } else {
+        diffuseData = ambient.getData();
+      }
+    } else {
+      diffuseData = diffuse.getData();
+    }
+    if (diffuseData == null || diffuseData.length != 4) {
+      diffuseData = DEFAULT_COLOR_DATA;
+    }
+    EffectAttribute transparency = effectMaterial.getTransparency();
+    float alpha = 1;
+    if (transparency != null) {
+      float[] transparencyData = transparency.getData();
+      if (transparencyData != null && transparencyData.length == 1) {
+        alpha = transparencyData[0];
+      }
+    }
+    diffuseData[3] = alpha;
+    return diffuseData;
   }
 
   /**
@@ -360,17 +399,15 @@ public class ColladaConverter implements Converter {
 
     // Calculate mesh from geometry attached to this node.
     List<InstanceGeometry> instanceGeoms = node.getInstanceGeometry();
-    for (InstanceGeometry instanceGeom : instanceGeoms) {
-      Geometry geom = getGeomFromLibraryGeometries(instanceGeom.getUrl());
-      List<InstanceMaterial> instanceMaterials = instanceGeom.getInstanceMaterials();
-      Color colorData;
-      if (CollectionUtils.isNullOrEmpty(instanceMaterials)) {
-        colorData = DEFAULT_COLOR;
-      } else {
-        colorData = getColorFromLibraryMaterials(instanceMaterials.get(0).getTarget());
+    // Collapse parent node if only one geometry is attached to this node.
+    if (instanceGeoms.size() == 1) {
+      c3mlEntity = buildEntityFromInstanceGeometry(instanceGeoms.get(0), currentMatrix);
+    } else {
+      for (InstanceGeometry instanceGeom : instanceGeoms) {
+        c3mlEntity.addChild(buildEntityFromInstanceGeometry(instanceGeom, currentMatrix));
       }
-      c3mlEntity.addChild(buildEntityFromGeometry(geom, currentMatrix, colorData));
     }
+
     InstanceNode instanceNode = node.getInstanceNode();
     if (instanceNode != null) {
       Node childNode = getNodeFromLibraryNodes(instanceNode.getUrl());
@@ -393,6 +430,27 @@ public class ColladaConverter implements Converter {
   }
 
   /**
+   * Builds a {@link C3mlEntity} from {@link InstanceGeometry} and {@link Matrix}.
+   *
+   * @param instanceGeometry The {@link InstanceGeometry} with {@link Geometry} and {@link Color}.
+   * @param matrix The matrix transformation to be applied on the model.
+   * @return The created {@link C3mlEntity}.
+   * @throws InvalidColladaException
+   */
+  private C3mlEntity buildEntityFromInstanceGeometry(InstanceGeometry instanceGeometry,
+      Matrix matrix) throws InvalidColladaException {
+    Geometry geom = getGeomFromLibraryGeometries(instanceGeometry.getUrl());
+    List<InstanceMaterial> instanceMaterials = instanceGeometry.getInstanceMaterials();
+    Color colorData;
+    if (CollectionUtils.isNullOrEmpty(instanceMaterials)) {
+      colorData = DEFAULT_COLOR;
+    } else {
+      colorData = getColorFromLibraryMaterials(instanceMaterials.get(0).getTarget());
+    }
+    return buildEntityFromGeometry(geom, matrix, colorData);
+  }
+
+  /**
    * Builds a {@link C3mlEntity} from {@link Geometry}, {@link Matrix} and {@link Color}.
    *
    * @param geom The COLLADA geometry representing the shape of the model.
@@ -401,7 +459,12 @@ public class ColladaConverter implements Converter {
    * @return The created {@link C3mlEntity}.
    */
   private C3mlEntity buildEntityFromGeometry(Geometry geom, Matrix matrix, Color color) {
-    List<Primitives> primitives = geom.getMesh().getPrimitives();
+    Mesh mesh = geom.getMesh();
+    // Splines are not supported by dae4j, requires xml parser.
+    if (mesh == null) {
+      return null;
+    }
+    List<Primitives> primitives = mesh.getPrimitives();
     float[] positions = null;
     float[] normals = null;
     // input indices used by COLLADA.
@@ -410,11 +473,11 @@ public class ColladaConverter implements Converter {
     if (primitives.size() < 1) {
       return null;
     }
-    for (Primitives primitive : geom.getMesh().getPrimitives()) {
+    for (Primitives primitive : mesh.getPrimitives()) {
       if (primitive.getClass().equals(Triangles.class)) {
         type = C3mlEntityType.MESH;
-        positions = geom.getMesh().getPositionData();
-        normals = geom.getMesh().getNormalData();
+        positions = mesh.getPositionData();
+        normals = mesh.getNormalData();
         inputIndices.addAll(getVerticesFromTriangles(primitive));
       } else if (primitive.getClass().equals(PolyList.class)) {
         // TODO(Brandon) extract from polylist, requires polygon triangulation.
@@ -447,6 +510,7 @@ public class ColladaConverter implements Converter {
     List<Double> positionsAsDoubles = CollectionUtils.doublesFromFloats(Floats.asList(positions));
     List<Double> normalAsDoubles = CollectionUtils.doublesFromFloats(Floats.asList(normals));
 
+    // Apply local matrix transformation to the mesh.
     Matrix4d matrix4d = VecMathUtil.matrix4dFromFloats(matrix.getData());
     List<Double> transformedPositions =
         VecMathUtil.transformMeshPositions(positionsAsDoubles, matrix4d);
@@ -483,17 +547,37 @@ public class ColladaConverter implements Converter {
    * @return The final matrix transformation obtained from current and parent node.
    */
   private Matrix getCurrentMatrix(Node node, Matrix parentMatrix) {
-    Matrix currentMatrix = null;
+    Matrix4d currentMatrix = VecMathUtil.matrix4dFromFloats(parentMatrix.getData());
     // A bug from dae4j.
     // Currently node.getMatrix() returns null despite having matrix.
     for (BaseXform xform : node.getXforms()) {
-      if (xform.getClass().equals(Matrix.class)) {
-        currentMatrix = (Matrix) xform;
+      if (xform instanceof Matrix) {
+        Matrix matrix = (Matrix) xform;
+        Matrix4d newMatrix = VecMathUtil.matrix4dFromFloats(matrix.getData());
+        currentMatrix = combineMatrices(newMatrix, currentMatrix);
+      } else if (xform instanceof Rotate) {
+        Rotate rotate = (Rotate) xform;
+        Matrix4d rotationMatrix =
+            VecMathUtil.createXYZAxisRotationMatrix(rotate.getX(), rotate.getY(), rotate.getZ(),
+                rotate.getAngle());
+        currentMatrix = combineMatrices(rotationMatrix, currentMatrix);
+      } else if (xform instanceof Scale) {
+        Scale scale = (Scale) xform;
+        Matrix4d scaleMatrix =
+            VecMathUtil.createScaleMatrix(scale.getX(), scale.getY(), scale.getZ());
+        currentMatrix = combineMatrices(scaleMatrix, currentMatrix);
+      } else if (xform instanceof Translate) {
+        Translate translate = (Translate) xform;
+        Matrix4d translationMatrix =
+            VecMathUtil.createTranslationMatrix(translate.getX(), translate.getY(),
+                translate.getZ());
+        currentMatrix = combineMatrices(translationMatrix, currentMatrix);
       }
     }
-    currentMatrix = combineMatrices(currentMatrix, parentMatrix);
 
-    return currentMatrix;
+    Matrix matrix = new Matrix("combinedMatrix");
+    matrix.setData(Floats.toArray(VecMathUtil.matrix4dToFloats(currentMatrix)));
+    return matrix;
   }
 
   /**
@@ -503,22 +587,11 @@ public class ColladaConverter implements Converter {
    * @param matrix2 The second matrix.
    * @return The resultant matrix from combination of both matrices.
    */
-  private Matrix combineMatrices(Matrix matrix1, Matrix matrix2) {
-    if (matrix1 == null) {
-      matrix1 = new Matrix("identity");
-      matrix1.setData(IDENTITY);
-    }
-    if (matrix2 == null) {
-      matrix2 = new Matrix("identity");
-      matrix2.setData(IDENTITY);
-    }
-    Matrix4d matrix4d_1 = VecMathUtil.matrix4dFromFloats(matrix1.getData());
-    Matrix4d matrix4d_2 = VecMathUtil.matrix4dFromFloats(matrix2.getData());
-    matrix4d_1.transpose();
-    matrix4d_2.transpose();
-    matrix4d_1.mul(matrix4d_2);
-    matrix4d_1.transpose();
-    matrix1.setData(Floats.toArray(VecMathUtil.matrix4dToFloats(matrix4d_1)));
+  private Matrix4d combineMatrices(Matrix4d matrix1, Matrix4d matrix2) {
+    matrix1.transpose();
+    matrix2.transpose();
+    matrix1.mul(matrix2);
+    matrix1.transpose();
     return matrix1;
   }
 

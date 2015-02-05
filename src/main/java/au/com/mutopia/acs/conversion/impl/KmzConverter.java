@@ -1,21 +1,19 @@
 package au.com.mutopia.acs.conversion.impl;
 
-import java.util.List;
-
-import lombok.extern.log4j.Log4j;
 import au.com.mutopia.acs.conversion.Converter;
 import au.com.mutopia.acs.exceptions.ConversionException;
 import au.com.mutopia.acs.models.Asset;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
-
 import com.google.inject.Inject;
+import lombok.extern.log4j.Log4j;
+
+import java.util.List;
 
 
 /**
  * Converts KMZ files into collections of {@link C3mlEntity} objects.
  * 
- * Converts the embedded KML document with a {@link KmlConverter} and the COLLADA meshes with a
- * {@link ColladaConverter}.
+ * Converts the embedded KML document with a {@link KmlConverter}.
  */
 @Log4j
 public class KmzConverter implements Converter {
@@ -27,7 +25,6 @@ public class KmzConverter implements Converter {
    * Creates the converter with the delegate {@link Converter}s for KML and COLLADA.
    * 
    * @param kmlConverter A {@link Converter} to delegate KML entities to.
-   * @param colladaConverter A {@link Converter} to delegate COLLADA entities to.
    */
   @Inject
   public KmzConverter(KmlConverter kmlConverter) {
