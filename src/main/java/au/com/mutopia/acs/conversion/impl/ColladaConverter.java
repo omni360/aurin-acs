@@ -13,14 +13,15 @@ import javax.vecmath.Matrix4d;
 import lombok.extern.log4j.Log4j;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.xml.sax.SAXException;
 
-import au.com.mutopia.acs.conversion.Converter;
 import au.com.mutopia.acs.exceptions.ConversionException;
 import au.com.mutopia.acs.exceptions.InvalidColladaException;
 import au.com.mutopia.acs.models.Asset;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
+import au.com.mutopia.acs.util.Collada2Gltf;
 import au.com.mutopia.acs.util.ColladaExtraReader;
 import au.com.mutopia.acs.util.CollectionUtils;
 import au.com.mutopia.acs.util.mesh.VecMathUtil;
@@ -46,6 +47,7 @@ import com.dddviewr.collada.visualscene.InstanceMaterial;
 import com.dddviewr.collada.visualscene.InstanceNode;
 import com.dddviewr.collada.visualscene.Matrix;
 import com.dddviewr.collada.visualscene.VisualScene;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Floats;
 
@@ -53,7 +55,7 @@ import com.google.common.primitives.Floats;
  * Converts COLLADA files into collections of {@link C3mlEntity} objects.
  */
 @Log4j
-public class ColladaConverter implements Converter {
+public class ColladaConverter extends AbstractConverter {
 
   /** Default Geographic location for COLLADA model. */
   private static final List<Double> defaultGeolocation = Lists.newArrayList(0.0, 0.0, 0.0);
@@ -125,10 +127,10 @@ public class ColladaConverter implements Converter {
    * @return A {@link C3mlEntity} containing the same information as the COLLADA file.
    * @throws ConversionException if the conversion failed.
    */
-  public List<C3mlEntity> convert(Asset asset) throws ConversionException {
+  public List<C3mlEntity> convert(Asset asset, boolean merge) throws ConversionException {
     log.debug("Converting COLLADA asset " + asset.getName() + "...");
     try {
-      return convert(asset.getTemporaryFile());
+      return merge ? Lists.newArrayList(convertMerged(asset)) : convert(asset.getTemporaryFile());
     } catch (IOException e) {
       throw new ConversionException("Error reading content from COLLADA file.");
     }
@@ -168,6 +170,21 @@ public class ColladaConverter implements Converter {
     } catch (IOException | SAXException | InvalidColladaException e) {
       throw new ConversionException("Error reading content from COLLADA file.");
     }
+  }
+
+  /**
+   * Creates a {@link C3mlEntity} with merged glTF geometry from all of the COLLADA nodes.
+   * 
+   * @param asset The asset to convert.
+   * @return An entity with all of the asset's geometry merged into a glTF mesh.
+   * @throws IOException if the glTF file couldn't be created.
+   */
+  private C3mlEntity convertMerged(Asset asset) throws IOException {
+    C3mlEntity entity = new C3mlEntity();
+    byte[] gltfBytes = Collada2Gltf.convertToGltfBytes(new String(asset.getData()));
+    entity.setGltfData(ArrayUtils.toObject(gltfBytes));
+    entity.setName(asset.getName());
+    return entity;
   }
 
   /**

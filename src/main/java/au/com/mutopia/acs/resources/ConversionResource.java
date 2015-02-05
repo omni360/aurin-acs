@@ -5,9 +5,11 @@ import java.io.InputStream;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 
@@ -35,6 +37,7 @@ import com.sun.jersey.multipart.FormDataParam;
 @Log4j
 public class ConversionResource {
 
+  /** A map of {@link Converter} objects for each available input format. */
   private ConverterMap converters;
 
   /**
@@ -60,7 +63,8 @@ public class ConversionResource {
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   @Produces(MediaType.APPLICATION_JSON)
   public C3mlData convert(@FormDataParam("file") InputStream inputStream,
-      @FormDataParam("file") FormDataContentDisposition fileDetail) throws ConversionException {
+      @FormDataParam("file") FormDataContentDisposition fileDetail,
+      @DefaultValue("false") @QueryParam("merge") boolean merge) throws ConversionException {
     Byte[] data;
     try {
       data = ArrayUtils.toObject(IOUtils.toByteArray(inputStream));
@@ -76,7 +80,7 @@ public class ConversionResource {
 
     // Convert the data.
     Converter converter = this.converters.get(asset.getFormat());
-    List<C3mlEntity> entities = converter.convert(asset);
+    List<C3mlEntity> entities = converter.convert(asset, merge);
 
     stopWatch.stop();
     log.debug("Conversion of " + asset + " complete (" + stopWatch.getTime() / 1000.0 + " secs)");

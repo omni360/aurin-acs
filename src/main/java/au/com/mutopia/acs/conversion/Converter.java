@@ -20,10 +20,13 @@ public interface Converter {
    * Converts the given asset into a collection of {@link C3mlEntity} objects.
    * 
    * @param asset The {@link Asset} to convert.
+   * @param merge Whether to merge all of the entities into a single one (or equivalent) or not.
    * @return A collection of {@link C3mlEntity} objects corresponding to the entities in the
    *         {@link Asset}.
    * @throws ConversionException If the conversion failed.
    */
+  public List<C3mlEntity> convert(Asset asset, boolean merge) throws ConversionException;
+
   public List<C3mlEntity> convert(Asset asset) throws ConversionException;
 
 }

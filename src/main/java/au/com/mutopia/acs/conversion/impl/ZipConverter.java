@@ -18,7 +18,7 @@ import com.google.inject.Inject;
  */
 // TODO(orlade): Unzip and determine correct format to delegate to.
 @Log4j
-public class ZipConverter implements Converter {
+public class ZipConverter extends AbstractConverter {
 
   /** The {@link ShapefileConverter} to delegate the conversion operation to. */
   private final ShapefileConverter shpConverter;
@@ -33,9 +33,9 @@ public class ZipConverter implements Converter {
     this.shpConverter = shpConverter;
   }
 
-  public List<C3mlEntity> convert(Asset asset) throws ConversionException {
+  public List<C3mlEntity> convert(Asset asset, boolean merge) throws ConversionException {
     log.debug("Converting ZIP asset " + asset.getName() + "...");
-    return this.shpConverter.convert(asset);
+    return this.shpConverter.convert(asset, merge);
   }
 
 }

@@ -11,9 +11,9 @@ import au.com.mutopia.acs.models.c3ml.C3mlEntity;
  * Converts IFC files into a collection of {@link C3mlEntity} objects.
  */
 @Log4j
-public class IfcConverter implements Converter {
+public class IfcConverter extends AbstractConverter {
 
-  public List<C3mlEntity> convert(Asset asset) {
+  public List<C3mlEntity> convert(Asset asset, boolean merge) {
     log.debug("Converting IFC asset " + asset.getName() + "...");
     // TODO Auto-generated method stub
     return null;
