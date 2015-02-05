@@ -5,6 +5,8 @@ package au.com.mutopia.acs.models;
  * Enumerates the supported file formats.
  */
 public enum Format {
+  /** C3ML. */
+  C3ML("c3ml"),
   /** CityGML. */
   CITYGML("citygml"),
   /** COLLADA. */

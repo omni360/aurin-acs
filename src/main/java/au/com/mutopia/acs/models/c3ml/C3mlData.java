@@ -18,7 +18,7 @@ public class C3mlData {
 
   private List<C3mlEntity> c3mls = new ArrayList<>();
 
-  private Map<String, Map<String, String>> params = new HashMap<>();
+  private Map<String, Map<String, String>> properties = new HashMap<>();
 
   /**
    * Creates an empty {@link C3mlData} container.
@@ -41,45 +41,54 @@ public class C3mlData {
    * @param c3mls The entities to set on the data container.
    */
   public void setEntities(List<C3mlEntity> c3mls) {
-    this.c3mls = c3mls;
+    this.c3mls = new ArrayList<>();
     if (c3mls != null) {
       for (C3mlEntity entity : c3mls) {
+        addEntity(entity);
         extractEntityParameters(entity);
       }
     }
   }
 
   /**
-   * Adds the given entity to the {@link C3mlData} container.
+   * Adds the given entity and all of its children to the {@link C3mlData} container.
    * 
    * @param entity The entity to add.
    * @return True if the entity was added, false otherwise.
    */
   public boolean addEntity(C3mlEntity entity) {
-    return c3mls.add(entity);
+    boolean result = c3mls.add(entity);
+    for (C3mlEntity child : entity.getChildren()) {
+      result |= addEntity(child);
+    }
+    return result;
   }
 
   /**
-   * Removes the given entity from the {@link C3mlData} container.
+   * Removes the given entity and all of its children from the {@link C3mlData} container.
    * 
    * @param entity The entity to remove.
    * @return True if the entity was added, false otherwise.
    */
   public boolean removeEntity(C3mlEntity entity) {
-    return c3mls.remove(entity);
+    boolean result = c3mls.remove(entity);
+    for (C3mlEntity child : entity.getChildren()) {
+      result |= removeEntity(child);
+    }
+    return result;
   }
 
   /**
-   * Updates the {@link #params} field with the parameter data for the given {@link C3mlEntity}.
+   * Updates the {@link #properties} field with the parameter data for the given {@link C3mlEntity}.
    * 
    * @param entity The {@link C3mlEntity} to extract parameters from.
    */
   private void extractEntityParameters(C3mlEntity entity) {
     for (String name : entity.getProperties().keySet()) {
-      Map<String, String> param = params.get(name);
+      Map<String, String> param = properties.get(name);
       if (param == null) {
         param = new HashMap<>();
-        params.put(name, param);
+        properties.put(name, param);
       }
       param.put(entity.getId().toString(), entity.getProperties().get(name));
     }
@@ -89,11 +98,12 @@ public class C3mlData {
   public boolean equals(Object other) {
     if (!(other instanceof C3mlData)) return false;
     C3mlData otherData = (C3mlData) other;
-    if (c3mls.size() == otherData.getC3mls().size() && params.equals(otherData.getParams())) {
+    if (c3mls.size() == otherData.getC3mls().size() && properties.equals(otherData.getProperties())) {
       for (C3mlEntity entity : c3mls) {
         if (!otherData.getC3mls().contains(entity)) return false;
       }
     }
     return true;
   }
+
 }

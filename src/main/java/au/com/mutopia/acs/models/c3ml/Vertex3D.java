@@ -1,5 +1,7 @@
 package au.com.mutopia.acs.models.c3ml;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Data;
 
 /**
@@ -17,6 +19,12 @@ public class Vertex3D {
   /** Altitude value for this vertex (meters). */
   private double altitude;
 
+  public Vertex3D() {
+    latitude = 0.0;
+    longitude = 0.0;
+    altitude = 0.0;
+  }
+
   /**
    * Creates the vertex with the given values.
    * 
@@ -28,6 +36,18 @@ public class Vertex3D {
     this.latitude = latitude;
     this.longitude = longitude;
     this.altitude = altitude;
+  }
+  
+  void setX(double x) {
+    setLongitude(x);
+  }
+  
+  void setY(double y) {
+    setLatitude(y);
+  }
+  
+  void setZ(double z) {
+    setAltitude(z);
   }
 
   public String toString() {

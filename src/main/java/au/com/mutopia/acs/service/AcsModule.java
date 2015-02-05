@@ -5,6 +5,7 @@ import java.util.Map;
 
 import au.com.mutopia.acs.conversion.Converter;
 import au.com.mutopia.acs.conversion.ConverterMap;
+import au.com.mutopia.acs.conversion.impl.C3mlConverter;
 import au.com.mutopia.acs.conversion.impl.ColladaConverter;
 import au.com.mutopia.acs.conversion.impl.ConverterMapImpl;
 import au.com.mutopia.acs.conversion.impl.GeoJsonConverter;
@@ -39,6 +40,7 @@ public class AcsModule extends AbstractModule {
     final ShapefileConverter shpConverter = new ShapefileConverter(kmlConverter);
     Map<Format, Converter> converters = new HashMap<>();
 
+    converters.put(Format.C3ML, new C3mlConverter());
     converters.put(Format.COLLADA, new ColladaConverter());
     converters.put(Format.GEOJSON, new GeoJsonConverter(kmlConverter));
     converters.put(Format.IFC, new IfcConverter(bimAuth));

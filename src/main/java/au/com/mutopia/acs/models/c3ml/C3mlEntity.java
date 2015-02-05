@@ -10,6 +10,9 @@ import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * An object representing the contents of a C3ML document.
  * 
@@ -25,13 +28,21 @@ public class C3mlEntity {
   private String name;
 
   /** The name of the type of the entity, default to empty container without geometries. */
-  private C3mlEntityType type = C3mlEntityType.CONTAINER;
+  private C3mlEntityType type = C3mlEntityType.COLLECTION;
 
   /** The ID of this entity's parent entity. */
   private String parentId;
 
-  /** The {@link C3mlEntity} objects that belong 'within' this one. */
+  /**
+   * The {@link C3mlEntity} objects that belong 'within' this one. This is not serialized to JSON
+   * C3ML.
+   */
+  @JsonIgnore
   private List<C3mlEntity> children = new ArrayList<>();
+
+  /** The IDs of the child entities. This is what the children field is expected to contain. */
+  @JsonProperty("children")
+  private List<String> childrenIds = new ArrayList<>();
 
   /** A map of property names to values of this entity. */
   private Map<String, String> properties = new HashMap<>();
@@ -104,6 +115,7 @@ public class C3mlEntity {
       return;
     }
     children.add(child);
+    childrenIds.add(child.getId());
     child.setParentId(getId());
   }
 

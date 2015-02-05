@@ -70,11 +70,11 @@ public class BroadC3mlFixture extends C3mlData {
     C3mlEntity entity = new C3mlEntity(UUID.randomUUID().toString());
     entity.setName("Federation Square");
     entity.addProperty("description", "Federation Square in Melbourne.");
-    entity.setType(C3mlEntityType.CONTAINER);
+    entity.setType(C3mlEntityType.COLLECTION);
 
     C3mlEntity childEntity = new C3mlEntity(UUID.randomUUID().toString());
     childEntity.setName("Cube");
-    childEntity.setType(C3mlEntityType.CONTAINER);
+    childEntity.setType(C3mlEntityType.COLLECTION);
     entity.addChild(childEntity);
 
     C3mlEntity childMeshEntity = new C3mlEntity(UUID.randomUUID().toString());

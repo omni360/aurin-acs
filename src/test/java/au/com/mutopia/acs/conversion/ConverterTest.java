@@ -153,7 +153,7 @@ public abstract class ConverterTest {
     C3mlEntity actualPolygon = getFirstOfType(C3mlEntityType.POLYGON, actualC3mls);
 
     assertThatC3mlEntityIsLenientlyEqual(actualPolygon, expectedPolygon);
-    assertThatParametersAreEqual(actual.getParams(), expected.getParams());
+    assertThatParametersAreEqual(actual.getProperties(), expected.getProperties());
   }
 
   /**
@@ -166,7 +166,7 @@ public abstract class ConverterTest {
   public void assertThatC3mlBroadDataIsEqual(C3mlData actual, C3mlData expected) {
     assertThatC3mlBroadDataIsEqualByComparingTypes(actual, expected,
         ImmutableList.of(C3mlEntityType.POINT, C3mlEntityType.LINE, C3mlEntityType.POLYGON,
-            C3mlEntityType.CONTAINER));
+            C3mlEntityType.COLLECTION));
   }
 
   /**
@@ -186,14 +186,14 @@ public abstract class ConverterTest {
     for (C3mlEntityType type : c3mlEntityTypes) {
       C3mlEntity actualEntity = getFirstOfType(type, actualC3mls);
       C3mlEntity expectedEntity = getFirstOfType(type, expectedC3mls);
-      if (type.equals(C3mlEntityType.CONTAINER)) {
+      if (type.equals(C3mlEntityType.COLLECTION)) {
         // Check that the mesh container entity is equal to expected.
         assertThatBroadDataContainerMeshAreEqual(actualEntity, expectedEntity);
         continue;
       }
       assertThatC3mlEntityIsLenientlyEqual(actualEntity, expectedEntity);
     }
-    assertThatParametersAreEqual(actual.getParams(), expected.getParams());
+    assertThatParametersAreEqual(actual.getProperties(), expected.getProperties());
   }
 
   /**

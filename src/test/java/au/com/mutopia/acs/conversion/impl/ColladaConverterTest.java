@@ -33,14 +33,14 @@ public class ColladaConverterTest extends ConverterTest {
     // Remove KMZ specific container entity for mesh.
     List<C3mlEntity> editedEntities = new ArrayList<>();
     for (C3mlEntity entity : BROAD_DATA.getC3mls()) {
-      editedEntities.add(entity.getType().equals(C3mlEntityType.CONTAINER) ? entity.getChildren()
+      editedEntities.add(entity.getType().equals(C3mlEntityType.COLLECTION) ? entity.getChildren()
           .get(0) : entity);
     }
     BROAD_DATA.setC3mls(editedEntities);
     // Remove non meshes from the expected output fixtures, since the COLLADA inputs only have
     // meshes.
     BROAD_DATA =
-        filter(BROAD_DATA, Lists.newArrayList(C3mlEntityType.MESH, C3mlEntityType.CONTAINER));
+        filter(BROAD_DATA, Lists.newArrayList(C3mlEntityType.MESH, C3mlEntityType.COLLECTION));
   }
 
   /**
@@ -74,7 +74,7 @@ public class ColladaConverterTest extends ConverterTest {
   @Override
   public void assertThatC3mlBroadDataIsEqual(C3mlData actual, C3mlData expected) {
     assertThatC3mlBroadDataIsEqualByComparingTypes(actual, expected,
-        ImmutableList.of(C3mlEntityType.CONTAINER));
+        ImmutableList.of(C3mlEntityType.COLLECTION));
   }
 
   /**
