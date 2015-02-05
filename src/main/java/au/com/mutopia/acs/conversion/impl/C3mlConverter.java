@@ -11,9 +11,9 @@ import au.com.mutopia.acs.models.c3ml.C3mlEntity;
  * Converts a C3ML file into a collection of {@link C3mlEntity} objects.
  */
 @Log4j
-public class C3mlConverter implements Converter {
+public class C3mlConverter extends AbstractConverter {
 
-  public List<C3mlEntity> convert(Asset asset) {
+  public List<C3mlEntity> convert(Asset asset, boolean merge) {
     log.debug("Converting C3ML asset " + asset.getName() + "...");
     // TODO Auto-generated method stub
     return null;

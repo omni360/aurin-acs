@@ -24,7 +24,7 @@ import com.google.inject.Inject;
  * {@link KmlConverter}.
  */
 @Log4j
-public class ShapefileConverter implements Converter {
+public class ShapefileConverter extends AbstractConverter {
 
   /** The {@link KmlConverter} to delegate the conversion operation to. */
   private final KmlConverter kmlConverter;
@@ -39,7 +39,7 @@ public class ShapefileConverter implements Converter {
     this.kmlConverter = kmlConverter;
   }
 
-  public List<C3mlEntity> convert(Asset asset) throws ConversionException {
+  public List<C3mlEntity> convert(Asset asset, boolean merge) throws ConversionException {
     log.debug("Converting Shapefile asset " + asset.getName() + "...");
     try {
       // Extract all Shapefiles to be converted. A zip file may have multiple Shapefiles,

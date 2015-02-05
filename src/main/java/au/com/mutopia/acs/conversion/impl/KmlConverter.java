@@ -67,7 +67,7 @@ import java.util.Map;
  * Converts KML files into a collection of {@link C3mlEntity} objects.
  */
 @Log4j
-public class KmlConverter implements Converter {
+public class KmlConverter extends AbstractConverter {
   /**
    * Reference to the KML folder path, used to find the path to COLLADA (.dae) file and texture
    * files.
@@ -91,9 +91,10 @@ public class KmlConverter implements Converter {
    * Converts the KML {@link Asset} into a list of {@link C3mlEntity}s.
    *
    * @param asset An {@link Asset} representing a KML file.
+   * @param merge Whether to merge all of the content into a single entity.
    * @return A {@link C3mlEntity} containing the same information as the KML.
    */
-  public List<C3mlEntity> convert(Asset asset) throws ConversionException {
+  public List<C3mlEntity> convert(Asset asset, boolean merge) throws ConversionException {
     try {
       File kmlFile = asset.getTemporaryFile();
       return convert(kmlFile);

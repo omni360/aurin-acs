@@ -20,7 +20,7 @@ import com.google.inject.Inject;
  * {@link KmlConverter}.
  */
 @Log4j
-public class GeoJsonConverter implements Converter {
+public class GeoJsonConverter extends AbstractConverter {
 
   /** The {@link KmlConverter} to delegate the conversion operation to. */
   private final KmlConverter kmlConverter;
@@ -35,7 +35,7 @@ public class GeoJsonConverter implements Converter {
     this.kmlConverter = kmlConverter;
   }
 
-  public List<C3mlEntity> convert(Asset asset) throws ConversionException {
+  public List<C3mlEntity> convert(Asset asset, boolean merge) throws ConversionException {
     log.debug("Converting GeoJSON asset " + asset.getName() + "...");
     try {
       File kml = Ogr2Ogr.convertToKml(asset.getTemporaryFile());

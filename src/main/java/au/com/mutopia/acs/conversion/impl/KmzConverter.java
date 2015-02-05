@@ -16,7 +16,7 @@ import java.util.List;
  * Converts the embedded KML document with a {@link KmlConverter}.
  */
 @Log4j
-public class KmzConverter implements Converter {
+public class KmzConverter extends AbstractConverter {
 
   /** The {@link KmlConverter} to delegate the 2D conversion operation to. */
   private final KmlConverter kmlConverter;
@@ -31,7 +31,7 @@ public class KmzConverter implements Converter {
     this.kmlConverter = kmlConverter;
   }
 
-  public List<C3mlEntity> convert(Asset asset) throws ConversionException {
+  public List<C3mlEntity> convert(Asset asset, boolean merge) throws ConversionException {
     log.debug("Converting KML asset " + asset.getName() + "...");
     return kmlConverter.convertKmz(asset);
   }

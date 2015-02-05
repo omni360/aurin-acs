@@ -11,9 +11,9 @@ import au.com.mutopia.acs.models.c3ml.C3mlEntity;
  * Converts CityGML files into a collection of {@link C3mlEntity} objects.
  */
 @Log4j
-public class CityGmlConverter implements Converter {
+public class CityGmlConverter extends AbstractConverter {
 
-  public List<C3mlEntity> convert(Asset asset) {
+  public List<C3mlEntity> convert(Asset asset, boolean merge) {
     log.debug("Converting CityGML asset " + asset.getName() + "...");
     // TODO Auto-generated method stub
     return null;
