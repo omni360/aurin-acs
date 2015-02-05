@@ -33,8 +33,8 @@ public class C3mlEntity {
   /** The {@link C3mlEntity} objects that belong 'within' this one. */
   private List<C3mlEntity> children = new ArrayList<>();
 
-  /** A map of parameter names to values of this entity. */
-  private Map<String, String> parameters = new HashMap<>();
+  /** A map of property names to values of this entity. */
+  private Map<String, String> properties = new HashMap<>();
 
   /**
    * A list of coordinates of points making up the entity geometry (2D entities only).Each vertex
@@ -113,8 +113,8 @@ public class C3mlEntity {
    * @param name The name of the parameter.
    * @param value The entity's parameter value.
    */
-  public void addParameter(String name, String value) {
-    parameters.put(name, value);
+  public void addProperty(String name, String value) {
+    properties.put(name, value);
   }
 
   /**
@@ -129,4 +129,5 @@ public class C3mlEntity {
     color.add(colorData.getBlue());
     color.add(colorData.getAlpha());
   }
+
 }

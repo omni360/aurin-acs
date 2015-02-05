@@ -14,7 +14,7 @@ import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 public class C3mlConverter extends AbstractConverter {
 
   public List<C3mlEntity> convert(Asset asset, boolean merge) {
-    log.debug("Converting C3ML asset " + asset.getName() + "...");
+    log.debug("Converting C3ML asset " + asset + "...");
     // TODO Auto-generated method stub
     return null;
   }

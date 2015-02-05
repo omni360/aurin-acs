@@ -34,7 +34,7 @@ public class ZipConverter extends AbstractConverter {
   }
 
   public List<C3mlEntity> convert(Asset asset, boolean merge) throws ConversionException {
-    log.debug("Converting ZIP asset " + asset.getName() + "...");
+    log.debug("Converting ZIP asset " + asset + "...");
     return this.shpConverter.convert(asset, merge);
   }
 

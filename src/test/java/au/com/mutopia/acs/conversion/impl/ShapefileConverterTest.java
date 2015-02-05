@@ -33,7 +33,7 @@ public class ShapefileConverterTest extends ConverterTest {
     // Rename 'description' parameter for Shapefile expected fixtures, since Shapefile header has
     // a limit of 10 characters.
     for (C3mlEntity c3mlEntity : BROAD_DATA.getC3mls()) {
-      Map<String, String> newParameters = c3mlEntity.getParameters();
+      Map<String, String> newParameters = c3mlEntity.getProperties();
       newParameters.put("Descriptio", newParameters.get("description"));
       newParameters.remove("description");
     }

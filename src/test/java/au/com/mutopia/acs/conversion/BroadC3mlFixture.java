@@ -27,7 +27,7 @@ public class BroadC3mlFixture extends C3mlData {
   private C3mlEntity buildPoint() {
     C3mlEntity entity = new C3mlEntity(UUID.randomUUID().toString());
     entity.setName("Etihad Stadium");
-    entity.addParameter("description", "Etihad Stadium in Docklands.");
+    entity.addProperty("description", "Etihad Stadium in Docklands.");
     entity.setCoordinates(ImmutableList.of(new Vertex3D(-37.81666683012415, 144.947531183432, 0)));
     entity.setColor(ImmutableList.of(255, 0, 0, 255));
     entity.setType(C3mlEntityType.POINT);
@@ -37,7 +37,7 @@ public class BroadC3mlFixture extends C3mlData {
   private C3mlEntity buildLine() {
     C3mlEntity entity = new C3mlEntity(UUID.randomUUID().toString());
     entity.setName("Train Track");
-    entity.addParameter("description",
+    entity.addProperty("description",
         "A test segment of train track ending in Southern Cross Station.");
     Vertex3D a = new Vertex3D(-37.81168134092717, 144.9457316659238, 0);
     Vertex3D b = new Vertex3D(-37.81400168495323, 144.9487326064075, 0);
@@ -53,7 +53,7 @@ public class BroadC3mlFixture extends C3mlData {
   private C3mlEntity buildPolygon() {
     C3mlEntity entity = new C3mlEntity(UUID.randomUUID().toString());
     entity.setName("Melbourne CBD");
-    entity.addParameter("description", "Footprint of the Melbourne CBD.");
+    entity.addProperty("description", "Footprint of the Melbourne CBD.");
     Vertex3D a = new Vertex3D(-37.81548625281237, 144.9750826126445, 0);
     Vertex3D b = new Vertex3D(-37.80735973465846, 144.9710060006769, 0);
     Vertex3D c = new Vertex3D(-37.81305802727754, 144.9512328118604, 0);
@@ -69,7 +69,7 @@ public class BroadC3mlFixture extends C3mlData {
     // a part of the mesh.
     C3mlEntity entity = new C3mlEntity(UUID.randomUUID().toString());
     entity.setName("Federation Square");
-    entity.addParameter("description", "Federation Square in Melbourne.");
+    entity.addProperty("description", "Federation Square in Melbourne.");
     entity.setType(C3mlEntityType.CONTAINER);
 
     C3mlEntity childEntity = new C3mlEntity(UUID.randomUUID().toString());

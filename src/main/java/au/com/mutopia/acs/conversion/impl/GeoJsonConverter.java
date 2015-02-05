@@ -36,14 +36,14 @@ public class GeoJsonConverter extends AbstractConverter {
   }
 
   public List<C3mlEntity> convert(Asset asset, boolean merge) throws ConversionException {
-    log.debug("Converting GeoJSON asset " + asset.getName() + "...");
+    log.debug("Converting GeoJSON asset " + asset + "...");
     try {
       File kml = Ogr2Ogr.convertToKml(asset.getTemporaryFile());
       List<C3mlEntity> entities = kmlConverter.convert(new Asset(kml));
       // Remove duplicated 'Name' and 'Description' parameters created when Ogr2Ogr converts to KML.
       for (C3mlEntity entity : entities) {
-        entity.getParameters().remove("Name");
-        entity.getParameters().remove("Description");
+        entity.getProperties().remove("Name");
+        entity.getProperties().remove("Description");
       }
       return entities;
     } catch (IOException e) {

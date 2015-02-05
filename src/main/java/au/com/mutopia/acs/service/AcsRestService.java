@@ -19,7 +19,7 @@ import com.yammer.dropwizard.config.Environment;
  * The main gateway service that provides the REST API for the Catalyst platform.
  */
 @Log4j
-public class AcsRestService extends AutoConfigService<Configuration> {
+public class AcsRestService extends AutoConfigService<AcsConfiguration> {
 
   /**
    * Creates the ACS service.
@@ -43,13 +43,12 @@ public class AcsRestService extends AutoConfigService<Configuration> {
    * Creates the Guice dependency injector for the service using the {@link AcsModule} configuration
    * module.
    *
-   * @param configuration The service configuration information read out of the Dropwizard YAML
-   *        file.
+   * @param config The service configuration information read out of the Dropwizard YAML file.
    */
   @Override
-  protected Injector createInjector(Configuration configuration) {
+  protected Injector createInjector(AcsConfiguration config) {
     log.info("Creating core injector...");
-    AbstractModule coreModule = new AcsModule();
+    AbstractModule coreModule = new AcsModule(config);
     Injector injector = Guice.createInjector(coreModule);
     log.info("Configuring core injector...");
     log.info("Injector created and configured.");
@@ -64,7 +63,7 @@ public class AcsRestService extends AutoConfigService<Configuration> {
    * @see #run(Configuration, Environment)
    */
   @Override
-  protected void runWithInjector(Configuration configuration, Environment environment,
+  protected void runWithInjector(AcsConfiguration configuration, Environment environment,
       final Injector injector) throws Exception {
     log.info("Running core service...");
 
@@ -72,7 +71,9 @@ public class AcsRestService extends AutoConfigService<Configuration> {
     environment.addResource(injector.getInstance(ConversionResource.class));
 
     // Support for CORS.
-    environment.addFilter(CrossOriginFilter.class, "/*").setInitParam("allowedOrigins", "*")
+    environment
+        .addFilter(CrossOriginFilter.class, "/*")
+        .setInitParam("allowedOrigins", "*")
         .setInitParam("allowedHeaders", "X-Requested-With,Cache-Control,Content-Type,Accept,Origin")
         .setInitParam("allowedMethods", "OPTIONS,GET,PUT,POST,DELETE,HEAD");
 
@@ -85,7 +86,7 @@ public class AcsRestService extends AutoConfigService<Configuration> {
    * Initializes the services by adding service bundles to the service bootstrap.
    */
   @Override
-  public void initialize(Bootstrap<Configuration> bootstrap) {
+  public void initialize(Bootstrap<AcsConfiguration> bootstrap) {
     log.info("Initializing core service...");
     bootstrap.setName("Asset Conversion Service");
     log.info("Core service initialized.");

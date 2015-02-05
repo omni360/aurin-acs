@@ -75,13 +75,13 @@ public class C3mlData {
    * @param entity The {@link C3mlEntity} to extract parameters from.
    */
   private void extractEntityParameters(C3mlEntity entity) {
-    for (String name : entity.getParameters().keySet()) {
+    for (String name : entity.getProperties().keySet()) {
       Map<String, String> param = params.get(name);
       if (param == null) {
         param = new HashMap<>();
         params.put(name, param);
       }
-      param.put(entity.getId().toString(), entity.getParameters().get(name));
+      param.put(entity.getId().toString(), entity.getProperties().get(name));
     }
   }
 

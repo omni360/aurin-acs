@@ -552,7 +552,7 @@ public class KmlConverter extends AbstractConverter {
     populateParameters(entity, feature.getExtendedData());
     String description = feature.getDescription();
     if (!Strings.isNullOrEmpty(description)) {
-      entity.addParameter("description", description);
+      entity.addProperty("description", description);
     }
     return entity;
   }
@@ -570,7 +570,7 @@ public class KmlConverter extends AbstractConverter {
     if (extendedData == null) return;
     for (SchemaData schemaData : extendedData.getSchemaData()) {
       for (SimpleData simpleData : schemaData.getSimpleData()) {
-        entity.addParameter(simpleData.getName(), simpleData.getValue());
+        entity.addProperty(simpleData.getName(), simpleData.getValue());
       }
     }
   }

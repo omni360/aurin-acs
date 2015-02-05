@@ -128,7 +128,7 @@ public class ColladaConverter extends AbstractConverter {
    * @throws ConversionException if the conversion failed.
    */
   public List<C3mlEntity> convert(Asset asset, boolean merge) throws ConversionException {
-    log.debug("Converting COLLADA asset " + asset.getName() + "...");
+    log.debug("Converting COLLADA asset " + asset + "...");
     try {
       return merge ? Lists.newArrayList(convertMerged(asset)) : convert(asset.getTemporaryFile());
     } catch (IOException e) {
@@ -397,7 +397,7 @@ public class ColladaConverter extends AbstractConverter {
     // Add any custom parameters that were extracted.
     if (customParamMap.containsKey(node.getId())) {
       for (Map.Entry<String, String> params : customParamMap.get(node.getId()).entrySet()) {
-        c3mlEntity.addParameter(params.getKey(), params.getValue());
+        c3mlEntity.addProperty(params.getKey(), params.getValue());
       }
     }
 

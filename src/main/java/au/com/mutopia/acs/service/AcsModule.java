@@ -14,6 +14,7 @@ import au.com.mutopia.acs.conversion.impl.KmzConverter;
 import au.com.mutopia.acs.conversion.impl.ShapefileConverter;
 import au.com.mutopia.acs.conversion.impl.ZipConverter;
 import au.com.mutopia.acs.models.Format;
+import au.com.mutopia.acs.util.BimServerAuthenticator;
 
 import com.google.inject.AbstractModule;
 
@@ -22,15 +23,25 @@ import com.google.inject.AbstractModule;
  */
 public class AcsModule extends AbstractModule {
 
+  private AcsConfiguration config;
+
+  public AcsModule(AcsConfiguration config) {
+    this.config = config;
+  }
+
   @Override
   protected void configure() {
+    final BimServerAuthenticator bimAuth =
+        new BimServerAuthenticator(config.getBimserver().getHost(), config.getBimserver()
+            .getUsername(), config.getBimserver().getPassword());
+
     final KmlConverter kmlConverter = new KmlConverter();
     final ShapefileConverter shpConverter = new ShapefileConverter(kmlConverter);
     Map<Format, Converter> converters = new HashMap<>();
 
     converters.put(Format.COLLADA, new ColladaConverter());
     converters.put(Format.GEOJSON, new GeoJsonConverter(kmlConverter));
-    converters.put(Format.IFC, new IfcConverter());
+    converters.put(Format.IFC, new IfcConverter(bimAuth));
     converters.put(Format.KML, kmlConverter);
     converters.put(Format.KMZ, new KmzConverter(kmlConverter));
     converters.put(Format.SHP, shpConverter);

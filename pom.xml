@@ -182,6 +182,42 @@
       <artifactId>dae4j</artifactId>
       <version>${dae4j.version}</version>
     </dependency>
+    <!-- BIMserver -->
+    <dependency>
+      <groupId>org.osbim</groupId>
+      <artifactId>bimserver</artifactId>
+      <version>${bimserver.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.osbim</groupId>
+      <artifactId>bimserver-buildingsmartlibrary</artifactId>
+      <version>${bimserver.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.osbim</groupId>
+      <artifactId>bimserver-client-lib</artifactId>
+      <version>${bimserver.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.osbim</groupId>
+      <artifactId>bimserver-ifc</artifactId>
+      <version>${bimserver.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.osbim</groupId>
+      <artifactId>bimserver-ifcplugins</artifactId>
+      <version>${bimserver.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.osbim</groupId>
+      <artifactId>bimserver-shared</artifactId>
+      <version>${bimserver.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.osbim</groupId>
+      <artifactId>bimserver-utils</artifactId>
+      <version>${bimserver.version}</version>
+    </dependency>
 
     <!-- Runtime execution -->
     <dependency>

@@ -40,7 +40,7 @@ public class ShapefileConverter extends AbstractConverter {
   }
 
   public List<C3mlEntity> convert(Asset asset, boolean merge) throws ConversionException {
-    log.debug("Converting Shapefile asset " + asset.getName() + "...");
+    log.debug("Converting Shapefile asset " + asset + "...");
     try {
       // Extract all Shapefiles to be converted. A zip file may have multiple Shapefiles,
       // with each Shapefile containing c3mlEntities of a single geometry type.
@@ -67,7 +67,7 @@ public class ShapefileConverter extends AbstractConverter {
         entities.addAll(kmlConverter.convert(new Asset(kml)));
       }
       for (C3mlEntity entity : entities) {
-        entity.getParameters().remove("Name");
+        entity.getProperties().remove("Name");
       }
       return entities;
     } catch (IOException e) {
