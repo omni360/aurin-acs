@@ -2,7 +2,9 @@ package au.com.mutopia.acs.conversion.impl;
 
 import java.awt.Color;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +12,7 @@ import javax.vecmath.Matrix4d;
 
 import lombok.extern.log4j.Log4j;
 
+import org.apache.commons.io.IOUtils;
 import org.xml.sax.SAXException;
 
 import au.com.mutopia.acs.conversion.Converter;
@@ -18,7 +21,7 @@ import au.com.mutopia.acs.exceptions.InvalidColladaException;
 import au.com.mutopia.acs.models.Asset;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
-import au.com.mutopia.acs.util.ColladaExtraElement;
+import au.com.mutopia.acs.util.ColladaExtraReader;
 import au.com.mutopia.acs.util.CollectionUtils;
 import au.com.mutopia.acs.util.mesh.VecMathUtil;
 
@@ -44,7 +47,6 @@ import com.dddviewr.collada.visualscene.InstanceNode;
 import com.dddviewr.collada.visualscene.Matrix;
 import com.dddviewr.collada.visualscene.VisualScene;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.primitives.Floats;
 
 /**
@@ -78,22 +80,28 @@ public class ColladaConverter implements Converter {
   /**
    * Map of COLLADA nodes IDs and respective nodes.
    */
-  private Map<String, Node> nodeMap = Maps.newHashMap();
+  private Map<String, Node> nodeMap = new HashMap<>();
 
   /**
    * Map of COLLADA geometry IDs and respective geometries.
    */
-  private Map<String, Geometry> geometryMap = Maps.newHashMap();
+  private Map<String, Geometry> geometryMap = new HashMap<>();
 
   /**
    * Map of COLLADA material IDs and respective materials.
    */
-  private Map<String, Material> materialMap = Maps.newHashMap();
+  private Map<String, Material> materialMap = new HashMap<>();
 
   /**
    * Map of COLLADA effect IDs and respective effects.
    */
-  private Map<String, Effect> effectMap = Maps.newHashMap();
+  private Map<String, Effect> effectMap = new HashMap<>();
+
+  /**
+   * Map of COLLADA node IDs to maps of <code>{paramName: paramValue}</code> for custom properties
+   * stored in the <code>&lt;extra&gt;</code> tags.
+   */
+  private Map<String, Map<String, String>> customParamMap = new HashMap<>();
 
   /**
    * The rotation to be applied on the whole COLLADA model.
@@ -122,6 +130,7 @@ public class ColladaConverter implements Converter {
     try {
       File tempColladaFile = asset.getTemporaryFile();
       populateLibraryMaps(tempColladaFile.getPath());
+      populateCustomParameterMap(tempColladaFile);
       return buildEntities();
     } catch (IOException | SAXException | InvalidColladaException e) {
       throw new ConversionException("Error reading content from COLLADA file.");
@@ -221,13 +230,22 @@ public class ColladaConverter implements Converter {
    * @param entity The {@link C3mlEntity} object.
    * @param extra The COLLADA's <code>&lt;extra&gt;</code> element, mapping parameter names and
    *        values.
+   * @return Map of node IDs to maps of <code>{paramName: paramValue}</code> for custom properties.
    * 
    * @see <a href="https://collada.org/mediawiki/index.php/Extension#Extension_by_addition">COLLADA
    *      docs for the &lt;extra&gt; tag</a>
    */
-  private void populateParameters(C3mlEntity entity, ColladaExtraElement extra) {
-    // TODO(orlade): Implement extra parsing.
+  private void populateCustomParameterMap(File daeFile) {
+    try {
+      String colladaXml = IOUtils.toString(new FileInputStream(daeFile));
+      customParamMap = new ColladaExtraReader().getExtraProperties(colladaXml);
+    } catch (IOException e) {
+      log.error("Failed to populate custom parameters from DAE file " + daeFile.getAbsolutePath(),
+          e);
+      return;
+    }
   }
+
 
   /**
    * Gets the node from the LibraryNodes that matches given node reference ID.
@@ -361,7 +379,12 @@ public class ColladaConverter implements Converter {
       c3mlEntity.addChild(buildEntityFromNode(childNode, currentMatrix));
     }
 
-    // TODO(orlade): Parse custom parameters from any <extra> nodes with #populateParameters.
+    // Add any custom parameters that were extracted.
+    if (customParamMap.containsKey(node.getId())) {
+      for (Map.Entry<String, String> params : customParamMap.get(node.getId()).entrySet()) {
+        c3mlEntity.addParameter(params.getKey(), params.getValue());
+      }
+    }
 
     // Propagate to children nodes.
     List<Node> childNodes = node.getChildNodes();
