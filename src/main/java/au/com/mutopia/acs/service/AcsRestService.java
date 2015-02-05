@@ -73,7 +73,7 @@ public class AcsRestService extends AutoConfigService<Configuration> {
 
     // Support for CORS.
     environment.addFilter(CrossOriginFilter.class, "/*").setInitParam("allowedOrigins", "*")
-        .setInitParam("allowedHeaders", "X-Requested-With,Content-Type,Accept,Origin")
+        .setInitParam("allowedHeaders", "X-Requested-With,Cache-Control,Content-Type,Accept,Origin")
         .setInitParam("allowedMethods", "OPTIONS,GET,PUT,POST,DELETE,HEAD");
 
     super.runWithInjector(configuration, environment, injector);
