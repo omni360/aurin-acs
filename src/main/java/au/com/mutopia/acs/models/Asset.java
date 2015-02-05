@@ -22,7 +22,7 @@ import com.sun.jersey.core.header.FormDataContentDisposition;
 public class Asset {
 
   /** A name describing the asset. */
-  private String name;
+  private String name = "UNNAMED";
 
   /** The binary content of the file. */
   @JsonIgnore
@@ -50,6 +50,7 @@ public class Asset {
    */
   public Asset(byte[] data, FormDataContentDisposition fileDetails) {
     setData(data);
+    setName(FilenameUtils.removeExtension(fileDetails.getFileName()));
     setFileName(fileDetails.getFileName());
     setFileSize(fileDetails.getSize());
     setFormat(determineFormat());
@@ -73,6 +74,7 @@ public class Asset {
    */
   public Asset(File file) throws IOException {
     setData(FileUtils.readFileToByteArray(file));
+    setName(FilenameUtils.removeExtension(file.getName()));
     setFileName(file.getName());
     setFileSize(file.length());
     setFormat(determineFormat());
@@ -110,12 +112,6 @@ public class Asset {
     return Format.getByValue(ext);
   }
 
-  @Override
-  public String toString() {
-    return String.format("Asset[%s (%s)]", getFileName(),
-        FileUtils.byteCountToDisplaySize(getFileSize()));
-  }
-
   /**
    * @return A temporary file with the asset's filename and content.
    * @throws IOException if the file cannot be created.
@@ -123,4 +119,11 @@ public class Asset {
   public File getTemporaryFile() throws IOException {
     return au.com.mutopia.acs.util.FileUtils.createTemporaryFileWithContent(fileName, data);
   }
+
+  @Override
+  public String toString() {
+    return String.format("Asset[%s (%s)]", getFileName(),
+        FileUtils.byteCountToDisplaySize(getFileSize()));
+  }
+
 }
