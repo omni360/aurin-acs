@@ -73,6 +73,12 @@ public class C3mlEntity {
    * should be rotated when rendered.
    */
   private List<Double> rotation;
+  
+  /** The extrusion height of the entity. Polygons only. */
+  private Double height;
+  
+  /** The elevation of the entity from the ground. */
+  private Double altitude;
 
   /** The 3D coordinates of each of the points in the entity's mesh (3D entities only). */
   private List<Double> positions;
