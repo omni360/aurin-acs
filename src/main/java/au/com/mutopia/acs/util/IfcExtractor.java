@@ -6,12 +6,10 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import lombok.extern.log4j.Log4j;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.bimserver.client.BimServerClient;
 import org.bimserver.interfaces.objects.SDeserializerPluginConfiguration;
 import org.bimserver.interfaces.objects.SProject;
@@ -21,10 +19,10 @@ import org.bimserver.shared.exceptions.ServiceException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.type.MapType;
 
-import au.com.mutopia.acs.models.Asset;
-
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
+
+import flexjson.JSONDeserializer;
 
 /**
  * Sends requests to BIMserver to extract IFC geometries as COLLADA models.
