@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import lombok.extern.log4j.Log4j;
 import au.com.mutopia.acs.conversion.Converter;
 import au.com.mutopia.acs.exceptions.ConversionException;
 import au.com.mutopia.acs.models.Asset;
@@ -18,6 +19,7 @@ import com.google.inject.Inject;
  * First converts the GeoJSON into KML using {@link Ogr2Ogr}, then delegates the conversion to a
  * {@link KmlConverter}.
  */
+@Log4j
 public class GeoJsonConverter implements Converter {
 
   /** The {@link KmlConverter} to delegate the conversion operation to. */
@@ -34,6 +36,7 @@ public class GeoJsonConverter implements Converter {
   }
 
   public List<C3mlEntity> convert(Asset asset) throws ConversionException {
+    log.debug("Converting GeoJSON asset " + asset.getName() + "...");
     try {
       File kml = Ogr2Ogr.convertToKml(asset.getTemporaryFile());
       List<C3mlEntity> entities = kmlConverter.convert(new Asset(kml));

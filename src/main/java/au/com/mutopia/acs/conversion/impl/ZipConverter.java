@@ -2,6 +2,7 @@ package au.com.mutopia.acs.conversion.impl;
 
 import java.util.List;
 
+import lombok.extern.log4j.Log4j;
 import au.com.mutopia.acs.conversion.Converter;
 import au.com.mutopia.acs.exceptions.ConversionException;
 import au.com.mutopia.acs.models.Asset;
@@ -16,6 +17,7 @@ import com.google.inject.Inject;
  * request to a {@link ShapefileConverter}.
  */
 // TODO(orlade): Unzip and determine correct format to delegate to.
+@Log4j
 public class ZipConverter implements Converter {
 
   /** The {@link ShapefileConverter} to delegate the conversion operation to. */
@@ -32,6 +34,7 @@ public class ZipConverter implements Converter {
   }
 
   public List<C3mlEntity> convert(Asset asset) throws ConversionException {
+    log.debug("Converting ZIP asset " + asset.getName() + "...");
     return this.shpConverter.convert(asset);
   }
 

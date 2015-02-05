@@ -8,6 +8,8 @@ import java.util.Map;
 
 import javax.vecmath.Matrix4d;
 
+import lombok.extern.log4j.Log4j;
+
 import org.xml.sax.SAXException;
 
 import au.com.mutopia.acs.conversion.Converter;
@@ -48,6 +50,7 @@ import com.google.common.primitives.Floats;
 /**
  * Converts COLLADA files into collections of {@link C3mlEntity} objects.
  */
+@Log4j
 public class ColladaConverter implements Converter {
 
   /** Default Geographic location for COLLADA model. */
@@ -115,6 +118,7 @@ public class ColladaConverter implements Converter {
    * @throws ConversionException if the conversion failed.
    */
   public List<C3mlEntity> convert(Asset asset) throws ConversionException {
+    log.debug("Converting COLLADA asset " + asset.getName() + "...");
     try {
       File tempColladaFile = asset.getTemporaryFile();
       populateLibraryMaps(tempColladaFile.getPath());

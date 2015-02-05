@@ -32,15 +32,15 @@ public class Ogr2Ogr {
 
     CommandLine cmdLine = CommandLine.parse(command);
     DefaultExecutor executor = new DefaultExecutor();
+    log.debug("Executing command: " + command);
     try {
-      log.debug("Executing command: " + command);
       int exitValue = executor.execute(cmdLine);
       if (exitValue != 0) {
         throw new ConversionException("ogr2ogr returned exit code " + exitValue);
       }
     } catch (IOException e) {
-      throw new ConversionException(
-          "Failed to convert " + file.getAbsolutePath() + " with ogr2ogr", e);
+      throw new ConversionException("Failed to perform ogr2ogr conversion of "
+          + file.getAbsolutePath() + " (" + command + ")", e);
     }
     return new File(outPath);
   }

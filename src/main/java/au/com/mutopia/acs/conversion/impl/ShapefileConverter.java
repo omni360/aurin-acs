@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.extern.log4j.Log4j;
 import au.com.mutopia.acs.conversion.Converter;
 import au.com.mutopia.acs.exceptions.ConversionException;
 import au.com.mutopia.acs.models.Asset;
@@ -22,6 +23,7 @@ import com.google.inject.Inject;
  * First converts the Shapefile into KML using {@link Ogr2Ogr}, then delegates the conversion to a
  * {@link KmlConverter}.
  */
+@Log4j
 public class ShapefileConverter implements Converter {
 
   /** The {@link KmlConverter} to delegate the conversion operation to. */
@@ -38,6 +40,7 @@ public class ShapefileConverter implements Converter {
   }
 
   public List<C3mlEntity> convert(Asset asset) throws ConversionException {
+    log.debug("Converting Shapefile asset " + asset.getName() + "...");
     try {
       // Extract all Shapefiles to be converted. A zip file may have multiple Shapefiles,
       // with each Shapefile containing c3mlEntities of a single geometry type.

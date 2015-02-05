@@ -2,6 +2,7 @@ package au.com.mutopia.acs.conversion.impl;
 
 import java.util.List;
 
+import lombok.extern.log4j.Log4j;
 import au.com.mutopia.acs.conversion.Converter;
 import au.com.mutopia.acs.exceptions.ConversionException;
 import au.com.mutopia.acs.models.Asset;
@@ -16,6 +17,7 @@ import com.google.inject.Inject;
  * Converts the embedded KML document with a {@link KmlConverter} and the COLLADA meshes with a
  * {@link ColladaConverter}.
  */
+@Log4j
 public class KmzConverter implements Converter {
 
   /** The {@link KmlConverter} to delegate the 2D conversion operation to. */
@@ -33,6 +35,7 @@ public class KmzConverter implements Converter {
   }
 
   public List<C3mlEntity> convert(Asset asset) throws ConversionException {
+    log.debug("Converting KML asset " + asset.getName() + "...");
     return kmlConverter.convertKmz(asset);
   }
 
