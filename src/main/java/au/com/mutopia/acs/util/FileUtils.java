@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.UUID;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
 /**
@@ -87,4 +88,21 @@ public class FileUtils {
   public static byte[] bytesFromFile(File file) throws IOException {
     return IOUtils.toByteArray(new FileInputStream(file));
   }
+  
+  /**
+   * Finds the file at the given path ignoring case.
+   *
+   * @param path The case-insensitive path of the file to get.
+   * @return The file matching the path, or null if not file exists.
+   */
+  public static File getFileCaseInsensitive(String path) {
+    File daeFile = new File(path);
+    if (!daeFile.exists()) {
+      String ext = FilenameUtils.getExtension(path);
+      path = path.substring(0, path.length() - ext.length()) + ext.toUpperCase();
+      daeFile = new File(path);
+    }
+    return daeFile.exists() ? daeFile : null;
+  }
+
 }

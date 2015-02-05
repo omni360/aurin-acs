@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import lombok.extern.log4j.Log4j;
+
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.io.FilenameUtils;
@@ -15,6 +17,7 @@ import com.google.common.collect.ImmutableMap;
  * Wrapper for invoking the <code>COLLADA2GLTF</code> tool via the command line. Expects
  * <code>collada2gltf</code> to be available on the system path.
  */
+@Log4j
 public class Collada2Gltf {
 
   /**
@@ -25,6 +28,7 @@ public class Collada2Gltf {
    * @return The output glTF file.
    */
   public static File convertToGltf(File file, boolean embed) {
+    log.debug("Converting " + file.getAbsolutePath() + " to glTF...");
     String inPath = file.getAbsolutePath();
     String outPath = FilenameUtils.removeExtension(inPath) + ".gltf";
 
@@ -39,6 +43,7 @@ public class Collada2Gltf {
 
     // Execute the command with the system environment, and handle errors.
     try {
+      log.debug("Executing command: " + cmdLine.toString());
       int exitValue = new DefaultExecutor().execute(cmdLine, System.getenv());
       if (exitValue != 0) {
         throw new RuntimeException("COLLADA2GLTF returned exit code " + exitValue);
