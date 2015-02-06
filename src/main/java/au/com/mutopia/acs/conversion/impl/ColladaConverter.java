@@ -14,7 +14,6 @@ import lombok.extern.log4j.Log4j;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.xml.sax.SAXException;
 
 import au.com.mutopia.acs.exceptions.ConversionException;
@@ -25,6 +24,7 @@ import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
 import au.com.mutopia.acs.util.Collada2Gltf;
 import au.com.mutopia.acs.util.ColladaExtraReader;
 import au.com.mutopia.acs.util.CollectionUtils;
+import au.com.mutopia.acs.util.GltfBuilder;
 import au.com.mutopia.acs.util.mesh.VecMathUtil;
 
 import com.dddviewr.collada.Collada;
@@ -180,7 +180,11 @@ public class ColladaConverter extends AbstractConverter {
    */
   public List<C3mlEntity> convert(File colladaFile, boolean merge) throws ConversionException {
     try {
-      if (merge) return ImmutableList.of(convertMerged(colladaFile));
+      if (merge) {
+        C3mlEntity entity =
+            new GltfBuilder().convertMerged(colladaFile, rotation, scale, geoLocation);
+        return ImmutableList.of(entity);
+      }
 
       populateLibraryMaps(colladaFile.getPath());
       populateCustomParameterMap(colladaFile);
@@ -188,28 +192,6 @@ public class ColladaConverter extends AbstractConverter {
     } catch (IOException | SAXException | InvalidColladaException e) {
       throw new ConversionException("Error reading content from COLLADA file.");
     }
-  }
-
-  /**
-   * Creates a {@link C3mlEntity} with merged glTF geometry from all of the COLLADA nodes.
-   * 
-   * @param colladaFile The COLLADA file to convert.
-   * @return An entity with all of the asset's geometry merged into a glTF mesh.
-   * @throws IOException if the glTF file couldn't be created.
-   */
-  private C3mlEntity convertMerged(File colladaFile) throws IOException {
-    C3mlEntity gltfEntity = new C3mlEntity();
-    gltfEntity.setName(FilenameUtils.removeExtension(colladaFile.getName()));
-    gltfEntity.setType(C3mlEntityType.MESH);
-    String gltf = IOUtils.toString(Collada2Gltf.convertToGltf(colladaFile).toURI());
-    Map<String, Object> gltfMap = new JSONDeserializer<Map<String, Object>>().deserialize(gltf);
-    gltfEntity.setGltfData(gltfMap);
-
-    // Apply global transformations if they exist.
-    if (rotation != null) gltfEntity.setRotation(rotation);
-    if (scale != null) gltfEntity.setScale(scale);
-    if (geoLocation != null) gltfEntity.setGeoLocation(geoLocation);
-    return gltfEntity;
   }
 
   /**
