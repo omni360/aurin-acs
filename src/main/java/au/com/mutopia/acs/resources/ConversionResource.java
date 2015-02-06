@@ -56,6 +56,7 @@ public class ConversionResource {
    * 
    * @param inputStream A stream of the uploaded file data.
    * @param fileDetail Metadata about the uploaded file.
+   * @param merge Whether to merge all entities into one (if possible).
    * @return The generated C3ML document.
    * @throws ConversionException if the conversion failed.
    */
@@ -64,7 +65,7 @@ public class ConversionResource {
   @Produces(MediaType.APPLICATION_JSON)
   public C3mlData convert(@FormDataParam("file") InputStream inputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail,
-      @DefaultValue("false") @QueryParam("merge") boolean merge) throws ConversionException {
+      @DefaultValue("false") @FormDataParam("merge") boolean merge) throws ConversionException {
     Byte[] data;
     try {
       data = ArrayUtils.toObject(IOUtils.toByteArray(inputStream));

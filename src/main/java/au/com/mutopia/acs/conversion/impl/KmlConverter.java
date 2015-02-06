@@ -1,6 +1,32 @@
 package au.com.mutopia.acs.conversion.impl;
 
-import au.com.mutopia.acs.conversion.Converter;
+import java.awt.Color;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import lombok.extern.log4j.Log4j;
+
+import org.apache.commons.io.FileUtils;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
 import au.com.mutopia.acs.exceptions.ConversionException;
 import au.com.mutopia.acs.models.Asset;
 import au.com.mutopia.acs.models.Format;
@@ -8,10 +34,12 @@ import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
 import au.com.mutopia.acs.models.c3ml.Vertex3D;
 import au.com.mutopia.acs.util.ZipUtils;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
+
 import de.micromata.opengis.kml.v_2_2_0.Boundary;
 import de.micromata.opengis.kml.v_2_2_0.Coordinate;
 import de.micromata.opengis.kml.v_2_2_0.Document;
@@ -38,30 +66,6 @@ import de.micromata.opengis.kml.v_2_2_0.Style;
 import de.micromata.opengis.kml.v_2_2_0.StyleMap;
 import de.micromata.opengis.kml.v_2_2_0.StyleSelector;
 import de.micromata.opengis.kml.v_2_2_0.StyleState;
-import lombok.extern.log4j.Log4j;
-import org.apache.commons.io.FileUtils;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import java.awt.*;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Converts KML files into a collection of {@link C3mlEntity} objects.
@@ -87,6 +91,10 @@ public class KmlConverter extends AbstractConverter {
    */
   private Map<String, Map<StyleState, String>> mapForStyleMap = new HashMap<>();
 
+  /** Whether to merge the whole file into a single entity (if possible). */
+  // TODO(orlade): Change to local variable, or create a new instance of KmlConverter each time.
+  private boolean merge = false;
+
   /**
    * Converts the KML {@link Asset} into a list of {@link C3mlEntity}s.
    *
@@ -97,7 +105,7 @@ public class KmlConverter extends AbstractConverter {
   public List<C3mlEntity> convert(Asset asset, boolean merge) throws ConversionException {
     try {
       File kmlFile = asset.getTemporaryFile();
-      return convert(kmlFile);
+      return convert(kmlFile, merge);
     } catch (IOException e) {
       throw new ConversionException("Error reading content from KML file.");
     }
@@ -107,11 +115,13 @@ public class KmlConverter extends AbstractConverter {
    * Converts the KML file into a list of {@link C3mlEntity}s.
    *
    * @param kmlFile The KML to be converted.
+   * @param merge Whether to merge all of the content into a single entity.
    * @return A {@link C3mlEntity} containing the same information as the KML.
    * @throws ConversionException if the conversion failed.
    */
-  public List<C3mlEntity> convert(File kmlFile) throws ConversionException {
+  public List<C3mlEntity> convert(File kmlFile, boolean merge) throws ConversionException {
     fixXmlSchema(kmlFile);
+    this.merge = merge;
     return getEntities(kmlFile);
   }
 
@@ -119,10 +129,11 @@ public class KmlConverter extends AbstractConverter {
    * Converts the KMZ file into a list of {@link C3mlEntity} objects.
    *
    * @param asset An {@link Asset} representing a KMZ file.
+   * @param merge Whether to merge all of the content into a single entity.
    * @return A {@link C3mlEntity} containing the same information as the KMZ file.
    * @throws ConversionException if the conversion failed.
    */
-  public List<C3mlEntity> convertKmz(Asset asset) throws ConversionException {
+  public List<C3mlEntity> convertKmz(Asset asset, boolean merge) throws ConversionException {
     try {
       // Extract all KML files to be converted. A KMZ file may have multiple KML.
       List<File> kmlFiles = new ArrayList<>();
@@ -138,7 +149,7 @@ public class KmlConverter extends AbstractConverter {
       }
       List<C3mlEntity> c3mlEntities = new ArrayList<>();
       for (File kml : kmlFiles) {
-        c3mlEntities.addAll(convert(kml));
+        c3mlEntities.addAll(convert(kml, merge));
       }
       return c3mlEntities;
     } catch (IOException e) {
@@ -257,21 +268,55 @@ public class KmlConverter extends AbstractConverter {
   }
 
   /**
+   * Creates a {@link C3mlEntity} from a KML Feature, populated with name, description and
+   * parameters.
+   *
+   * @param feature The KML feature element.
+   * @return The created {@link C3mlEntity}.
+   */
+  private C3mlEntity createEntity(Feature feature) {
+    C3mlEntity entity = new C3mlEntity();
+    entity.setName(feature.getName());
+    String description = feature.getDescription();
+    if (!Strings.isNullOrEmpty(description)) {
+      entity.addProperty("description", description);
+    }
+    populateParameters(entity, feature.getExtendedData());
+    return entity;
+  }
+
+  /**
+   * Populates entity with parameters from KML's <code>&lt;ExtendedData&gt;</code> tag.
+   *
+   * @param entity The {@link C3mlEntity} object.
+   * @param extendedData The KML extended data element, mapping parameter names and values.
+   * 
+   * @see <a href="https://developers.google.com/kml/documentation/extendeddata">KML docs for
+   *      &lt;ExtendedData&gt;</a>
+   */
+  private void populateParameters(C3mlEntity entity, ExtendedData extendedData) {
+    if (extendedData == null) return;
+    for (SchemaData schemaData : extendedData.getSchemaData()) {
+      for (SimpleData simpleData : schemaData.getSimpleData()) {
+        entity.addProperty(simpleData.getName(), simpleData.getValue());
+      }
+    }
+  }
+
+  /**
    * Writes the geometric values for the {@link C3mlEntity} object if the geometry is not empty.
    *
    * @param entity The {@link C3mlEntity} object.
    * @param geometry The geometry embedded in the KML element.
    */
   private void writeGeometry(C3mlEntity entity, Geometry geometry) throws ConversionException {
-    if (!isMultiGeometryOrModel(geometry)) {
-      writeSimpleGeometry(entity, geometry);
-    }
-
     // Polygon includes children and each child should be an entity.
     if (geometry instanceof MultiGeometry) {
       writeMultiGeometry(entity, (MultiGeometry) geometry);
     } else if (geometry instanceof Model) {
       writeModel(entity, (Model) geometry);
+    } else {
+      writeSimpleGeometry(entity, geometry);
     }
   }
 
@@ -342,8 +387,8 @@ public class KmlConverter extends AbstractConverter {
   private void writeModel(C3mlEntity entity, Model model) throws ConversionException {
     try {
       String daeFilePath = kmlFolderPath + File.separator + model.getLink().getHref();
+      File daeFile = au.com.mutopia.acs.util.FileUtils.getFileCaseInsensitive(daeFilePath);
 
-      File daeFile = new File(daeFilePath);
       ColladaConverter colladaConverter = new ColladaConverter();
       Location modelOrigin = model.getLocation();
       Scale modelScale = model.getScale();
@@ -359,7 +404,7 @@ public class KmlConverter extends AbstractConverter {
           Lists.newArrayList(modelOrigin.getLongitude(), modelOrigin.getLatitude(),
               modelOrigin.getAltitude());
       List<C3mlEntity> modelEntities =
-          colladaConverter.convert(daeFile, rotation, scale, geoLocation);
+          colladaConverter.convert(daeFile, merge, rotation, scale, geoLocation);
       for (C3mlEntity modelEntity : modelEntities) {
         entity.addChild(modelEntity);
       }
@@ -380,42 +425,41 @@ public class KmlConverter extends AbstractConverter {
   }
 
   /**
-   * @return True if the geometry is an instance of {@link MultiGeometry} or {@link Model}.
-   */
-  private Boolean isMultiGeometryOrModel(Geometry geometry) {
-    return (geometry instanceof MultiGeometry || geometry instanceof Model);
-  }
-
-  /**
-   * Extracts the color from {@link Style}s referenced by the {@link Placemark}. If not color is
+   * Extracts the color from {@link Style}s referenced by the {@link Placemark}. If no color is
    * present default to White.
    *
    * @param placemark The KML placemark element.
    * @return The Color extracted from KML placemark.
    */
   private Color getColor(Placemark placemark) {
-    Color color = null;
-    String colorString;
-    List<StyleSelector> styleSelector = placemark.getStyleSelector();
-    Iterator<StyleSelector> iterator = styleSelector.iterator();
-    Style style = findStyleInStyleSelectors(iterator);
-    if (style != null) {
-      colorString = style.getPolyStyle().getColor();
-      color = convertStringToColor(colorString);
-    } else {
+    Style style = findStyleInStyleSelectors(placemark.getStyleSelector());
+
+    if (style == null) return DEFAULT_COLOR;
+
+    if (style.getPolyStyle() != null) {
+      return convertStringToColor(style.getPolyStyle().getColor());
+    }
+
+    if (placemark.getStyleUrl() != null) {
       String styleUrl = placemark.getStyleUrl();
-      if (styleUrl != null) {
-        if (styleUrl.startsWith("#")) {
-          styleUrl = styleUrl.replace("#", "");
-        }
-        colorString = getNormalColor(styleUrl);
-        color = convertStringToColor(colorString);
+      if (styleUrl.startsWith("#")) {
+        styleUrl = styleUrl.replace("#", "");
       }
+      return convertStringToColor(getNormalColor(styleUrl));
     }
-    if (color == null) {
-      color = DEFAULT_COLOR;
-    }
-    return color;
+
+    return DEFAULT_COLOR;
+  }
+
+  /**
+   * Gets the normal color from the style, given style ID.
+   *
+   * @param styleId The style ID.
+   * @return The normal color for the style.
+   */
+  private String getNormalColor(String styleId) {
+    Map<StyleState, String> map = mapForStyleMap.get(styleId);
+    return map != null ? map.get(StyleState.NORMAL) : mapForStyleColor.get(styleId);
   }
 
   /**
@@ -423,7 +467,7 @@ public class KmlConverter extends AbstractConverter {
    * 
    * @param kml The KML document to generate style maps for.
    */
-  public void generateStyleMaps(Kml kml) {
+  private void generateStyleMaps(Kml kml) {
     mapForStyleColor = Maps.newHashMap();
     mapForStyleMap = Maps.newHashMap();
     // Check if feature is a document.
@@ -493,14 +537,14 @@ public class KmlConverter extends AbstractConverter {
   }
 
   /**
-   * Gets the normal color from the style, given style ID.
-   *
-   * @param styleId The style ID.
-   * @return The normal color for the style.
+   * @param iterator The list of {@link StyleSelector}s.
+   * @return The instance of {@link StyleSelector} which is of type {@link Style};
    */
-  public String getNormalColor(String styleId) {
-    Map<StyleState, String> map = mapForStyleMap.get(styleId);
-    return map != null ? map.get(StyleState.NORMAL) : mapForStyleColor.get(styleId);
+  private Style findStyleInStyleSelectors(List<StyleSelector> styleSelectors) {
+    for (StyleSelector selector : styleSelectors) {
+      if (selector instanceof Style) return (Style) selector;
+    }
+    return null;
   }
 
   /**
@@ -518,56 +562,6 @@ public class KmlConverter extends AbstractConverter {
     String g = "0x" + colorString.substring(4, 6);
     String r = "0x" + colorString.substring(6, 8);
     return new Color(Integer.decode(r), Integer.decode(g), Integer.decode(b), Integer.decode(a));
-  }
-
-  /**
-   * @param iterator The {@link StyleSelector} iterator.
-   * @return The instance of {@link StyleSelector} which is of type {@link Style};
-   */
-  private Style findStyleInStyleSelectors(Iterator<StyleSelector> iterator) {
-    while (iterator.hasNext()) {
-      StyleSelector tmp = iterator.next();
-      if (tmp instanceof Style) {
-        return (Style) tmp;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Creates a {@link C3mlEntity} from a KML Feature, populated with name, description and
-   * parameters.
-   *
-   * @param feature The KML feature element.
-   * @return The created {@link C3mlEntity}.
-   */
-  private C3mlEntity createEntity(Feature feature) {
-    C3mlEntity entity = new C3mlEntity();
-    entity.setName(feature.getName());
-    populateParameters(entity, feature.getExtendedData());
-    String description = feature.getDescription();
-    if (!Strings.isNullOrEmpty(description)) {
-      entity.addProperty("description", description);
-    }
-    return entity;
-  }
-
-  /**
-   * Populates entity with parameters from KML's <code>&lt;ExtendedData&gt;</code> tag.
-   *
-   * @param entity The {@link C3mlEntity} object.
-   * @param extendedData The KML extended data element, mapping parameter names and values.
-   * 
-   * @see <a href="https://developers.google.com/kml/documentation/extendeddata">KML docs for
-   *      &lt;ExtendedData&gt;</a>
-   */
-  private void populateParameters(C3mlEntity entity, ExtendedData extendedData) {
-    if (extendedData == null) return;
-    for (SchemaData schemaData : extendedData.getSchemaData()) {
-      for (SimpleData simpleData : schemaData.getSimpleData()) {
-        entity.addProperty(simpleData.getName(), simpleData.getValue());
-      }
-    }
   }
 
   /**

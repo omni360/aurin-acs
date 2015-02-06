@@ -33,7 +33,7 @@ public class KmzConverter extends AbstractConverter {
 
   public List<C3mlEntity> convert(Asset asset, boolean merge) throws ConversionException {
     log.debug("Converting KML asset " + asset + "...");
-    return kmlConverter.convertKmz(asset);
+    return kmlConverter.convertKmz(asset, merge);
   }
 
 }
