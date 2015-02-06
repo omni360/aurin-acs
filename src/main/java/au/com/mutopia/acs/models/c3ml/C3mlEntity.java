@@ -98,8 +98,9 @@ public class C3mlEntity {
   /** The URL to the glTF mesh data, if applicable. */
   private String gltfUrl;
 
-  /** The glTF mesh data in binary format, if applicable. */
-  private Byte[] gltfData;
+  /** The glTF mesh data as a deserialized JSON document, if applicable. */
+  @JsonProperty("gltf")
+  private Map<String, Object> gltfData;
 
   /**
    * Creates a new {@link C3mlEntity} with a random ID.

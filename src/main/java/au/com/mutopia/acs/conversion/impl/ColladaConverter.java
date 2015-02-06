@@ -12,6 +12,7 @@ import javax.vecmath.Matrix4d;
 
 import lombok.extern.log4j.Log4j;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.xml.sax.SAXException;
@@ -25,6 +26,7 @@ import au.com.mutopia.acs.util.Collada2Gltf;
 import au.com.mutopia.acs.util.ColladaExtraReader;
 import au.com.mutopia.acs.util.CollectionUtils;
 import au.com.mutopia.acs.util.mesh.VecMathUtil;
+
 import com.dddviewr.collada.Collada;
 import com.dddviewr.collada.Input;
 import com.dddviewr.collada.effects.Effect;
@@ -50,8 +52,11 @@ import com.dddviewr.collada.visualscene.Rotate;
 import com.dddviewr.collada.visualscene.Scale;
 import com.dddviewr.collada.visualscene.Translate;
 import com.dddviewr.collada.visualscene.VisualScene;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Floats;
+
+import flexjson.JSONDeserializer;
 
 /**
  * Converts COLLADA files into collections of {@link C3mlEntity} objects.
@@ -131,13 +136,15 @@ public class ColladaConverter extends AbstractConverter {
    * Converts the COLLADA {@link Asset} into a list of {@link C3mlEntity}s.
    *
    * @param asset An {@link Asset} representing a COLLADA file.
+   * @param merge Whether to merge the whole file into a single entity (if possible).
    * @return A {@link C3mlEntity} containing the same information as the COLLADA file.
    * @throws ConversionException if the conversion failed.
    */
   public List<C3mlEntity> convert(Asset asset, boolean merge) throws ConversionException {
     log.debug("Converting COLLADA asset " + asset + "...");
     try {
-      return merge ? Lists.newArrayList(convertMerged(asset)) : convert(asset.getTemporaryFile());
+      File assetFile = asset.getTemporaryFile();
+      return convert(assetFile, merge);
     } catch (IOException e) {
       throw new ConversionException("Error reading content from COLLADA file.");
     }
@@ -148,29 +155,33 @@ public class ColladaConverter extends AbstractConverter {
    * transformations on each converted geometries.
    *
    * @param colladaFile The COLLADA file containing geometries to be converted.
+   * @param merge Whether to merge the whole file into a single entity (if possible).
    * @param rotation The global rotation to be applied on the geometries, in X, Y and Z axis.
    * @param scale The global scale to be applied on the geometries, in X, Y and Z axis.
    * @param geoLocation The global geographic location to be applied (lon, lat, alt).
    * @return A {@link C3mlEntity} with global transformations applied to the COLLADA file.
    * @throws ConversionException if the conversion failed.
    */
-  public List<C3mlEntity> convert(File colladaFile, List<Double> rotation, List<Double> scale,
-      List<Double> geoLocation) throws ConversionException {
+  public List<C3mlEntity> convert(File colladaFile, boolean merge, List<Double> rotation,
+      List<Double> scale, List<Double> geoLocation) throws ConversionException {
     this.rotation = rotation;
     this.scale = scale;
     this.geoLocation = geoLocation;
-    return convert(colladaFile);
+    return convert(colladaFile, merge);
   }
 
   /**
    * Converts the COLLADA file into a list of {@link C3mlEntity}s.
    *
    * @param colladaFile The COLLADA file containing geometries to be converted.
+   * @param merge Whether to merge the whole file into a single entity (if possible).
    * @return A {@link C3mlEntity} containing the same information as the COLLADA file.
    * @throws ConversionException if the conversion failed.
    */
-  public List<C3mlEntity> convert(File colladaFile) throws ConversionException {
+  public List<C3mlEntity> convert(File colladaFile, boolean merge) throws ConversionException {
     try {
+      if (merge) return ImmutableList.of(convertMerged(colladaFile));
+
       populateLibraryMaps(colladaFile.getPath());
       populateCustomParameterMap(colladaFile);
       return buildEntities();
@@ -182,16 +193,23 @@ public class ColladaConverter extends AbstractConverter {
   /**
    * Creates a {@link C3mlEntity} with merged glTF geometry from all of the COLLADA nodes.
    * 
-   * @param asset The asset to convert.
+   * @param colladaFile The COLLADA file to convert.
    * @return An entity with all of the asset's geometry merged into a glTF mesh.
    * @throws IOException if the glTF file couldn't be created.
    */
-  private C3mlEntity convertMerged(Asset asset) throws IOException {
-    C3mlEntity entity = new C3mlEntity();
-    byte[] gltfBytes = Collada2Gltf.convertToGltfBytes(new String(asset.getData()));
-    entity.setGltfData(ArrayUtils.toObject(gltfBytes));
-    entity.setName(asset.getName());
-    return entity;
+  private C3mlEntity convertMerged(File colladaFile) throws IOException {
+    C3mlEntity gltfEntity = new C3mlEntity();
+    gltfEntity.setName(FilenameUtils.removeExtension(colladaFile.getName()));
+    gltfEntity.setType(C3mlEntityType.MESH);
+    String gltf = IOUtils.toString(Collada2Gltf.convertToGltf(colladaFile).toURI());
+    Map<String, Object> gltfMap = new JSONDeserializer<Map<String, Object>>().deserialize(gltf);
+    gltfEntity.setGltfData(gltfMap);
+
+    // Apply global transformations if they exist.
+    if (rotation != null) gltfEntity.setRotation(rotation);
+    if (scale != null) gltfEntity.setScale(scale);
+    if (geoLocation != null) gltfEntity.setGeoLocation(geoLocation);
+    return gltfEntity;
   }
 
   /**
@@ -394,9 +412,10 @@ public class ColladaConverter extends AbstractConverter {
     for (Node node : visualScene.getNodes()) {
       Matrix matrix = new Matrix("identity");
       matrix.setData(IDENTITY);
-      C3mlEntity c3mlEntity = buildEntityFromNode(node, matrix);
-      if (c3mlEntity != null) {
-        c3mlEntities.add(c3mlEntity);
+      try {
+        c3mlEntities.add(buildEntityFromNode(node, matrix));
+      } catch (UnsupportedOperationException e) {
+        log.warn(e.getMessage());
       }
     }
     return c3mlEntities;
@@ -481,16 +500,17 @@ public class ColladaConverter extends AbstractConverter {
     Mesh mesh = geom.getMesh();
     // Splines are not supported by dae4j, requires xml parser.
     if (mesh == null) {
-      return null;
+      throw new UnsupportedOperationException("Unable to parse non-mesh COLLADA node");
     }
+
     List<Primitives> primitives = mesh.getPrimitives();
     float[] positions = null;
     float[] normals = null;
     // input indices used by COLLADA.
     List<Integer> inputIndices = Lists.newArrayList();
     C3mlEntityType type = null;
-    if (primitives.size() < 1) {
-      return null;
+    if (CollectionUtils.isNullOrEmpty(primitives)) {
+      throw new UnsupportedOperationException("Unable to parse non-mesh COLLADA node");
     }
     for (Primitives primitive : mesh.getPrimitives()) {
       if (primitive.getClass().equals(Triangles.class)) {
@@ -502,9 +522,11 @@ public class ColladaConverter extends AbstractConverter {
         // TODO(Brandon) extract from polylist, requires polygon triangulation.
       }
     }
+
     if (type == null) {
-      return null;
+      throw new UnsupportedOperationException("Unable to parse non-mesh COLLADA node");
     }
+
     C3mlEntity c3mlEntity = new C3mlEntity();
     String name = geom.getName();
     c3mlEntity.setName((name != null) ? name : geom.getId());
