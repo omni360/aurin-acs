@@ -1,10 +1,15 @@
+# Runs the AURIN Asset Conversion Service with local installations of COLLADA2GLTF and BIMserver.
+#
+# Based on the COLLADA2GLTF image to avoid build.
 FROM urbanetic/collada2gltf
 MAINTAINER Oliver Lade <oliver.lade@unimelb.edu.au>
 
-EXPOSE 8080
+ENV BIMSERVER_PORT 8080
+ENV ACS_PORT 8081
+EXPOSE $ACS_PORT
 
 ENV TOMCAT_HOME /usr/local/tomcat
-ENV ACS_HOME /
+ENV ACS_HOME /opt/acs
 ENV BIMSERVER_HOME $TOMCAT_HOME/webapps/bimserver
 
 # Install Java 7 to run the ACS. The Docker Maven plugin will copy the packaged JAR into /.
@@ -27,7 +32,7 @@ ADD configuration.yml $ACS_HOME
 RUN catalina.sh start && \
     echo "Waiting 30 secs for BIMserver to initialize..." && \
     sleep 30 && \
-    curl -X POST localhost:8080/bimserver/json -d '{"request":{"interface":"org.bimserver.AdminInterface","method":"setup","parameters":{"siteAddress":"http://localhost:8888/bimserver","smtpServer":"bimserver.org","smtpSender":"admin@bimserver.org","adminName":"Administrator","adminUsername":"admin@bimserver.org","adminPassword":"admin"}}}'
+    curl -X POST localhost:$BIMSERVER_PORT/bimserver/json -d '{"request":{"interface":"org.bimserver.AdminInterface","method":"setup","parameters":{"siteAddress":"http://localhost:$BIMSERVER_PORT/bimserver","smtpServer":"bimserver.org","smtpSender":"admin@bimserver.org","adminName":"Administrator","adminUsername":"admin@bimserver.org","adminPassword":"admin"}}}'
 
 # Start the ACS server along with Tomcat to host the local BIMserver.
 ENTRYPOINT catalina.sh start && java -jar $ACS_HOME/aurin-acs.jar server $ACS_HOME/configuration.yml
