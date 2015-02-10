@@ -1,7 +1,7 @@
 # HTTP server settings.
 http:
-  port: 8081
-  adminPort: 8082
+  port: 8090
+  adminPort: 8092
 
 # Logging settings.
 logging:

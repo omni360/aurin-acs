@@ -38,7 +38,6 @@
     <bimserver.version>1.2.0</bimserver.version>
     <citygml4j.version>2.0ea</citygml4j.version>
     <dae4j.version>1.0.1</dae4j.version>
-    <geo-coords.version>1.0.0</geo-coords.version>
     <geotools.version>12-RC1</geotools.version>
     <ifc-toolbox.version>2.0.1</ifc-toolbox.version>
     <jak.version>2.2.0</jak.version>
