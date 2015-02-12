@@ -2,6 +2,7 @@ package au.com.mutopia.acs.util;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import lombok.extern.log4j.Log4j;
@@ -20,6 +21,32 @@ import com.google.common.collect.ImmutableMap;
 @Log4j
 public class Collada2Gltf {
 
+  /** Whether to embed by default or not. */
+  private static final boolean DEFAULT_EMBED = true;
+
+  /** Whether to embed all of the data as URIs (true) or create separate files (false). */
+  private final boolean embed;
+
+  /** The file in which the COLLADA to convert is stored. */
+  private final File colladaFile;
+
+  public Collada2Gltf(final File colladaFile, boolean embed) {
+    this.colladaFile = colladaFile;
+    this.embed = embed;
+  }
+
+  public Collada2Gltf(final File colladaFile) {
+    this(colladaFile, DEFAULT_EMBED);
+  }
+
+  public Collada2Gltf(String collada, boolean embed) throws IOException {
+    this(FileUtils.createTemporaryFileWithContent("tmp.dae", collada.getBytes()), embed);
+  }
+
+  public Collada2Gltf(String collada) throws IOException {
+    this(FileUtils.createTemporaryFileWithContent("tmp.dae", collada.getBytes()), DEFAULT_EMBED);
+  }
+
   /**
    * Converts the given file to KML, so long as the input is a file supported by ogr2ogr.
    *
@@ -27,9 +54,9 @@ public class Collada2Gltf {
    * @param embed Whether to embed all of the data as URIs (true) or create separate files (false).
    * @return The output glTF file.
    */
-  public static File convertToGltf(File file, boolean embed) {
-    log.debug("Converting " + file.getAbsolutePath() + " to glTF...");
-    String inPath = file.getAbsolutePath();
+  public File convertToGltfFile() {
+    log.debug("Converting " + colladaFile.getAbsolutePath() + " to glTF...");
+    String inPath = colladaFile.getAbsolutePath();
     String outPath = FilenameUtils.removeExtension(inPath) + ".gltf";
 
     // Build the command.
@@ -49,33 +76,30 @@ public class Collada2Gltf {
         throw new RuntimeException("COLLADA2GLTF returned exit code " + exitValue);
       }
     } catch (IOException e) {
-      throw new RuntimeException("Failed to convert " + file.getAbsolutePath()
+      throw new RuntimeException("Failed to convert " + colladaFile.getAbsolutePath()
           + " with COLLADA2GLTF", e);
     }
     return new File(outPath);
   }
 
   /**
-   * Converts the given file to glTF, embedding all binary data by default.
-   *
-   * @param file The COLLADA file to convert.
-   * @return The converted glTF file.
+   * Converts the COLLADA file to a glTF file, then reads the result as a string.
+   * 
+   * @return The string data from the glTF file.
+   * @throws IOException if the glTF conversion fails.
    */
-  public static File convertToGltf(File file) {
-    return convertToGltf(file, true);
+  public String convertToGltfString() throws IOException {
+    return IOUtils.toString(new FileInputStream(convertToGltfFile()));
   }
 
-  public static File convertToGltfFile(String collada) throws IOException {
-    File daeFile = FileUtils.createTemporaryFileWithContent("tmp.dae", collada.getBytes());
-    return convertToGltf(daeFile);
-  }
-
-  public static String convertToGltfString(String collada) throws IOException {
-    return IOUtils.toString(new FileInputStream(convertToGltfFile(collada)));
-  }
-
-  public static byte[] convertToGltfBytes(String collada) throws IOException {
-    return IOUtils.toByteArray(new FileInputStream(convertToGltfFile(collada)));
+  /**
+   * Converts the COLLADA file to a glTF file, then reads the result as a byte array.
+   * 
+   * @return The byte array data from the glTF file.
+   * @throws IOException if the glTF conversion fails.
+   */
+  public byte[] convertToGltfBytes() throws IOException {
+    return IOUtils.toByteArray(new FileInputStream(convertToGltfFile()));
   }
 
 }

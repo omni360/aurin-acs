@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +45,8 @@ public class GltfBuilder {
     C3mlEntity gltfEntity = new C3mlEntity();
     gltfEntity.setName(FilenameUtils.removeExtension(colladaFile.getName()));
     gltfEntity.setType(C3mlEntityType.MESH);
-    String gltf = IOUtils.toString(Collada2Gltf.convertToGltf(colladaFile).toURI());
+
+    String gltf = new Collada2Gltf(colladaFile).convertToGltfString();
     Map<String, Object> gltfMap = new JSONDeserializer<Map<String, Object>>().deserialize(gltf);
     gltfEntity.setGltfData(gltfMap);
 
@@ -64,10 +66,12 @@ public class GltfBuilder {
    * @param colladaFile The file to search for images relative to.
    * @return The constructed image map.
    */
+  @SuppressWarnings("unchecked")
   private Map<String, String> buildImageMap(File colladaFile) {
     Map<String, String> imageMap = new HashMap<>();
 
-    for (File imageFile : FileUtils.listFiles(colladaFile.getParentFile(), IMAGE_EXTS, true)) {
+    for (File imageFile : (Collection<File>) FileUtils.listFiles(colladaFile.getParentFile(),
+        IMAGE_EXTS, true)) {
       try {
         byte[] imageBytes = IOUtils.toByteArray(new FileInputStream(imageFile));
         String encodedData = Base64.encodeBase64String(imageBytes);
