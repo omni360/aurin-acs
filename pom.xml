@@ -184,37 +184,12 @@
     <!-- BIMserver -->
     <dependency>
       <groupId>org.osbim</groupId>
-      <artifactId>bimserver</artifactId>
-      <version>${bimserver.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.osbim</groupId>
-      <artifactId>bimserver-buildingsmartlibrary</artifactId>
-      <version>${bimserver.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.osbim</groupId>
       <artifactId>bimserver-client-lib</artifactId>
       <version>${bimserver.version}</version>
     </dependency>
     <dependency>
       <groupId>org.osbim</groupId>
-      <artifactId>bimserver-ifc</artifactId>
-      <version>${bimserver.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.osbim</groupId>
-      <artifactId>bimserver-ifcplugins</artifactId>
-      <version>${bimserver.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.osbim</groupId>
       <artifactId>bimserver-shared</artifactId>
-      <version>${bimserver.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.osbim</groupId>
-      <artifactId>bimserver-utils</artifactId>
       <version>${bimserver.version}</version>
     </dependency>
 
@@ -233,7 +208,6 @@
       <groupId>org.apache.cxf</groupId>
       <artifactId>cxf-bundle</artifactId>
       <version>2.7.3</version>
-      <type>jar</type>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
