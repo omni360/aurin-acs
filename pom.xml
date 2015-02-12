@@ -222,6 +222,12 @@
       <artifactId>bimserver-utils</artifactId>
       <version>${bimserver.version}</version>
     </dependency>
+    <!-- Missing dependency for BIMserver JSON errors. -->
+    <dependency>
+      <groupId>org.codehaus.jettison</groupId>
+      <artifactId>jettison</artifactId>
+      <version>1.3.5</version>
+    </dependency>
 
     <!-- Runtime execution -->
     <dependency>
