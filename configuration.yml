@@ -12,6 +12,6 @@ logging:
     archivedLogFilenamePattern: /var/aurin/acs/log/acs-%d.log.gz
 
 bimserver:
-  host: http://localhost:8080
+  host: http://localhost:8080/bimserver
   username: admin@bimserver.org
   password: admin
