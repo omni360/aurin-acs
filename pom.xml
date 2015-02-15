@@ -192,6 +192,11 @@
       <artifactId>bimserver-shared</artifactId>
       <version>${bimserver.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.osbim</groupId>
+      <artifactId>bimserver-utils</artifactId>
+      <version>${bimserver.version}</version>
+    </dependency>
 
     <!-- BIMserver dependencies. -->
     <dependency>

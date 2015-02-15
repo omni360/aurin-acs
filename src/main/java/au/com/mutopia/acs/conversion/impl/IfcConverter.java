@@ -1,5 +1,7 @@
 package au.com.mutopia.acs.conversion.impl;
 
+import au.com.mutopia.acs.util.mesh.VecMathUtil;
+import com.google.common.primitives.Doubles;
 import gov.nasa.worldwind.geom.Angle;
 
 import java.io.IOException;
@@ -8,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.vecmath.Matrix4d;
 import lombok.extern.log4j.Log4j;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -32,6 +35,23 @@ public class IfcConverter extends AbstractConverter {
 
   private BimServerAuthenticator auth;
 
+  private static final String IFC_SITE = "IfcSite";
+
+  /**
+   * The scale to be applied on all entities contained within the site.
+   */
+  private double siteScale = 1;
+
+  /**
+   * The longitude of the geographic location for all entities within the site.
+   */
+  private double siteLongitude;
+
+  /**
+   * The latitude of the geographic location for all entities within the site.
+   */
+  private double siteLatitude;
+
   @SuppressWarnings("serial")
   private static final class IfcJson extends HashMap<String, List<Map<String, Object>>> {}
 
@@ -54,23 +74,27 @@ public class IfcConverter extends AbstractConverter {
     }
   }
 
+  /**
+   * Extracts a list of top level {@link C3mlEntity} for each map representing the IFC objects
+   * hierarchy.
+   *
+   * @param ifcData The list of map representing each IFC objects hierarchy.
+   * @return A list of the extracted {@link C3mlEntity} objects.
+   */
   private List<C3mlEntity> getEntities(List<Map<String, Object>> ifcData) {
     List<C3mlEntity> entities = new ArrayList<>();
     for (Map<String, Object> ifcObject : ifcData) {
-      entities.add(buildEntity(ifcObject, null));
+      entities.add(buildEntity(ifcObject));
     }
     return entities;
   }
 
   /**
-   * Populates the {@link GeoData} from {@link C3mlEntity}s created from the map representing the
-   * IFC objects hierarchy.
+   * Builds {@link C3mlEntity}s from the map representing the IFC objects hierarchy.
    *
-   * @param geoData The top level hierarchy containing list of converted {@link C3mlEntity}s.
    * @param ifcObjectMap The map representing the top level IFC object hierarchy.
-   * @param parent The parent of {@link C3mlEntity}s being created.
    */
-  private C3mlEntity buildEntity(Map<String, Object> ifcObjectMap, C3mlEntity parent) {
+  private C3mlEntity buildEntity(Map<String, Object> ifcObjectMap) {
     C3mlEntity entity = new C3mlEntity();
 
     entity.setName((String) ifcObjectMap.get("name"));
@@ -79,10 +103,6 @@ public class IfcConverter extends AbstractConverter {
 
     if (ifcObjectMap.containsKey("geometry")) {
       addGeometryValues(ifcObjectMap, entity);
-      if (entity.getGeoLocation() == null) {
-        entity.setGeoLocation(ImmutableList.of(0.0, 0.0, 0.0));
-      }
-
     }
     if (ifcObjectMap.containsKey("parameters")) {
       Map<String, Object> parameters = (Map<String, Object>) ifcObjectMap.get("parameters");
@@ -91,31 +111,19 @@ public class IfcConverter extends AbstractConverter {
       }
     }
 
-    // GeoLeaf geometry = entity.getGeometry();
-    // if (geometry != null) {
-    // if (geometry instanceof GeoEntity) {
-    // entity.deleteGeometry();
-    // }
-    // }
     if (ifcObjectMap.containsKey("decomposedBy")) {
       for (Map<String, Object> childData : (List<Map<String, Object>>) ifcObjectMap
           .get("decomposedBy")) {
-        buildEntity(childData, entity);
+        entity.addChild(buildEntity(childData));
       }
     }
     if (ifcObjectMap.containsKey("contains")) {
       for (Map<String, Object> childData : (List<Map<String, Object>>) ifcObjectMap.get("contains")) {
-        buildEntity(childData, entity);
+        entity.addChild(buildEntity(childData));
       }
     }
 
-    // Return the parent if there is one.
-    if (parent != null) {
-      parent.addChild(entity);
-      return parent;
-    } else {
-      return entity;
-    }
+    return entity;
   }
 
   /**
@@ -128,21 +136,22 @@ public class IfcConverter extends AbstractConverter {
     String ifcType = (String) ifcObjectMap.get("type");
     entity.addProperty("type", ifcType);
 
-    // entity.setDescription(ifcType);
-    // entity.setIfcType(ifcType);
+//    if (!ifcType.equals(IFC_SITE)) return;
 
-    // Set the uniform scale, if present.
+    // Set the site specific uniform scale, if present.
     Object lengthUnitConversion = ifcObjectMap.get("lengthUnitConversion");
-    if (lengthUnitConversion != null) {
-      double scale = (double) lengthUnitConversion;
-      entity.setScale(ImmutableList.of(scale, scale, scale));
-    }
+    if (lengthUnitConversion == null) return;
+    siteScale = (double) lengthUnitConversion;
 
-    // Set geolocation if present.
+    // Set site specific geolocation if present.
     Object latitudeObject = ifcObjectMap.get("latitude");
     Object longitudeObject = ifcObjectMap.get("longitude");
 
-    if (latitudeObject == null || longitudeObject == null) return;
+    if (latitudeObject == null || longitudeObject == null) {
+      siteLatitude = 0;
+      siteLongitude = 0;
+      return;
+    }
 
     String latitudeString = (String) latitudeObject;
     String longitudeString = (String) longitudeObject;
@@ -151,15 +160,13 @@ public class IfcConverter extends AbstractConverter {
     ArrayList<Double> latitudeList = gson.fromJson(latitudeString, ArrayList.class);
     ArrayList<Double> longitudeList = gson.fromJson(longitudeString, ArrayList.class);
 
-    double y =
+    siteLatitude =
         Angle.fromDMS(latitudeList.get(0).intValue(), Math.abs(latitudeList.get(1).intValue()),
             Math.abs(latitudeList.get(2).intValue())).getDegrees();
 
-    double x =
+    siteLongitude =
         Angle.fromDMS(longitudeList.get(0).intValue(), Math.abs(longitudeList.get(1).intValue()),
             Math.abs(longitudeList.get(2).intValue())).getDegrees();
-
-    entity.setGeoLocation(ImmutableList.of(x, y, 0.0));
   }
 
   /**
@@ -190,6 +197,24 @@ public class IfcConverter extends AbstractConverter {
       indices.add(triangle.intValue());
     }
 
+    // Apply local matrix transformation if present.
+    if (geometry.containsKey("matrix")) {
+      List<Double> matrix = (List<Double>) geometry.get("matrix");
+      // Apply local matrix transformation to the mesh.
+      Matrix4d matrix4d = VecMathUtil.matrix4dFromDoubles(Doubles.toArray(matrix));
+      positions = VecMathUtil.transformMeshPositions(positions, matrix4d);
+      normals = VecMathUtil.transformMeshNormals(normals, matrix4d);
+    }
+
+    // Order of matrix transformation: translate, rotate, scale.
+    Matrix4d rotationMatrix = VecMathUtil.createXYZAxisRotationMatrix(0, 0, 0, 0);
+    Matrix4d scaleMatrix = VecMathUtil.createScaleMatrix(siteScale);
+    Matrix4d translateMatrix = VecMathUtil.createTranslationMatrix(0, 0, 0);
+    translateMatrix.mul(rotationMatrix);
+    translateMatrix.mul(scaleMatrix);
+    positions = VecMathUtil.transformMeshPositions(positions, translateMatrix);
+    normals = VecMathUtil.transformMeshNormals(normals, translateMatrix);
+
     entity.setPositions(positions);
     entity.setNormals(normals);
     entity.setTriangles(indices);
@@ -201,14 +226,7 @@ public class IfcConverter extends AbstractConverter {
     }
     entity.setColor(color);
 
-    entity.setRotation(ImmutableList.of(0.0, 0.0, 0.0));
-
-    // Transform the location.
-    if (geometry.containsKey("matrix")) {
-      List<Double> matrix = (List<Double>) geometry.get("matrix");
-      // TODO(orlade): Transform.
-      // entity.transform(Doubles.toArray(matrix));
-    }
+    entity.setGeoLocation(ImmutableList.of(siteLongitude, siteLatitude, 0.0));
   }
 
 }
