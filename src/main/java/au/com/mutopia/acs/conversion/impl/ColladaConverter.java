@@ -394,11 +394,7 @@ public class ColladaConverter extends AbstractConverter {
     for (Node node : visualScene.getNodes()) {
       Matrix matrix = new Matrix("identity");
       matrix.setData(IDENTITY);
-      try {
-        c3mlEntities.add(buildEntityFromNode(node, matrix));
-      } catch (UnsupportedOperationException e) {
-        log.warn(e.getMessage());
-      }
+      c3mlEntities.add(buildEntityFromNode(node, matrix));
     }
     return c3mlEntities;
   }
@@ -421,10 +417,18 @@ public class ColladaConverter extends AbstractConverter {
     List<InstanceGeometry> instanceGeoms = node.getInstanceGeometry();
     // Collapse parent node if only one geometry is attached to this node.
     if (instanceGeoms.size() == 1) {
-      c3mlEntity = buildEntityFromInstanceGeometry(instanceGeoms.get(0), currentMatrix);
+      try {
+        c3mlEntity = buildEntityFromInstanceGeometry(instanceGeoms.get(0), currentMatrix);
+      } catch (UnsupportedOperationException e) {
+        log.warn(e.getMessage());
+      }
     } else {
       for (InstanceGeometry instanceGeom : instanceGeoms) {
-        c3mlEntity.addChild(buildEntityFromInstanceGeometry(instanceGeom, currentMatrix));
+        try {
+          c3mlEntity.addChild(buildEntityFromInstanceGeometry(instanceGeom, currentMatrix));
+        } catch (UnsupportedOperationException e) {
+          log.warn(e.getMessage());
+        }
       }
     }
 
