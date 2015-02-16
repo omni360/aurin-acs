@@ -1,6 +1,7 @@
 package au.com.mutopia.acs.conversion.impl;
 
 import au.com.mutopia.acs.util.mesh.VecMathUtil;
+import com.google.common.base.Strings;
 import com.google.common.primitives.Doubles;
 import gov.nasa.worldwind.geom.Angle;
 
@@ -136,12 +137,15 @@ public class IfcConverter extends AbstractConverter {
     String ifcType = (String) ifcObjectMap.get("type");
     entity.addProperty("type", ifcType);
 
-//    if (!ifcType.equals(IFC_SITE)) return;
+    if (!Strings.isNullOrEmpty(ifcType) && !ifcType.equals(IFC_SITE)) return;
 
     // Set the site specific uniform scale, if present.
     Object lengthUnitConversion = ifcObjectMap.get("lengthUnitConversion");
-    if (lengthUnitConversion == null) return;
-    siteScale = (double) lengthUnitConversion;
+    if (lengthUnitConversion == null) {
+      siteScale = 1;
+    } else {
+      siteScale = (double) lengthUnitConversion;
+    }
 
     // Set site specific geolocation if present.
     Object latitudeObject = ifcObjectMap.get("latitude");
