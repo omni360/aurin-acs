@@ -434,10 +434,10 @@ public class KmlConverter extends AbstractConverter {
   private Color getColor(Placemark placemark) {
     Style style = findStyleInStyleSelectors(placemark.getStyleSelector());
 
-    if (style == null) return DEFAULT_COLOR;
-
-    if (style.getPolyStyle() != null) {
-      return convertStringToColor(style.getPolyStyle().getColor());
+    if (style != null) {
+      if (style.getPolyStyle() != null) {
+        return convertStringToColor(style.getPolyStyle().getColor());
+      }
     }
 
     if (placemark.getStyleUrl() != null) {
@@ -537,7 +537,7 @@ public class KmlConverter extends AbstractConverter {
   }
 
   /**
-   * @param iterator The list of {@link StyleSelector}s.
+   * @param styleSelectors The list of {@link StyleSelector}s.
    * @return The instance of {@link StyleSelector} which is of type {@link Style};
    */
   private Style findStyleInStyleSelectors(List<StyleSelector> styleSelectors) {

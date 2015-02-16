@@ -206,7 +206,7 @@ public abstract class ConverterTest {
    * @param expected The expected {@link C3mlEntity}.
    */
   public void assertThatBroadDataContainerMeshAreEqual(C3mlEntity actual, C3mlEntity expected) {
-    assertThat(actual).isLenientEqualsToByAcceptingFields(expected, "name", "parameters");
+    assertThat(actual).isLenientEqualsToByAcceptingFields(expected, "name", "properties");
     assertThat(actual.getChildren().size()).isEqualTo(expected.getChildren().size());
     C3mlEntity actualMeshEntity = actual.getChildren().get(0);
     C3mlEntity expectedMeshEntity = expected.getChildren().get(0);
@@ -244,7 +244,7 @@ public abstract class ConverterTest {
    * @param expected The expected {@link C3mlEntity}.
    */
   public void assertThatC3mlEntityIsLenientlyEqual(C3mlEntity actual, C3mlEntity expected) {
-    assertThat(actual).isLenientEqualsToByAcceptingFields(expected, "name", "parameters", "color");
+    assertThat(actual).isLenientEqualsToByAcceptingFields(expected, "name", "properties", "color");
     assertThat(isSameCoordinates(actual.getCoordinates(), expected.getCoordinates())).isTrue();
   }
 

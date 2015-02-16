@@ -30,17 +30,9 @@ public class ColladaConverterTest extends ConverterTest {
    * Sets up the fixtures to compare the conversions against.
    */
   public ColladaConverterTest() {
-    // Remove KMZ specific container entity for mesh.
-    List<C3mlEntity> editedEntities = new ArrayList<>();
-    for (C3mlEntity entity : BROAD_DATA.getC3mls()) {
-      editedEntities.add(entity.getType().equals(C3mlEntityType.COLLECTION) ? entity.getChildren()
-          .get(0) : entity);
-    }
-    BROAD_DATA.setC3mls(editedEntities);
     // Remove non meshes from the expected output fixtures, since the COLLADA inputs only have
     // meshes.
-    BROAD_DATA =
-        filter(BROAD_DATA, Lists.newArrayList(C3mlEntityType.MESH, C3mlEntityType.COLLECTION));
+    BROAD_DATA = filter(BROAD_DATA, Lists.newArrayList(C3mlEntityType.MESH));
   }
 
   /**

@@ -59,6 +59,7 @@ public class IfcConverterTest extends ConverterTest {
   public void testBroad() {
   }
 
+  @Ignore
   @Test
   public void could_extract_geometric_value_with_bim_server() throws Exception {
     Asset asset =

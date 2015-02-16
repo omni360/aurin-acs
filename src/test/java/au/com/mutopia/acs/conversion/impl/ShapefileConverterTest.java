@@ -80,7 +80,7 @@ public class ShapefileConverterTest extends ConverterTest {
    */
   @Override
   public void assertThatC3mlEntityIsLenientlyEqual(C3mlEntity actual, C3mlEntity expected) {
-    assertThat(actual).isLenientEqualsToByAcceptingFields(expected, "name", "parameters");
+    assertThat(actual).isLenientEqualsToByAcceptingFields(expected, "name", "properties");
     assertThat(isSameCoordinates(actual.getCoordinates(), expected.getCoordinates())).isTrue();
   }
 }
