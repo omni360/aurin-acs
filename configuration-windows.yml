@@ -1,0 +1,17 @@
+# HTTP server settings.
+http:
+  port: 8090
+  adminPort: 8092
+
+# Logging settings.
+logging:
+  level: DEBUG
+  file:
+    enabled: true
+    currentLogFilename: /var/aurin/acs/log/acs.log
+    archivedLogFilenamePattern: /var/aurin/acs/log/acs-%d.log.gz
+
+bimserver:
+  host: http://localhost:8082/bimserver
+  username: admin@bimserver.org
+  password: admin
