@@ -14,5 +14,7 @@ public enum C3mlEntityType {
   /** A 3D mesh defined by a collection of vertices connected in triangles. */
   MESH,
   /** If C3mlEntity is a container element that does not have any geometry. */
-  COLLECTION
+  COLLECTION,
+  /** An object that may have multiple forms of different types. */
+  FEATURE
 }

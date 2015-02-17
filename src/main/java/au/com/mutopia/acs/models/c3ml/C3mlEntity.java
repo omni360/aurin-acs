@@ -33,12 +33,21 @@ public class C3mlEntity {
   /** The ID of this entity's parent entity. */
   private String parentId;
 
+  /** Whether to display the entity by default when rendering. */
+  private boolean show = true;
+  
+  /** The type of form that should be displayed for a {@link C3mlEntityType#FEATURE} entity. */
+  private String displayMode;
+
   /**
    * The {@link C3mlEntity} objects that belong 'within' this one. This is not serialized to JSON
    * C3ML.
    */
   @JsonIgnore
   private List<C3mlEntity> children = new ArrayList<>();
+
+  /** Map of form type to the ID of another entity that provides that form of this feature. */
+  private Map<String, String> forms = new HashMap<String, String>();
 
   /** The IDs of the child entities. This is what the children field is expected to contain. */
   @JsonProperty("children")
@@ -73,10 +82,10 @@ public class C3mlEntity {
    * should be rotated when rendered.
    */
   private List<Double> rotation;
-  
+
   /** The extrusion height of the entity. Polygons only. */
   private Double height;
-  
+
   /** The elevation of the entity from the ground. */
   private Double altitude;
 
