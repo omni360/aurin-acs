@@ -6,17 +6,19 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.junit.Before;
 import org.junit.Test;
 
+import au.com.mutopia.acs.conversion.output.KmzWriter;
 import au.com.mutopia.acs.models.c3ml.C3mlData;
 import au.com.mutopia.acs.util.ZipUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+/**
+ * Tests that C3ML can be converted into KMZ.
+ */
 public class KmzWriterTest {
 
   private KmzWriter writer;
