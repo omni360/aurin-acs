@@ -33,7 +33,7 @@ public class KmzWriterTest {
     InputStream fixture = Class.class.getResourceAsStream("/fixtures/c3ml/typology.c3ml");
     C3mlData data = new ObjectMapper().readValue(fixture, C3mlData.class);
 
-    File outFile = writer.convert(data, "/tmp/acs/testTypologyExportToKmz.kmz");
+    File outFile = writer.convert(data);
 
     assertThat(FilenameUtils.getExtension(outFile.getName())).isEqualTo("kmz");
     List<File> unzipped = ZipUtils.unzipToTempDirectory(outFile);

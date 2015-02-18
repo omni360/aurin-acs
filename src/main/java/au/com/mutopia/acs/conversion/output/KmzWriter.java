@@ -1,133 +1,292 @@
 package au.com.mutopia.acs.conversion.output;
 
+import java.awt.Color;
 import java.io.File;
-import java.io.FileOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.PrintStream;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import lombok.extern.log4j.Log4j;
-import au.com.mutopia.acs.conversion.impl.KmzConverter;
+
+import org.apache.commons.io.IOUtils;
+
 import au.com.mutopia.acs.exceptions.ConversionException;
 import au.com.mutopia.acs.models.c3ml.C3mlData;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
 import au.com.mutopia.acs.models.c3ml.Vertex3D;
+import au.com.mutopia.acs.util.FileUtils;
 import au.com.mutopia.acs.util.ZipUtils;
 
-import com.dddviewr.collada.Collada;
-import com.dddviewr.collada.visualscene.VisualScene;
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
+
+import de.micromata.opengis.kml.v_2_2_0.AltitudeMode;
+import de.micromata.opengis.kml.v_2_2_0.Folder;
+import de.micromata.opengis.kml.v_2_2_0.Kml;
+import de.micromata.opengis.kml.v_2_2_0.Model;
+import de.micromata.opengis.kml.v_2_2_0.Placemark;
 
 /**
- * Converts C3ML data into a KMZ file (the reverse of {@link KmzConverter}).
+ * Writes {@link C3mlData} to KMZ.
  */
 @Log4j
 public class KmzWriter {
-
-  private static final ColladaBuilder colladaBuilder = new ColladaBuilder();
+  private StringWriter stringWriter = new StringWriter();
 
   /**
-   * Converts the given {@link C3mlData} into a KMZ ZIP file.
-   * 
-   * @param data The {@link C3mlData} to write.
-   * @param outFilename The name of file to write the output into.
-   * @throws ConversionException if the conversion fails.
+   * Base model for KML file.
    */
-  public File convert(C3mlData data, String outFilename) throws ConversionException {
-    KmlBuilder kmlBuilder = new KmlBuilder();
-    Collada collada = colladaBuilder.initCollada();
-    VisualScene scene = new VisualScene("AcsScene", "AcsScene");
-    collada.getLibraryVisualScenes().addVisualScene(scene);
+  private Kml kml;
 
-    Map<String, C3mlEntity> entityIdMap = new HashMap<>();
-    for (C3mlEntity entity : data.getC3mls()) {
-      entityIdMap.put(entity.getId(), entity);
-    }
-    for (C3mlEntity entity : data.getC3mls()) {
-      // Create a new list to avoid concurrent modification.
-      List<String> childIds = Lists.newArrayList(entity.getChildrenIds());
+  private KmlBuilder kmlBuilder;
 
-      // Reconstruct the entity hierarchy.
-      for (String childId : childIds) {
-        entity.addChild(entityIdMap.get(childId));
-      }
+  /**
+   * The highest level folder that contains styles shared between placemarks.
+   */
+  private Folder topLevelFolder;
 
-      // Convert each of the entities into a corresponding KML or COLLADA element.
-      if (entity.getType() == C3mlEntityType.MESH) {
-        scene.addNode(colladaBuilder.buildColladaNode(entity, collada));
-      } else {
+  /**
+   * The list of style IDs created.
+   */
+  private List<String> styleIds;
 
-        switch (entity.getType()) {
-          case POINT:
-            kmlBuilder.writePoint(entity);
-            break;
-          case LINE:
-            kmlBuilder.writeLine(entity);
-            break;
-          case POLYGON:
-            kmlBuilder.writePolygon(entity);
-            break;
-          case COLLECTION:
-          case FEATURE:
-            kmlBuilder.writeFolder(entity);
-            break;
-          default:
-            log.warn("Unknown entity type: " + entity.getType());
-        }
-      }
-    }
+  /**
+   * The list of files (models or icons) being referenced by KML.
+   */
+  private List<File> referencedFiles = new ArrayList<>();
 
-    // Zip the KML and resources into a KMZ file.
-    File tempKmlFile;
+  /**
+   * Map of entity IDs to objects to reconstruct the hierarchy.
+   */
+  private Map<String, C3mlEntity> entityIdMap;
 
+  /**
+   * Starts the KML document, create a KML folder within the document.
+   */
+  public KmzWriter() {
+    kml = new Kml();
+    topLevelFolder = kml.createAndSetFolder().withName("entities");
+    styleIds = new ArrayList<>();
+    kmlBuilder = new KmlBuilder(kml, topLevelFolder, styleIds);
+
+    stringWriter = new StringWriter();
+    referencedFiles = new ArrayList<>();
+  }
+
+  /**
+   * Writes the content of {@link C3mlData} as a KMZ file.
+   *
+   * @param data The {@link C3mlData} document to convert.
+   * @throws ConversionException if the conversion failed.
+   */
+  public File convert(C3mlData data) throws ConversionException {
     try {
-      File outDir = Files.createTempDir();
-      List<File> outFiles = new ArrayList<>();
-
-      // Write the COLLADA to the KML.
-      if (!scene.getNodes().isEmpty()) {
-        String daePath = "models/untitled.dae";
-        // File daeFile =
-        // new File(String.format("%s/%s/%s", FileUtils.TEMP_DIR, UUID.randomUUID().toString(),
-        // daePath));
-        File modelsDir = new File(outDir, "models");
-        modelsDir.mkdirs();
-        File daeFile = new File(modelsDir, "untitled.dae");
-
-        FileOutputStream fos = new FileOutputStream(daeFile);
-        collada.dump(new PrintStream(fos), 2);
-        fos.close();
-
-        kmlBuilder.writeAggregateModel(daePath, new Vertex3D());
-        outFiles.add(modelsDir);
+      entityIdMap = new HashMap<>();
+      for (C3mlEntity entity : data.getC3mls()) {
+        entityIdMap.put(entity.getId(), entity);
       }
 
-      // Write the KML.
-      tempKmlFile = new File(outDir, "doc.kml");
-      kmlBuilder.getKml().marshal(tempKmlFile);
-      outFiles.add(tempKmlFile);
+      for (C3mlEntity entity : data.getC3mls()) {
+        writeEntity(entity, topLevelFolder);
+      }
+      return writeOutput();
+    } catch (Exception e) {
+      throw new ConversionException("Failed to convert to KMZ", e);
+    }
+  }
 
-      // Zip the files.
-      File outFile = new File(outDir, outFilename);
-      ZipUtils.zipFilesToDirectory(outFiles, outFile);
-      return outFile;
+  /**
+   * Zips the KML and resources into a KMZ file.
+   *
+   * @throws ConversionException
+   */
+  private File writeOutput() throws ConversionException {
+    try {
+      List<File> filesToZip = Lists.newArrayList();
+      File tmpKmlFile =
+          FileUtils.createTemporaryFileWithContent("doc.kml", getResultAsString().getBytes());
+      filesToZip.add(tmpKmlFile);
+      filesToZip.addAll(referencedFiles);
+
+      File tmpKmzFile = FileUtils.createTemporaryFileWithContent("project.kmz", null);
+      ZipUtils.zipFilesToDirectory(filesToZip, tmpKmzFile);
+      return tmpKmzFile;
     } catch (IOException e) {
       throw new ConversionException("Failed to save files to KMZ", e);
     }
   }
 
   /**
-   * Converts the data to KMZ and writes to the given file.
-   * 
-   * @throws ConversionException
+   * Writes the {@link C3mlEntity} hierarchy as {@link Placemark}s within the {@link Folder}. If the
+   * hierarchy is made up of meshes only, convert the hierarchy as a COLLADA model.
+   *
+   * @param entity
+   * @param parentFolder
    */
-  public File convert(C3mlData data) throws ConversionException, IOException {
-    return convert(data, "out.kmz");
+  private void writeEntity(C3mlEntity entity, Folder parentFolder) {
+    if (entity.getType() == C3mlEntityType.COLLECTION) {
+      parentFolder = kmlBuilder.writeFolder(entity, parentFolder);
+    } else {
+      if (entity.getType() == C3mlEntityType.MESH) {
+        writeModel(entity, parentFolder);
+      } else {
+        kmlBuilder.writeEntity(entity, parentFolder);
+      }
+    }
+
+    if (!entity.getChildrenIds().isEmpty()) {
+      for (String childId : entity.getChildrenIds()) {
+        Folder entityFolder = parentFolder.createAndAddFolder().withName(entity.getName());
+        writeEntity(entityIdMap.get(childId), entityFolder);
+      }
+    }
+  }
+
+  /**
+   * Creates a COLLADA model for the {@link C3mlEntity} hierarchy and references it by the model's
+   * id.
+   *
+   * @param entity {@link C3mlEntity}
+   */
+  private void writeModel(C3mlEntity entity, Folder parentFolder) {
+    Placemark placemark = parentFolder.createAndAddPlacemark();
+    placemark.setName(entity.getName());
+    Model model = placemark.createAndSetModel();
+    model.withAltitudeMode(AltitudeMode.RELATIVE_TO_GROUND);
+
+    Vertex3D location = new Vertex3D(entity.getGeoLocation(), true);
+    Vertex3D rotation = new Vertex3D(entity.getRotation(), false);
+    Vertex3D scale = new Vertex3D(entity.getScale(), false);
+
+    model.createAndSetLocation().withLongitude(location.getLongitude())
+        .withLatitude(location.getLatitude()).withAltitude(location.getAltitude());
+
+    model.createAndSetOrientation().withHeading(rotation.getX()).withTilt(rotation.getY())
+        .withRoll(rotation.getZ());
+
+    model.createAndSetScale().withX(scale.getX()).withY(scale.getY()).withZ(scale.getZ());
+
+    String colladaModelHref = entity.getId() + ".dae";
+    model.createAndSetLink().withHref(colladaModelHref);
+
+    // Collapse hierarchy by removing duplicated entities in KML and COLLADA.
+    if (entity.getChildren().size() == 1) {
+      entity = entity.getChildren().get(0);
+    }
+    createTempColladaModelFile(colladaModelHref, entity);
+  }
+
+  /**
+   * Checks if the {@link C3mlEntity} hierarchy contains meshes only.
+   *
+   * @param entity
+   * @return True if the {@link C3mlEntity} hierarchy contains meshes only.
+   */
+  private boolean containsOnlyMesh(C3mlEntity entity) {
+    if (entity.getType() != C3mlEntityType.MESH) return false;
+
+    for (String childId : entity.getChildrenIds()) {
+      C3mlEntity child = entityIdMap.get(childId);
+      if (child.getType() == C3mlEntityType.MESH) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * @param color
+   * @return The KML coded color string.
+   */
+  private String getKmlColorString(Color color) {
+    // Order of color: AABBGGRR.
+    return String.format("%02x%02x%02x%02x", color.getAlpha(), color.getBlue(), color.getGreen(),
+        color.getRed());
+  }
+
+  /**
+   * Gets the KML output string of this KMZ file.
+   *
+   * @return The KML string from this KMZ file.
+   */
+  public String getResultAsString() {
+    return stringWriter.toString().replaceAll(
+        "[\\s]*<refreshInterval>[\\S]{3}</refreshInterval>"
+            + "[\\s]*<viewRefreshTime>[\\S]{3}</viewRefreshTime>"
+            + "[\\s]*<viewBoundScale>[\\S]{3}</viewBoundScale>", "");
+  }
+
+  /**
+   * Gets the KMZ file as byte array.
+   *
+   * @return The KMZ file as byte array.
+   */
+  public byte[] getFileAsBytes() {
+    try {
+      List<File> filesToZip = Lists.newArrayList();
+      File tmpKmlFile =
+          FileUtils.createTemporaryFileWithContent("doc.kml", getResultAsString().getBytes());
+      filesToZip.add(tmpKmlFile);
+      filesToZip.addAll(referencedFiles);
+
+      File tmpKmzFile = FileUtils.createTemporaryFileWithContent("project.kmz", null);
+      ZipUtils.zipFilesToDirectory(filesToZip, tmpKmzFile);
+      return IOUtils.toByteArray(new FileInputStream(tmpKmzFile));
+    } catch (IOException e) {
+      log.error(e);
+    }
+
+    return null;
+  }
+
+  /**
+   * Creates a temporary COLLADA file that models the {@link C3mlEntity} hierarchy.
+   *
+   * @param hrefString The string reference to the COLLADA file.
+   * @param entity
+   */
+  private void createTempColladaModelFile(String hrefString, C3mlEntity entity) {
+    ColladaWriter colladaWriter = new ColladaWriter();
+
+    colladaWriter.startDocument();
+    colladaWriter.writeAssets();
+    colladaWriter.startWriteVisualScenes();
+
+    colladaWriter.writeMeshNode(entity, 0);
+
+    colladaWriter.endWriteVisualScenes();
+    colladaWriter.writeLibraryNodes();
+    colladaWriter.writeGeometries();
+    colladaWriter.writeEffects();
+    colladaWriter.writeMaterials();
+    colladaWriter.writeScene();
+    colladaWriter.endDocument();
+    createTempHrefFile(hrefString, colladaWriter.getResultAsString().getBytes());
+  }
+
+  /**
+   * Creates a temporary href file that is used by model or image references.
+   *
+   * @param hrefString The string reference to the file.
+   * @param data
+   */
+  private void createTempHrefFile(String hrefString, byte[] data) {
+    try {
+      referencedFiles.add(FileUtils.createTemporaryFileWithContent(hrefString, data));
+    } catch (IOException e) {
+      log.error(e);
+    }
+  }
+
+  /**
+   * Closes the KML document.
+   */
+  public void endWrite() {
+    kml.marshal(stringWriter);
   }
 
 }

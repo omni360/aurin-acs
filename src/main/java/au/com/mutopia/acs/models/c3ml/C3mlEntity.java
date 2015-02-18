@@ -15,7 +15,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * An object representing the contents of a C3ML document.
- * 
+ *
  * @see <a
  *      href="https://docs.google.com/document/d/1dNMQyOjIN6AGPIpUqw0ZdKRrLbrTjws6itGeo4dtHYU">Unofficial
  *      C3ML specification</a>
@@ -35,7 +35,7 @@ public class C3mlEntity {
 
   /** Whether to display the entity by default when rendering. */
   private boolean show = true;
-  
+
   /** The type of form that should be displayed for a {@link C3mlEntityType#FEATURE} entity. */
   private String displayMode;
 
@@ -57,7 +57,7 @@ public class C3mlEntity {
   private Map<String, String> properties = new HashMap<>();
 
   /**
-   * A list of coordinates of points making up the entity geometry (2D entities only).Each vertex
+   * A list of coordinates of points making up the entity geometry (2D entities only). Each vertex
    * represents the longitude, latitude and elevation of a point.
    */
   private List<Vertex3D> coordinates;
@@ -120,7 +120,7 @@ public class C3mlEntity {
 
   /**
    * Creates a new {@link C3mlEntity} with the specified ID.
-   * 
+   *
    * @param id The ID to use for the entity.
    */
   public C3mlEntity(String id) {
@@ -129,7 +129,7 @@ public class C3mlEntity {
 
   /**
    * Adds a {@link C3mlEntity} as a child of this one
-   * 
+   *
    * @param child The {@link C3mlEntity} to add.
    */
   public void addChild(C3mlEntity child) {
@@ -143,7 +143,7 @@ public class C3mlEntity {
 
   /**
    * Adds a parameter to the entity.
-   * 
+   *
    * @param name The name of the parameter.
    * @param value The entity's parameter value.
    */
@@ -153,7 +153,7 @@ public class C3mlEntity {
 
   /**
    * Sets the color of the entity.
-   * 
+   *
    * @param colorData The RGBA color values.
    */
   public void setColorData(Color colorData) {
