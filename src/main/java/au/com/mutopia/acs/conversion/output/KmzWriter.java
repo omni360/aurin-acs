@@ -1,19 +1,13 @@
 package au.com.mutopia.acs.conversion.output;
 
-import java.awt.Color;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import lombok.extern.log4j.Log4j;
-
-import org.apache.commons.io.IOUtils;
-
 import au.com.mutopia.acs.exceptions.ConversionException;
 import au.com.mutopia.acs.models.c3ml.C3mlData;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
@@ -35,7 +29,6 @@ import de.micromata.opengis.kml.v_2_2_0.Placemark;
  */
 @Log4j
 public class KmzWriter {
-  private StringWriter stringWriter = new StringWriter();
 
   /**
    * Base model for KML file.
@@ -73,7 +66,6 @@ public class KmzWriter {
     styleIds = new ArrayList<>();
     kmlBuilder = new KmlBuilder(kml, topLevelFolder, styleIds);
 
-    stringWriter = new StringWriter();
     referencedFiles = new ArrayList<>();
   }
 
@@ -96,27 +88,6 @@ public class KmzWriter {
       return writeOutput();
     } catch (Exception e) {
       throw new ConversionException("Failed to convert to KMZ", e);
-    }
-  }
-
-  /**
-   * Zips the KML and resources into a KMZ file.
-   *
-   * @throws ConversionException
-   */
-  private File writeOutput() throws ConversionException {
-    try {
-      List<File> filesToZip = Lists.newArrayList();
-      File tmpKmlFile =
-          FileUtils.createTemporaryFileWithContent("doc.kml", getResultAsString().getBytes());
-      filesToZip.add(tmpKmlFile);
-      filesToZip.addAll(referencedFiles);
-
-      File tmpKmzFile = FileUtils.createTemporaryFileWithContent("project.kmz", null);
-      ZipUtils.zipFilesToDirectory(filesToZip, tmpKmzFile);
-      return tmpKmzFile;
-    } catch (IOException e) {
-      throw new ConversionException("Failed to save files to KMZ", e);
     }
   }
 
@@ -181,69 +152,6 @@ public class KmzWriter {
   }
 
   /**
-   * Checks if the {@link C3mlEntity} hierarchy contains meshes only.
-   *
-   * @param entity
-   * @return True if the {@link C3mlEntity} hierarchy contains meshes only.
-   */
-  private boolean containsOnlyMesh(C3mlEntity entity) {
-    if (entity.getType() != C3mlEntityType.MESH) return false;
-
-    for (String childId : entity.getChildrenIds()) {
-      C3mlEntity child = entityIdMap.get(childId);
-      if (child.getType() == C3mlEntityType.MESH) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  /**
-   * @param color
-   * @return The KML coded color string.
-   */
-  private String getKmlColorString(Color color) {
-    // Order of color: AABBGGRR.
-    return String.format("%02x%02x%02x%02x", color.getAlpha(), color.getBlue(), color.getGreen(),
-        color.getRed());
-  }
-
-  /**
-   * Gets the KML output string of this KMZ file.
-   *
-   * @return The KML string from this KMZ file.
-   */
-  public String getResultAsString() {
-    return stringWriter.toString().replaceAll(
-        "[\\s]*<refreshInterval>[\\S]{3}</refreshInterval>"
-            + "[\\s]*<viewRefreshTime>[\\S]{3}</viewRefreshTime>"
-            + "[\\s]*<viewBoundScale>[\\S]{3}</viewBoundScale>", "");
-  }
-
-  /**
-   * Gets the KMZ file as byte array.
-   *
-   * @return The KMZ file as byte array.
-   */
-  public byte[] getFileAsBytes() {
-    try {
-      List<File> filesToZip = Lists.newArrayList();
-      File tmpKmlFile =
-          FileUtils.createTemporaryFileWithContent("doc.kml", getResultAsString().getBytes());
-      filesToZip.add(tmpKmlFile);
-      filesToZip.addAll(referencedFiles);
-
-      File tmpKmzFile = FileUtils.createTemporaryFileWithContent("project.kmz", null);
-      ZipUtils.zipFilesToDirectory(filesToZip, tmpKmzFile);
-      return IOUtils.toByteArray(new FileInputStream(tmpKmzFile));
-    } catch (IOException e) {
-      log.error(e);
-    }
-
-    return null;
-  }
-
-  /**
    * Creates a temporary COLLADA file that models the {@link C3mlEntity} hierarchy.
    *
    * @param hrefString The string reference to the COLLADA file.
@@ -283,10 +191,24 @@ public class KmzWriter {
   }
 
   /**
-   * Closes the KML document.
+   * Zips the KML and resources into a KMZ file.
+   *
+   * @throws ConversionException
    */
-  public void endWrite() {
-    kml.marshal(stringWriter);
+  private File writeOutput() throws ConversionException {
+    try {
+      String kmlDoc = kmlBuilder.marshall();
+      List<File> filesToZip = Lists.newArrayList();
+      File tmpKmlFile = FileUtils.createTemporaryFileWithContent("doc.kml", kmlDoc.getBytes());
+      filesToZip.add(tmpKmlFile);
+      filesToZip.addAll(referencedFiles);
+
+      File tmpKmzFile = FileUtils.createTemporaryFileWithContent("project.kmz", null);
+      ZipUtils.zipFilesToDirectory(filesToZip, tmpKmzFile);
+      return tmpKmzFile;
+    } catch (IOException e) {
+      throw new ConversionException("Failed to save files to KMZ", e);
+    }
   }
 
 }

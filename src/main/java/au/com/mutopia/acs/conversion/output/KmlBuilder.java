@@ -1,6 +1,7 @@
 package au.com.mutopia.acs.conversion.output;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -234,6 +235,18 @@ public class KmlBuilder {
         .withLongitude(location.getLongitude()).withAltitude(location.getAltitude());
     model.createAndSetLink().withHref(path);
     return placemark;
+  }
+
+  /**
+   * Marshalls the KML document into a string without animations.
+   */
+  public String marshall() {
+    StringWriter stringWriter = new StringWriter();
+    kml.marshal(stringWriter);
+    return stringWriter.toString().replaceAll(
+        "[\\s]*<refreshInterval>[\\S]{3}</refreshInterval>"
+            + "[\\s]*<viewRefreshTime>[\\S]{3}</viewRefreshTime>"
+            + "[\\s]*<viewBoundScale>[\\S]{3}</viewBoundScale>", "");
   }
 
   // /**
