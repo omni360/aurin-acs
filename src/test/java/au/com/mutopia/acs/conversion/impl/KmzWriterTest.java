@@ -29,15 +29,15 @@ public class KmzWriterTest {
   }
 
   @Test
-  public void test() throws Exception {
+  public void testTypologyExportToKmz() throws Exception {
     InputStream fixture = Class.class.getResourceAsStream("/fixtures/c3ml/typology.c3ml");
     C3mlData data = new ObjectMapper().readValue(fixture, C3mlData.class);
-    File outFile = writer.convert(data);
+
+    File outFile = writer.convert(data, "/tmp/acs/testTypologyExportToKmz.kmz");
 
     assertThat(FilenameUtils.getExtension(outFile.getName())).isEqualTo("kmz");
     List<File> unzipped = ZipUtils.unzipToTempDirectory(outFile);
-    // TODO(orlade): Set to two when COLLADA is saved.
-    assertThat(unzipped).hasSize(1);
+    assertThat(unzipped).hasSize(2);
   }
 
 }
