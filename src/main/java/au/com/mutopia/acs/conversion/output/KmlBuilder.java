@@ -1,5 +1,7 @@
 package au.com.mutopia.acs.conversion.output;
 
+import au.com.mutopia.acs.models.Format;
+import com.google.common.base.Strings;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -7,8 +9,6 @@ import java.util.List;
 
 import lombok.Getter;
 import lombok.extern.log4j.Log4j;
-
-import org.fest.util.Strings;
 
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 import au.com.mutopia.acs.models.c3ml.Vertex3D;
@@ -83,13 +83,21 @@ public class KmlBuilder {
    * Writes the point {@link C3mlEntity} as a {@link Placemark} within the {@link Folder}.
    */
   public Placemark writePoint(C3mlEntity entity, Folder parentFolder) {
-    Placemark placemark = parentFolder.createAndAddPlacemark();
-    setCommon(entity, placemark);
+    Placemark placemark = createPlacemark(entity, parentFolder);
 
     Point point = placemark.createAndSetPoint();
     point.setAltitudeMode(AltitudeMode.RELATIVE_TO_GROUND);
     Vertex3D coord = entity.getCoordinates().get(0);
     point.addToCoordinates(coord.getLongitude(), coord.getLatitude(), coord.getAltitude());
+
+    String kmlColorString = getKmlColorString(entity.getColor());
+    String pointStyleId = kmlColorString + "Point";
+    if (!styleIds.contains(pointStyleId)) {
+      topLevelFolder.createAndAddStyle().withId(pointStyleId).createAndSetIconStyle()
+          .withColor(kmlColorString);
+      styleIds.add(pointStyleId);
+    }
+    placemark.withStyleUrl("#" + pointStyleId);
     return placemark;
   }
 
@@ -104,8 +112,7 @@ public class KmlBuilder {
    * @param parentFolder
    */
   public Placemark writeLine(C3mlEntity entity, Folder parentFolder) {
-    Placemark placemark = parentFolder.createAndAddPlacemark();
-    setCommon(entity, placemark);
+    Placemark placemark = createPlacemark(entity, parentFolder);
 
     LineString lineString = placemark.createAndSetLineString();
     lineString.setExtrude(false);
@@ -134,8 +141,7 @@ public class KmlBuilder {
    * Writes the {@link C3mlEntity} as a {@link Placemark} within the {@link Folder}.
    */
   public Placemark writePolygon(C3mlEntity entity, Folder parentFolder) {
-    Placemark placemark = parentFolder.createAndAddPlacemark();
-    setCommon(entity, placemark);
+    Placemark placemark = createPlacemark(entity, parentFolder);
 
     Polygon polygon = placemark.createAndSetPolygon();
     polygon.setExtrude(entity.getHeight() > 0);
@@ -186,36 +192,46 @@ public class KmlBuilder {
   }
 
   /**
-   * Creates a COLLADA model for the {@link GeoObject} hierarchy and references it by the model's
+   * Creates a COLLADA model for the {@link C3mlEntity} hierarchy and references it by the model's
    * id.
    *
-   * @param geoObject {@link GeoObject}
+   * @param entity {@link C3mlEntity}
    */
   public Placemark writeModel(C3mlEntity entity, Folder parentFolder) throws IOException {
     Placemark placemark = parentFolder.createAndAddPlacemark();
-    placemark.setName(entity.getName());
-    Model model = placemark.createAndSetModel();
-    model.withAltitudeMode(AltitudeMode.RELATIVE_TO_GROUND);
+    setCommon(entity, placemark);
 
-    // Vertex3D geoLocation = geoObject.getHierarchyGeoOrigin();
-    // Vertex3D rotation = geoObject.getRotation();
-    // Vertex3D scale = geoObject.getScale();
-    // model.createAndSetLocation().withLongitude(kmzGeoLocation.getLongitude())
-    // .withLatitude(kmzGeoLocation.getLatitude()).withAltitude(kmzGeoLocation.getAltitude());
-    //
-    // model.createAndSetOrientation().withHeading(rotation.getX()).withTilt(rotation.getY())
-    // .withRoll(rotation.getZ());
-    //
-    // model.createAndSetScale().withX(scale.getX()).withY(scale.getY()).withZ(scale.getZ());
-    //
-    // String colladaModelHref = geoObject.getId() + ".dae";
-    // model.createAndSetLink().withHref(colladaModelHref);
-    //
-    // // Collapse hierarchy by removing duplicated entities in KML and COLLADA.
-    // if (geoObject.getChildren().size() == 1) {
-    // geoObject = (GeoObject) geoObject.getChildren().get(0);
-    // }
-    // createTempColladaModelFile(colladaModelHref, geoObject);
+//    placemark.setName(entity.getName());
+//    Model model = placemark.createAndSetModel();
+//    model.withAltitudeMode(AltitudeMode.RELATIVE_TO_GROUND);
+//
+//    Vertex3D location = new Vertex3D(entity.getGeoLocation(), true);
+//    Vertex3D rotation = new Vertex3D(entity.getRotation(), false);
+//    Vertex3D scale = new Vertex3D(entity.getScale(), false);
+//
+//    model.createAndSetLocation().withLongitude(location.getLongitude())
+//        .withLatitude(location.getLatitude()).withAltitude(location.getAltitude());
+//
+//    model.createAndSetOrientation().withHeading(rotation.getX()).withTilt(rotation.getY())
+//        .withRoll(rotation.getZ());
+//
+//    model.createAndSetScale().withX(scale.getX()).withY(scale.getY()).withZ(scale.getZ());
+//
+//    String colladaModelHref = getUniqueFileHref(entity.getId(), Format.COLLADA.toString());
+//    model.createAndSetLink().withHref(colladaModelHref);
+
+    return placemark;
+  }
+
+  /**
+   * Creates a {@link Placemark} for the {@link C3mlEntity}.
+   *
+   * @param entity {@link C3mlEntity}
+   * @param parentFolder The parent folder to write to.
+   */
+  public Placemark createPlacemark(C3mlEntity entity, Folder parentFolder) {
+    Placemark placemark = parentFolder.createAndAddPlacemark();
+    setCommon(entity, placemark);
     return placemark;
   }
 
@@ -281,7 +297,7 @@ public class KmlBuilder {
    */
   private void setCommon(C3mlEntity entity, Feature feature) {
     feature.setId(entity.getId());
-    feature.setName(Strings.isEmpty(entity.getName()) ? entity.getId() : entity.getName());
+    feature.setName(Strings.isNullOrEmpty(entity.getName()) ? entity.getId() : entity.getName());
     feature.setVisibility(entity.isShow());
     if (entity.getProperties() != null && !entity.getProperties().isEmpty()) {
       ExtendedData xdata = feature.createAndSetExtendedData();

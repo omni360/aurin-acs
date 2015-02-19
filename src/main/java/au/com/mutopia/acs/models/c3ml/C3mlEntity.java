@@ -1,5 +1,7 @@
 package au.com.mutopia.acs.models.c3ml;
 
+import au.com.mutopia.acs.util.geometry.GeometryUtils;
+import com.google.common.collect.ImmutableList;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Getter
 @Setter
 public class C3mlEntity {
-
   private String id;
   private String name;
 
@@ -60,13 +61,13 @@ public class C3mlEntity {
    * A list of coordinates of points making up the entity geometry (2D entities only). Each vertex
    * represents the longitude, latitude and elevation of a point.
    */
-  private List<Vertex3D> coordinates;
+  private List<Vertex3D> coordinates = new ArrayList<>();
 
   /**
    * A list of polygons (each a list of coordinates) specifying the holes in the polygon as polygons
    * to cut out of the original shape.
    */
-  private List<List<Vertex3D>> holes;
+  private List<List<Vertex3D>> holes = new ArrayList<>();
 
   /**
    * The color of the entity, if any solid color should be applied. The list of numbers represents
@@ -75,13 +76,13 @@ public class C3mlEntity {
   private List<Integer> color = new ArrayList<>();
 
   /** The scaling factors (x, y, z) by which all coordinates should be scaled when rendered. */
-  private List<Double> scale;
+  private List<Double> scale = ImmutableList.of(1.0, 1.0, 1.0);
 
   /**
    * The angles (in degrees around the x, y, z axes, counterclockwise) by which the coordinates
    * should be rotated when rendered.
    */
-  private List<Double> rotation;
+  private List<Double> rotation = ImmutableList.of(0.0, 0.0, 0.0);
 
   /** The extrusion height of the entity. Polygons only. */
   private Double height;
@@ -102,7 +103,7 @@ public class C3mlEntity {
   private List<Integer> triangles;
 
   /** The aggregate location of the {@link #positions} of the mesh. */
-  private List<Double> geoLocation;
+  private List<Double> geoLocation = ImmutableList.of(0.0, 0.0, 0.0);
 
   /** The URL to the glTF mesh data, if applicable. */
   private String gltfUrl;
@@ -139,6 +140,14 @@ public class C3mlEntity {
     children.add(child);
     childrenIds.add(child.getId());
     child.setParentId(getId());
+  }
+
+  public void setCoordinates(List<Vertex3D> coordinates) {
+    this.coordinates = coordinates;
+    double minAltitude = GeometryUtils.getMinHeight(coordinates);
+    double maxAltitude = GeometryUtils.getMaxHeight(coordinates);
+    setAltitude(minAltitude);
+    setHeight(maxAltitude - minAltitude);
   }
 
   /**

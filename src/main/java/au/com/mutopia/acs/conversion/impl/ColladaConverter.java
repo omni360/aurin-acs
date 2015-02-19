@@ -206,6 +206,9 @@ public class ColladaConverter extends AbstractConverter {
     visualScene =
         collada.getLibraryVisualScenes().getScene(
             collada.getScene().getInstanceVisualScene().getUrl());
+    for (Node node : visualScene.getNodes()) {
+      nodeMap.put(node.getId(), node);
+    }
     unitMeter = collada.getUnit().getMeter();
     upAxis = collada.getUpAxis();
     LibraryEffects libraryEffects = collada.getLibraryEffects();
