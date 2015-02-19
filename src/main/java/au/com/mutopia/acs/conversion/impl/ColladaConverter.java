@@ -120,12 +120,12 @@ public class ColladaConverter extends AbstractConverter {
   /**
    * The rotation to be applied on the whole COLLADA model.
    */
-  private List<Double> rotation = null;
+  private List<Double> rotation = ImmutableList.of(0.0, 0.0, 0.0);
 
   /**
    * The scale to be applied on the whole COLLADA model.
    */
-  private List<Double> scale = null;
+  private List<Double> scale = ImmutableList.of(1.0, 1.0, 1.0);
 
   /**
    * The geographic location to be applied on the whole COLLADA model.
@@ -557,15 +557,24 @@ public class ColladaConverter extends AbstractConverter {
     List<Double> scaledPositions = VecMathUtil.transformMeshPositions(upAxisPositions, scaleMatrix);
     List<Double> scaledNormals = VecMathUtil.transformMeshNormals(upAxisNormals, scaleMatrix);
 
+    // Apply global transformations to the model if exists.
+    Matrix4d globalRotationMatrix =
+        VecMathUtil.createRotationMatrix(rotation.get(0), rotation.get(1), rotation.get(2));
+    Matrix4d globalScaleMatrix =
+        VecMathUtil.createScaleMatrix(scale.get(0), scale.get(1), scale.get(2));
+    Matrix4d translateMatrix = VecMathUtil.createTranslationMatrix(0, 0, 0);
+    translateMatrix.mul(globalRotationMatrix);
+    translateMatrix.mul(globalScaleMatrix);
+    List<Double> globalPositions =
+        VecMathUtil.transformMeshPositions(scaledPositions, translateMatrix);
+    List<Double> globalNormals = VecMathUtil.transformMeshNormals(scaledNormals, translateMatrix);
+
     entity.setType(C3mlEntityType.MESH);
-    entity.setPositions(scaledPositions);
-    entity.setNormals(scaledNormals);
+    entity.setPositions(globalPositions);
+    entity.setNormals(globalNormals);
     entity.setTriangles(inputIndices);
     entity.setGeoLocation(defaultGeolocation);
 
-    // Apply global transformations to the model if exists.
-    if (rotation != null) entity.setRotation(rotation);
-    if (scale != null) entity.setScale(scale);
     if (geoLocation != null) entity.setGeoLocation(geoLocation);
   }
 
