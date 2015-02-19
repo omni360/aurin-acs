@@ -149,15 +149,31 @@ public class KmzWriter {
    */
   private boolean checkIsMeshOnlyHierarchy(C3mlEntity entity) {
     boolean isMeshOnlyHierarchy = true;
-    for (String childId : entity.getChildrenIds()) {
-      C3mlEntity childEntity = entityIdMap.get(childId);
-      if (!checkIsMeshOnlyHierarchy(childEntity)) isMeshOnlyHierarchy = false;
-    }
-    C3mlEntityType type = entity.getType();
-    if (type != C3mlEntityType.MESH && type != C3mlEntityType.COLLECTION)
+    List<String> childrenIds = entity.getChildrenIds();
+    if (!isMesh(entity)) {
       isMeshOnlyHierarchy = false;
+    }
+    for (String childId : childrenIds) {
+      C3mlEntity childEntity = entityIdMap.get(childId);
+      if (!checkIsMeshOnlyHierarchy(childEntity)) {
+        isMeshOnlyHierarchy = false;
+      }
+    }
     entityIdIsMeshOnlyHierarchyMap.put(entity.getId(), isMeshOnlyHierarchy);
     return isMeshOnlyHierarchy;
+  }
+
+  /**
+   * A {@link C3mlEntity} is potentially a mesh if it is of type mesh or it is a collection with
+   * children.
+   *
+   * @param entity The {@link C3mlEntity}.
+   * @return True if {@link C3mlEntity} is potentially a mesh.
+   */
+  private boolean isMesh(C3mlEntity entity) {
+    C3mlEntityType type = entity.getType();
+    return type == C3mlEntityType.MESH ||
+        type == C3mlEntityType.COLLECTION && entity.getChildrenIds().size() > 0;
   }
 
   /**
