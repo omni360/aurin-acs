@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
@@ -16,6 +17,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import lombok.extern.log4j.Log4j;
+import au.com.mutopia.acs.models.Format;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -114,8 +116,28 @@ public class ZipUtils {
   }
 
   /**
+   * Extracts the files in the ZIP archive, and returns those with the specified file extension.
+   * Note: does not clean up any of the extracted files, in case the matched files reference other
+   * files.
+   *
+   * @param zipFile The ZIP archive to unzip.
+   * @param ext The file extension to match files with.
+   * @return A list of the files in the ZIP archive with the extension.
+   */
+  public static List<File> extractByExtension(File zipFile, String ext) {
+    List<File> matchFiles = new ArrayList<>();
+    List<File> unzippedFiles = ZipUtils.unzipToTempDirectory(zipFile);
+    for (File unzippedFile : unzippedFiles) {
+      if (Files.getFileExtension(unzippedFile.getName()).equals(ext)) {
+        matchFiles.add(unzippedFile);
+      }
+    }
+    return matchFiles;
+  }
+
+  /**
    * Compresses the given string into a byte array.
-   * 
+   *
    * @param text The text to compress.
    * @return The string compressed into a byte array.
    * @see <a href="http://stackoverflow.com/questions/10572398">Stack Overflow answer</a>
@@ -134,10 +156,10 @@ public class ZipUtils {
 
   /**
    * Decompresses the given bytes into a UTF-8 string.
-   * 
+   *
    * @param data The bytes to decompress.
    * @return The string encoded by the bytes.
-   * 
+   *
    * @see <a href="http://stackoverflow.com/questions/10572398">Stack Overflow answer</a>
    */
   public static String decompressString(byte[] data) {
