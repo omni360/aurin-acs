@@ -9,14 +9,7 @@ EXPOSE $ACS_PORT
 ENV ACS_HOME /opt/acs
 WORKDIR /
 
-# Install build tools and dependencies to build COLLADA2GLTF, then clean up afterwards.
-RUN apt-get update && apt-get -qq install git cmake g++ libxml2-dev libpng12-dev libpcre3-dev pkg-config
-RUN git clone --recurse-submodules https://github.com/KhronosGroup/glTF.git
-RUN cd glTF && git reset --hard df4892809111a8c6dbff4fab6c386a24745d344e
-RUN cd glTF/converter/COLLADA2GLTF && cmake . && make
-RUN mv glTF/converter/COLLADA2GLTF/bin/collada2gltf /usr/local/bin/
-RUN apt-get purge -qq git cmake g++ libxml2-dev libpng12-dev libpcre3-dev pkg-config
-RUN rm -rf glTF
+ADD collada2gltf /usr/local/bin/
 
 # Add the ACS JAR and configuration.
 ADD aurin-acs.jar $ACS_HOME/

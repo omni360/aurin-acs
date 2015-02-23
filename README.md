@@ -24,6 +24,20 @@ ACS can import the following 2D and 3D formats:
 * COLLADA
 * IFC
 
+## Build
+
+Build and deployment of the ACS is done with Maven and Docker. 
+
+1. Run `mvn package` to build the ACS JAR.
+2. Run `mvn docker:build` to build the Docker image, adding the built JAR (note: must be `sudo` or
+   in `docker` user group).
+3. Run `docker run -d -p 80:8090 --name="acs" urbanetic/aurin-acs` to run the ACS as a Docker
+   container in the background.
+4. Run `docker stop acs` to stop the background container.
+5. Run `docker start acs` to restart the container in the future.
+
+Note that the `/docker` directory contains a pre-compiled binary for `collada2gltf` which is added
+in the Docker build to avoid having to build it from source.
 
 [cesium]: https://cesiumjs.org/
 [atlascesium]: https://github.com/urbanetic/atlas-cesium
