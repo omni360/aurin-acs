@@ -1,5 +1,7 @@
 package au.com.mutopia.acs.conversion.impl;
 
+import au.com.mutopia.acs.util.geometry.GeometryUtils;
+import de.micromata.opengis.kml.v_2_2_0.Data;
 import java.awt.Color;
 import java.io.File;
 import java.io.FileInputStream;
@@ -301,6 +303,9 @@ public class KmlConverter extends AbstractConverter {
         entity.addProperty(simpleData.getName(), simpleData.getValue());
       }
     }
+    for (Data data : extendedData.getData()) {
+      entity.addProperty(data.getName(), data.getValue());
+    }
   }
 
   /**
@@ -403,6 +408,8 @@ public class KmlConverter extends AbstractConverter {
       List<Double> geoLocation =
           Lists.newArrayList(modelOrigin.getLongitude(), modelOrigin.getLatitude(),
               modelOrigin.getAltitude());
+      entity.setGeoLocation(geoLocation);
+
       List<C3mlEntity> modelEntities =
           colladaConverter.convert(daeFile, merge, rotation, scale, geoLocation);
       for (C3mlEntity modelEntity : modelEntities) {
@@ -470,14 +477,10 @@ public class KmlConverter extends AbstractConverter {
   private void generateStyleMaps(Kml kml) {
     mapForStyleColor = Maps.newHashMap();
     mapForStyleMap = Maps.newHashMap();
-    // Check if feature is a document.
-    // Style maps are absent if feature is not a document.
-    if (kml.getFeature() instanceof Document) {
-      Document document = (Document) kml.getFeature();
-      List<StyleSelector> styleSelector = document.getStyleSelector();
-      extractStyleColors(styleSelector.iterator());
-      extractStyleMaps(styleSelector.iterator());
-    }
+    List<StyleSelector> styleSelector = kml.getFeature().getStyleSelector();
+    if (styleSelector == null) return;
+    extractStyleColors(styleSelector.iterator());
+    extractStyleMaps(styleSelector.iterator());
   }
 
   /**

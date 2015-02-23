@@ -68,4 +68,16 @@ public class ColladaConverterTest extends ConverterTest {
     assertThatC3mlBroadDataIsEqualByComparingTypes(actual, expected,
         ImmutableList.of(C3mlEntityType.MESH));
   }
+
+  /**
+   * Asserts that the converted Broad Data mesh is leniently equals to the expected data.
+   *
+   * @param actual The converted {@link C3mlEntity} containing mesh.
+   * @param expected The expected {@link C3mlEntity}.
+   */
+  public void assertThatBroadDataMeshAreEqual(C3mlEntity actual, C3mlEntity expected) {
+    assertThat(actual.getType()).isEqualTo(C3mlEntityType.MESH);
+    assertThat(actual).isLenientEqualsToByAcceptingFields(expected, "name", "color", "properties",
+        "positions", "triangles");
+  }
 }

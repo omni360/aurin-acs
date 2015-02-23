@@ -32,9 +32,8 @@ public class ColladaWriter {
    */
   private static final List<Integer> DEFAULT_COLOR = ImmutableList.of(255, 255, 255, 0);
 
-  private StringWriter writer = new StringWriter();
   private StringWriter geomWriter = new StringWriter();
-  private StringWriter instanceNodeWriter = new StringWriter();
+  private StringWriter writer = new StringWriter();
 
   /**
    * The map of color strings (#RRGGBB) to their respective colors, used to unsure materials are not
@@ -50,7 +49,6 @@ public class ColladaWriter {
   public void initWriter() {
     writer = new StringWriter();
     geomWriter = new StringWriter();
-    instanceNodeWriter = new StringWriter();
   }
 
   /**
@@ -118,7 +116,7 @@ public class ColladaWriter {
    * Writes the individual geometry to temporary String writer, before appending to final COLLADA
    * file.
    *
-   * @param mesh The geometry to be written to COLLADA file.
+   * @param entity The entity with geometry to be written to COLLADA file.
    */
   private void writeGeometry(C3mlEntity entity) {
     // Geometry geometry = mesh.getGeometry();
@@ -276,35 +274,39 @@ public class ColladaWriter {
   }
 
   /**
+   * Writes the mesh only hierarchy to COLLADA.
+   *
+   * @param entity The top level entity to be written to COLLADA.
+   * @param entityIdMap The map of entity IDs to object to retrieve children entities.
+   * @param level The hierarchy level of the entity.
+   */
+  public void writeMeshHierarchy(C3mlEntity entity, Map<String, C3mlEntity> entityIdMap,
+      int level) {
+    writeMeshNode(entity, level);
+    level++;
+    for (String childId : entity.getChildrenIds()) {
+      writeMeshHierarchy(entityIdMap.get(childId), entityIdMap, level);
+    }
+  }
+
+  /**
    * Writes the mesh instance node to COLLADA.
    *
    * @param entity The mesh to be written to COLLADA.
    * @param level The hierarchy level of the mesh/entity.
    */
   public void writeMeshNode(C3mlEntity entity, int level) {
-    String id = entity.getId();
-
     if (entity.getTriangles() != null) {
       writeGeometry(entity);
-      writeLibraryNode(entity);
+      writeNode(entity, level);
     }
-
-    String indent = NODE_INDENT;
-    for (int i = 1; i < level; i++) {
-      indent += "  ";
-    }
-
-    writer.write(indent + "  <matrix>");
-    writer.write(getMatrixData(entity));
-    writer.write("</matrix>\n");
-    writer.write(indent + "  <instance_node url=\"#instance_node-" + id + "\"/>\n");
   }
 
   /**
    * Repositions the mesh if the mesh has been moved from its original location. TODO(Brandon)
    * Calculate the new position based on new/old geolocation.
    *
-   * @param mesh The GeoMesh to be repositioned.
+   * @param entity The entity to be repositioned.
    */
   private void repositionMesh(C3mlEntity entity) {
     if (!entity.getGeoLocation().equals(modelGeoOrigin)) {
@@ -315,7 +317,7 @@ public class ColladaWriter {
   /**
    * Gets the matrix data as string from mesh.
    *
-   * @param mesh The mesh to get matrix from.
+   * @param entity The entity with matrix.
    * @return The matrix data as string.
    */
   private String getMatrixData(C3mlEntity entity) {
@@ -334,11 +336,23 @@ public class ColladaWriter {
    */
   public void writeLibraryNodes() {
     writer.write("  <library_nodes>\n");
-    writer.write(instanceNodeWriter.toString());
+    writer.write(writer.toString());
     writer.write("  </library_nodes>\n");
   }
 
-  private void writeLibraryNode(C3mlEntity entity) {
+  /**
+   * Writes the instance node to COLLADA.
+   *
+   * @param entity The entity to be written to COLLADA as node.
+   * @param level The hierarchy level of the entity.
+   */
+  private void writeNode(C3mlEntity entity, int level) {
+    String indent = NODE_INDENT;
+    for (int i = 1; i < level; i++) {
+      indent += "  ";
+    }
+
+    String entityId = entity.getId();
     if (entity.getColor() == null) {
       entity.setColor(DEFAULT_COLOR);
     }
@@ -346,18 +360,37 @@ public class ColladaWriter {
     if (!materials.containsKey(colorString)) {
       materials.put(colorString, buildColor(entity));
     }
-    instanceNodeWriter.write("    <node id=\"instance_node-" + entity.getId() + "\" name=\""
+    writer.write(indent + "<node id=\"instance_node-" + entityId + "\" name=\""
         + entity.getName() + "\">\n");
-    instanceNodeWriter.write("      <instance_geometry url=\"#geom-" + entity.getId() + "\">\n");
-    instanceNodeWriter.write("        <bind_material>\n");
-    instanceNodeWriter.write("          <technique_common>\n");
-    instanceNodeWriter.write("            <instance_material symbol=\"material-"
+    writer.write(indent + "  <matrix>");
+    writer.write(getMatrixData(entity));
+    writer.write("</matrix>\n");
+    writer.write(indent + "  <instance_geometry url=\"#geom-" + entityId + "\">\n");
+    writer.write(indent + "   <bind_material>\n");
+    writer.write(indent + "     <technique_common>\n");
+    writer.write(indent + "        <instance_material symbol=\"material-"
         + getColorString(entity.getColor()) + "\" target=\"#material-"
         + getColorString(entity.getColor()) + "\"/>\n");
-    instanceNodeWriter.write("          </technique_common>\n");
-    instanceNodeWriter.write("        </bind_material>\n");
-    instanceNodeWriter.write("      </instance_geometry>\n");
-    instanceNodeWriter.write("    </node>\n");
+    writer.write(indent + "      </technique_common>\n");
+    writer.write(indent + "    </bind_material>\n");
+    writer.write(indent + "  </instance_geometry>\n");
+
+    // Writes the entity's properties as extra element.
+    Map<String, String> properties = entity.getProperties();
+    if (properties.keySet().size() > 0) {
+      writer.write(indent + "  <extra>\n");
+      writer.write(indent + "    <technique profile=\"OpenCOLLADA\">\n");
+      writer.write(indent + "      <user_properties>\n");
+      for (String propertyName : properties.keySet()) {
+        writer.write(indent + "        " + propertyName + " = " + properties.get(propertyName) +
+            "\n");
+      }
+      writer.write(indent + "      </user_properties>\n");
+      writer.write(indent + "    </technique>\n");
+      writer.write(indent + "  </extra>\n");
+    }
+
+    writer.write(indent + "</node>\n");
   }
 
   /**

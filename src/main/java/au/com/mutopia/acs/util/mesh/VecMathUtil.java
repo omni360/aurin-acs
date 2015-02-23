@@ -76,6 +76,20 @@ public class VecMathUtil {
   }
 
   /**
+   * @param rotX The degree of rotation for X axis.
+   * @param rotY The degree of rotation for Y axis.
+   * @param rotZ The degree of rotation for Z axis.
+   * @return A matrix transformation rotated about the X, Y and Z axis.
+   */
+  public static Matrix4d createRotationMatrix(double rotX, double rotY, double rotZ) {
+    Matrix4d rotationMatrix = createIdentityMatrix();
+    rotationMatrix.rotX(Math.toRadians(rotX));
+    rotationMatrix.rotY(Math.toRadians(rotY));
+    rotationMatrix.rotZ(Math.toRadians(rotZ));
+    return rotationMatrix;
+  }
+
+  /**
    * @param x The amount of translation in X axis.
    * @param y The amount of translation in Y axis.
    * @param z The amount of translation in Z axis.
