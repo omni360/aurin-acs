@@ -14,7 +14,7 @@ named `file`, such as:
     </form>
 
 The C3ML response will be JSON, so the request may optionally specifiy the header
-`Accepts: application/json`. Since the response is *not* HTML, the form should be submitted
+`Accept: application/json`. Since the response is *not* HTML, the form should be submitted
 via AJAX (e.g. with jQuery's [`$.post`][jquery] method) rather than directly with the submit button.
 
 That's all there is to it! ACS will determine the type of the uploaded file based on its extension
