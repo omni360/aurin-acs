@@ -6,6 +6,7 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 
 import au.com.mutopia.acs.resources.ConversionResource;
 import au.com.mutopia.acs.resources.MainResource;
+import au.com.mutopia.acs.transform.JsonModule;
 
 import com.fiestacabin.dropwizard.guice.AutoConfigService;
 import com.google.inject.AbstractModule;
@@ -69,6 +70,8 @@ public class AcsRestService extends AutoConfigService<AcsConfiguration> {
 
     environment.addResource(injector.getInstance(MainResource.class));
     environment.addResource(injector.getInstance(ConversionResource.class));
+
+    environment.getObjectMapperFactory().registerModule(injector.getInstance(JsonModule.class));
 
     // Support for CORS.
     environment
