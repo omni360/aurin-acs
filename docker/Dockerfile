@@ -10,7 +10,13 @@ ENV ACS_HOME /opt/acs
 WORKDIR /
 
 # Install ogr2ogr.
-RUN add-apt-repository ppa:ubuntugis/ppa && apt-get update && apt-get install gdal-bin
+RUN apt-get update && \
+    apt-get install software-properties-common && \
+    add-apt-repository ppa:ubuntugis/ppa && \
+    apt-get update && \
+    apt-get install gdal-bin && \
+    apt-get purge
+
 # Install collada2gltf binary.
 ADD collada2gltf /usr/local/bin/
 
