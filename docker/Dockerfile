@@ -9,6 +9,9 @@ EXPOSE $ACS_PORT
 ENV ACS_HOME /opt/acs
 WORKDIR /
 
+# Install ogr2ogr.
+RUN add-apt-repository ppa:ubuntugis/ppa && apt-get update && apt-get install gdal-bin
+# Install collada2gltf binary.
 ADD collada2gltf /usr/local/bin/
 
 # Add the ACS JAR and configuration.
