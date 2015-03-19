@@ -11,10 +11,7 @@ WORKDIR /
 
 # Install ogr2ogr.
 RUN apt-get update && \
-    apt-get install software-properties-common && \
-    add-apt-repository ppa:ubuntugis/ppa && \
-    apt-get update && \
-    apt-get install gdal-bin && \
+    apt-get install -y gdal-bin && \
     apt-get purge
 
 # Install collada2gltf binary.
