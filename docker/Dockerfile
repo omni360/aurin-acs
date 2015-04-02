@@ -9,6 +9,12 @@ EXPOSE $ACS_PORT
 ENV ACS_HOME /opt/acs
 WORKDIR /
 
+# Install ogr2ogr.
+RUN apt-get update && \
+    apt-get install -y gdal-bin && \
+    apt-get purge
+
+# Install collada2gltf binary.
 ADD collada2gltf /usr/local/bin/
 
 # Add the ACS JAR and configuration.
