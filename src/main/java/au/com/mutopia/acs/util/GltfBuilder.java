@@ -1,5 +1,14 @@
 package au.com.mutopia.acs.util;
 
+import au.com.mutopia.acs.models.c3ml.C3mlEntity;
+import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
+import flexjson.JSONDeserializer;
+import lombok.extern.log4j.Log4j;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -8,17 +17,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import lombok.extern.log4j.Log4j;
-
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
-
-import au.com.mutopia.acs.models.c3ml.C3mlEntity;
-import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
-import flexjson.JSONDeserializer;
 
 /**
  * Utility methods for constructing glTF meshes.
@@ -29,6 +27,10 @@ public class GltfBuilder {
   /** The extensions expected to be seen on image files. */
   private static final String[] IMAGE_EXTS = new String[] {"jpg", "jpeg", "png", "gif", "tif",
       "JPG", "JPEG", "PNG", "GIF", "TIF"};
+
+  /** A blank image used to replace a missing relative image URI. */
+  private static final String BLANK_BASE_64_IMAGE =
+      "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
 
   /**
    * Creates a {@link C3mlEntity} with merged glTF geometry from all of the COLLADA nodes.
@@ -86,7 +88,8 @@ public class GltfBuilder {
   }
 
   /**
-   * Replaces relative image URIs with data URIs. The glTF map is updated in place.
+   * Replaces relative image URIs with data URIs. The glTF map is updated in place. Missing file
+   * references are removed.
    * 
    * @param gltfMap The glTF document deserialized into a map.
    * @param imageMap A map of image URIs to Base64-encoded data URIs.
@@ -100,6 +103,10 @@ public class GltfBuilder {
         String uri = images.get(imageId).get("uri");
         if (!uri.startsWith("data:") && imageMap.containsKey(uri)) {
           images.get(imageId).put("uri", imageMap.get(uri));
+        } else {
+          // If the image could not be replaced, replace it with a blank image to avoid rendering
+          // errors.
+          images.get(imageId).put("uri", BLANK_BASE_64_IMAGE);
         }
       }
     }
