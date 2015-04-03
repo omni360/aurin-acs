@@ -1,5 +1,7 @@
 package au.com.mutopia.acs.resources;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -9,7 +11,6 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 
@@ -21,6 +22,7 @@ import org.apache.commons.lang3.time.StopWatch;
 
 import au.com.mutopia.acs.conversion.Converter;
 import au.com.mutopia.acs.conversion.ConverterMap;
+import au.com.mutopia.acs.conversion.output.KmzWriter;
 import au.com.mutopia.acs.exceptions.ConversionException;
 import au.com.mutopia.acs.models.Asset;
 import au.com.mutopia.acs.models.c3ml.C3mlData;
@@ -88,6 +90,25 @@ public class ConversionResource {
 
     C3mlData c3ml = new C3mlData(entities);
     return c3ml;
+  }
+
+  /**
+   * Converts the given {@link C3mlData} document into a KMZ file, and returns the bytes.
+   * 
+   * @param data The C3ML to export.
+   * @return The bytes of the resulting KMZ file.
+   * @throws ConversionException if the export fails.
+   */
+  @POST
+  @Path("/export")
+  @Consumes(MediaType.APPLICATION_JSON)
+  public byte[] export(C3mlData data) throws ConversionException {
+    File kmzFile = new KmzWriter().convert(data);
+    try {
+      return IOUtils.toByteArray(new FileInputStream(kmzFile));
+    } catch (IOException e) {
+      throw new ConversionException("Failed to read KMZ file", e);
+    }
   }
 
 }
