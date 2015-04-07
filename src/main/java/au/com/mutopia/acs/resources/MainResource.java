@@ -10,7 +10,7 @@ import javax.ws.rs.Path;
 public class MainResource {
 
   /** The URL to the source code repository. */
-  private static final String REPO_URL = "https://bitbucket.org/mutopia/aurin-acs";
+  private static final String REPO_URL = "https://github.com/aurin/acs";
 
   /**
    * Serves the HTML for browsers on the index page.
@@ -20,7 +20,7 @@ public class MainResource {
   @GET
   public String main() {
     return "ACS does not have a user interface. For instructions, see the <a href=\"" + REPO_URL
-        + "\">source code repository</a>.";
+        + "\">source code repository</a>.<br/>v1.0.0";
   }
 
 }

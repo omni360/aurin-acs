@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>au.com.mutopia</groupId>
   <artifactId>aurin-acs</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <name>Asset Conversion Service</name>
 
   <repositories>
@@ -482,8 +482,6 @@
         <version>0.1.1</version>
         <configuration>
           <imageName>urbanetic/aurin-acs</imageName>
-          <!-- <baseImage>urbanetic/collada2gltf</baseImage> -->
-          <!-- <entryPoint>["java", "-jar", "${runnableJarName}.jar", "server", "configuration.yml"]</entryPoint> -->
           <dockerDirectory>docker</dockerDirectory>
           <resources>
             <resource>
