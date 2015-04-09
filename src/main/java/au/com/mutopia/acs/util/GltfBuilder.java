@@ -101,7 +101,11 @@ public class GltfBuilder {
     if (images != null) {
       for (String imageId : images.keySet()) {
         String uri = images.get(imageId).get("uri");
-        if (!uri.startsWith("data:") && imageMap.containsKey(uri)) {
+        // Ignore any images which are already base64 encoded by collada2gltf.
+        if (uri.startsWith("data:")) {
+          break;
+        }
+        if (imageMap.containsKey(uri)) {
           images.get(imageId).put("uri", imageMap.get(uri));
         } else {
           // If the image could not be replaced, replace it with a blank image to avoid rendering
