@@ -4,7 +4,7 @@ MAINTAINER Oliver Lade <oliver.lade@unimelb.edu.au>
 
 ENV BIMSERVER_PORT 8080
 ENV ACS_PORT 8090
-EXPOSE $ACS_PORT
+EXPOSE 8090
 
 ENV ACS_HOME /opt/acs
 WORKDIR /
