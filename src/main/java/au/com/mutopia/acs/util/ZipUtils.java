@@ -122,17 +122,24 @@ public class ZipUtils {
    *
    * @param zipFile The ZIP archive to unzip.
    * @param ext The file extension to match files with.
+   * @param allowDotfiles Whether to ignore hidden files (filename starts with a dot).
    * @return A list of the files in the ZIP archive with the extension.
    */
-  public static List<File> extractByExtension(File zipFile, String ext) {
+  public static List<File> extractByExtension(File zipFile, String ext, boolean allowDotfiles) {
     List<File> matchFiles = new ArrayList<>();
     List<File> unzippedFiles = ZipUtils.unzipToTempDirectory(zipFile);
     for (File unzippedFile : unzippedFiles) {
-      if (Files.getFileExtension(unzippedFile.getName()).equals(ext)) {
+      String filename = unzippedFile.getName();
+      if (Files.getFileExtension(filename).equals(ext)
+          && (allowDotfiles || !filename.startsWith("."))) {
         matchFiles.add(unzippedFile);
       }
     }
     return matchFiles;
+  }
+
+  public static List<File> extractByExtension(File zipFile, String ext) {
+    return extractByExtension(zipFile, ext, false);
   }
 
   /**
