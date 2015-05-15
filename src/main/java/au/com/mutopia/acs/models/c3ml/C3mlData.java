@@ -8,12 +8,16 @@ import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 /**
  * A POJO containing a list of {@link C3mlEntity} meshes (each with an ID), as well as a map of
  * entity IDs to parameters maps, each mapping parameter names to values for an entity.
  */
 @Getter
 @Setter
+@JsonInclude(Include.NON_NULL)
 public class C3mlData {
 
   private List<C3mlEntity> c3mls = new ArrayList<>();
@@ -27,7 +31,7 @@ public class C3mlData {
 
   /**
    * Creates a {@link C3mlData} container populated with the given entities.
-   * 
+   *
    * @param c3mls Entities to contain in the {@link C3mlData}.
    */
   public C3mlData(List<C3mlEntity> c3mls) {
@@ -37,7 +41,7 @@ public class C3mlData {
   /**
    * Sets the given {@link C3mlEntity} objects as the content of the {@link C3mlData} collection,
    * and extracts the parameters from each.
-   * 
+   *
    * @param c3mls The entities to set on the data container.
    */
   public void setEntities(List<C3mlEntity> c3mls) {
@@ -52,7 +56,7 @@ public class C3mlData {
 
   /**
    * Adds the given entity and all of its children to the {@link C3mlData} container.
-   * 
+   *
    * @param entity The entity to add.
    * @return True if the entity was added, false otherwise.
    */
@@ -66,7 +70,7 @@ public class C3mlData {
 
   /**
    * Removes the given entity and all of its children from the {@link C3mlData} container.
-   * 
+   *
    * @param entity The entity to remove.
    * @return True if the entity was added, false otherwise.
    */
@@ -80,7 +84,7 @@ public class C3mlData {
 
   /**
    * Updates the {@link #properties} field with the parameter data for the given {@link C3mlEntity}.
-   * 
+   *
    * @param entity The {@link C3mlEntity} to extract parameters from.
    */
   private void extractEntityParameters(C3mlEntity entity) {

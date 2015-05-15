@@ -1,7 +1,5 @@
 package au.com.mutopia.acs.models.c3ml;
 
-import au.com.mutopia.acs.util.geometry.GeometryUtils;
-import com.google.common.collect.ImmutableList;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,9 +9,13 @@ import java.util.UUID;
 
 import lombok.Getter;
 import lombok.Setter;
+import au.com.mutopia.acs.util.geometry.GeometryUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableList;
 
 /**
  * An object representing the contents of a C3ML document.
@@ -24,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 @Getter
 @Setter
+@JsonInclude(Include.NON_NULL)
 public class C3mlEntity {
   private String id;
   private String name;
@@ -74,6 +77,12 @@ public class C3mlEntity {
    * an RGBA vector (0 to 255 for red, green, blue and alpha).
    */
   private List<Integer> color = new ArrayList<>();
+
+  /**
+   * The color of the border of an entity, if any solid color should be applied. The list of numbers
+   * represents an RGBA vector (0 to 255 for red, green, blue and alpha).
+   */
+  private List<Integer> borderColor = new ArrayList<>();
 
   /** The scaling factors (x, y, z) by which all coordinates should be scaled when rendered. */
   private List<Double> scale = ImmutableList.of(1.0, 1.0, 1.0);
@@ -160,17 +169,35 @@ public class C3mlEntity {
     properties.put(name, value);
   }
 
+  private List<Integer> buildColorArray(Color colorData) {
+    List<Integer> color = new ArrayList<>();
+    color.add(colorData.getRed());
+    color.add(colorData.getGreen());
+    color.add(colorData.getBlue());
+    color.add(colorData.getAlpha());
+    return color;
+  }
+
   /**
    * Sets the color of the entity.
    *
    * @param colorData The RGBA color values.
    */
   public void setColorData(Color colorData) {
-    color = new ArrayList<>();
-    color.add(colorData.getRed());
-    color.add(colorData.getGreen());
-    color.add(colorData.getBlue());
-    color.add(colorData.getAlpha());
+    color = buildColorArray(colorData);
+  }
+
+  /**
+   * Sets the border color of the entity.
+   *
+   * @param colorData The RGBA color values.
+   */
+  public void setBorderColorData(Color colorData) {
+    if (colorData == null) {
+      borderColor = null;
+    } else {
+      borderColor = buildColorArray(colorData);
+    }
   }
 
   @Override

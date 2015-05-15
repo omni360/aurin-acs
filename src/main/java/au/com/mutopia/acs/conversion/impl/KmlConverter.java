@@ -138,8 +138,8 @@ public class KmlConverter extends AbstractConverter {
       for (File unzippedFile : unzippedFiles) {
         String filename = unzippedFile.getName();
         // Ignore hidden files beginning with a period, which can be meta-data.
-        if (filename.indexOf(".") != 0 &&
-            Files.getFileExtension(filename).equals(Format.KML.toString())) {
+        if (filename.indexOf(".") != 0
+            && Files.getFileExtension(filename).equals(Format.KML.toString())) {
           kmlFiles.add(unzippedFile);
         }
       }
@@ -260,8 +260,8 @@ public class KmlConverter extends AbstractConverter {
    */
   private C3mlEntity buildEntity(Placemark placemark) throws ConversionException {
     C3mlEntity entity = createEntity(placemark);
-    Color color = getColor(placemark);
-    entity.setColorData(color);
+    entity.setColorData(getColor(placemark));
+    entity.setBorderColorData(getBorderColor(placemark));
     writeGeometry(entity, placemark.getGeometry());
     return entity;
   }
@@ -289,7 +289,7 @@ public class KmlConverter extends AbstractConverter {
    *
    * @param entity The {@link C3mlEntity} object.
    * @param extendedData The KML extended data element, mapping parameter names and values.
-   * 
+   *
    * @see <a href="https://developers.google.com/kml/documentation/extendeddata">KML docs for
    *      &lt;ExtendedData&gt;</a>
    */
@@ -373,6 +373,7 @@ public class KmlConverter extends AbstractConverter {
       C3mlEntity child = new C3mlEntity();
       child.setName(entity.getName() + "_child_" + j);
       child.setColor(entity.getColor());
+      child.setBorderColor(entity.getBorderColor());
       Geometry geometryFromMulti = multiGeometry.getGeometry().get(j);
       writeGeometry(entity, geometryFromMulti);
     }
@@ -456,6 +457,31 @@ public class KmlConverter extends AbstractConverter {
   }
 
   /**
+   * Extracts the line color from {@link Style}s referenced by the {@link Placemark}. If no color is
+   * present default to {@code null}.
+   *
+   * @param placemark The KML placemark element.
+   * @return The Color extracted from KML placemark's line style.
+   */
+  private Color getBorderColor(Placemark placemark) {
+    Style style = findStyleInStyleSelectors(placemark.getStyleSelector());
+
+    if (style != null && style.getLineStyle() != null) {
+      return convertStringToColor(style.getLineStyle().getColor());
+    }
+
+    if (placemark.getStyleUrl() != null) {
+      String styleUrl = placemark.getStyleUrl();
+      if (styleUrl.startsWith("#")) {
+        styleUrl = styleUrl.replace("#", "");
+      }
+      return convertStringToColor(getNormalColor(styleUrl));
+    }
+
+    return null;
+  }
+
+  /**
    * Gets the normal color from the style, given style ID.
    *
    * @param styleId The style ID.
@@ -468,7 +494,7 @@ public class KmlConverter extends AbstractConverter {
 
   /**
    * Generate style maps from KML file for CZML conversion.
-   * 
+   *
    * @param kml The KML document to generate style maps for.
    */
   private void generateStyleMaps(Kml kml) {
@@ -568,7 +594,7 @@ public class KmlConverter extends AbstractConverter {
    * Fix the XML schema of the KML file so that JAK can read the KML file without errors. The
    * namespace is rename to one supported by JAK. The element names of nodes are modified to reflect
    * the new XML namespace.
-   * 
+   *
    * @param kmlFile The file to fix the schema of.
    */
   private void fixXmlSchema(File kmlFile) {
