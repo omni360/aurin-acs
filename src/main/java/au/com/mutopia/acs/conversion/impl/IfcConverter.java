@@ -98,6 +98,7 @@ public class IfcConverter extends AbstractConverter {
   private C3mlEntity buildEntity(Map<String, Object> ifcObjectMap) {
     C3mlEntity entity = new C3mlEntity();
 
+    entity.setId((String) ifcObjectMap.get("id"));
     entity.setName((String) ifcObjectMap.get("name"));
 
     addBasicProperties(ifcObjectMap, entity);
