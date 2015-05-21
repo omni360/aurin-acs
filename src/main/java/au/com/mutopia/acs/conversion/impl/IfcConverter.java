@@ -1,8 +1,11 @@
 package au.com.mutopia.acs.conversion.impl;
 
+import au.com.mutopia.acs.util.mesh.MeshUtil;
 import au.com.mutopia.acs.util.mesh.VecMathUtil;
 import com.google.common.base.Strings;
 import com.google.common.primitives.Doubles;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Polygon;
 import gov.nasa.worldwind.geom.Angle;
 
 import java.io.IOException;
@@ -33,7 +36,7 @@ import com.google.gson.Gson;
  */
 @Log4j
 public class IfcConverter extends AbstractConverter {
-
+  private final MeshUtil meshUtil = new MeshUtil();
   private BimServerAuthenticator auth;
 
   private static final String IFC_SITE = "IfcSite";
@@ -52,6 +55,10 @@ public class IfcConverter extends AbstractConverter {
    * The latitude of the geographic location for all entities within the site.
    */
   private double siteLatitude;
+
+  private static final String HEIGHT_PROPERTY = "height";
+  private static final String AREA_PROPERTY = "area";
+  private static final String VOLUME_PROPERTY = "volume";
 
   @SuppressWarnings("serial")
   private static final class IfcJson extends HashMap<String, List<Map<String, Object>>> {}
@@ -223,6 +230,16 @@ public class IfcConverter extends AbstractConverter {
     entity.setPositions(positions);
     entity.setNormals(normals);
     entity.setTriangles(indices);
+
+    double altitude = meshUtil.getMinHeight(positions);
+    double height = meshUtil.getMaxHeight(positions) - altitude;
+    Polygon polygon =
+        meshUtil.getPolygon(positions, triangles, height, siteLongitude, siteLatitude, altitude);
+
+    double area = polygon.getArea();
+    entity.addProperty(HEIGHT_PROPERTY, Double.toString(height));
+    entity.addProperty(AREA_PROPERTY, Double.toString(area));
+    entity.addProperty(VOLUME_PROPERTY, Double.toString(height * area));
 
     List<Integer> color = new ArrayList<>();
     for (int i : new int[] {0, 1, 2, 3}) {
