@@ -4,7 +4,6 @@ import au.com.mutopia.acs.util.mesh.MeshUtil;
 import au.com.mutopia.acs.util.mesh.VecMathUtil;
 import com.google.common.base.Strings;
 import com.google.common.primitives.Doubles;
-import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Polygon;
 import gov.nasa.worldwind.geom.Angle;
 
@@ -202,7 +201,6 @@ public class IfcConverter extends AbstractConverter {
         || triangles.size() < 3) {
       return;
     }
-    entity.setType(C3mlEntityType.MESH);
 
     List<Integer> indices = Lists.newArrayList();
     for (Integer triangle : triangles) {
@@ -227,6 +225,7 @@ public class IfcConverter extends AbstractConverter {
     positions = VecMathUtil.transformMeshPositions(positions, translateMatrix);
     normals = VecMathUtil.transformMeshNormals(normals, translateMatrix);
 
+    entity.setType(C3mlEntityType.MESH);
     entity.setPositions(positions);
     entity.setNormals(normals);
     entity.setTriangles(indices);
@@ -250,5 +249,4 @@ public class IfcConverter extends AbstractConverter {
 
     entity.setGeoLocation(ImmutableList.of(siteLongitude, siteLatitude, 0.0));
   }
-
 }
