@@ -1,5 +1,9 @@
 package au.com.mutopia.acs.conversion.impl;
 
+import au.com.mutopia.acs.models.c3ml.Vertex3D;
+import au.com.mutopia.acs.util.mesh.MeshUtil;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Polygon;
 import java.awt.Color;
 import java.io.File;
 import java.io.FileInputStream;
@@ -12,7 +16,6 @@ import javax.vecmath.Matrix4d;
 
 import lombok.extern.log4j.Log4j;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.xml.sax.SAXException;
 
@@ -21,7 +24,6 @@ import au.com.mutopia.acs.exceptions.InvalidColladaException;
 import au.com.mutopia.acs.models.Asset;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
-import au.com.mutopia.acs.util.Collada2Gltf;
 import au.com.mutopia.acs.util.ColladaExtraReader;
 import au.com.mutopia.acs.util.CollectionUtils;
 import au.com.mutopia.acs.util.GltfBuilder;
@@ -56,13 +58,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Floats;
 
-import flexjson.JSONDeserializer;
-
 /**
  * Converts COLLADA files into collections of {@link C3mlEntity} objects.
  */
 @Log4j
 public class ColladaConverter extends AbstractConverter {
+  private final MeshUtil meshUtil = new MeshUtil();
 
   /** Default Geographic location for COLLADA model. */
   private static final List<Double> defaultGeolocation = Lists.newArrayList(0.0, 0.0, 0.0);
@@ -81,6 +82,9 @@ public class ColladaConverter extends AbstractConverter {
 
   /** Constants for COLLADA up-axis field. */
   private static final String X_UP = "X_UP", Y_UP = "Y_UP", Z_UP = "Z_UP";
+
+  /* The minimum height of mesh solid to be considered as flat surface. */
+  private static final double FLAT_POLYGON_HEIGHT = 0.3;
 
   /** String label specifying the axis of upward direction of COLLADA model. */
   private String upAxis;
@@ -569,13 +573,28 @@ public class ColladaConverter extends AbstractConverter {
         VecMathUtil.transformMeshPositions(scaledPositions, translateMatrix);
     List<Double> globalNormals = VecMathUtil.transformMeshNormals(scaledNormals, translateMatrix);
 
-    entity.setType(C3mlEntityType.MESH);
-    entity.setPositions(globalPositions);
-    entity.setNormals(globalNormals);
-    entity.setTriangles(inputIndices);
-    entity.setGeoLocation(defaultGeolocation);
+    double altitude = meshUtil.getMinHeight(globalPositions);
+    double height = meshUtil.getMaxHeight(globalPositions) - altitude;
 
-    if (geoLocation != null) entity.setGeoLocation(geoLocation);
+    Polygon polygon =
+        meshUtil.getPolygon(globalPositions, inputIndices, height, geoLocation.get(1),
+            geoLocation.get(0), altitude);
+
+    // Create a Polygon if mesh is a regular prism and height is 0.
+    if (polygon != null && height == 0) {
+      entity.setType(C3mlEntityType.POLYGON);
+      entity.setCoordinates(getVertex3DPointsFromCoordinates(polygon.getCoordinates(),
+          FLAT_POLYGON_HEIGHT));
+      entity.setAltitude(altitude);
+      entity.setHeight(FLAT_POLYGON_HEIGHT);
+    } else {
+      entity.setType(C3mlEntityType.MESH);
+      entity.setPositions(globalPositions);
+      entity.setNormals(globalNormals);
+      entity.setTriangles(inputIndices);
+      entity.setGeoLocation(defaultGeolocation);
+      if (geoLocation != null) entity.setGeoLocation(geoLocation);
+    }
   }
 
   /**
@@ -686,4 +705,14 @@ public class ColladaConverter extends AbstractConverter {
     return 0;
   }
 
+  /**
+   * @return The list of {@link au.com.mutopia.acs.models.c3ml.Vertex3D} points from a list of coordinates.
+   */
+  private List<Vertex3D> getVertex3DPointsFromCoordinates(Coordinate[] coordinates, double height) {
+    List<Vertex3D> points = Lists.newArrayList();
+    for (Coordinate coord : coordinates) {
+      points.add(new Vertex3D(coord.x, coord.y, height));
+    }
+    return points;
+  }
 }
