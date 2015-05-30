@@ -1,6 +1,7 @@
 package au.com.mutopia.acs.util.mesh;
 
 import au.com.mutopia.acs.models.c3ml.Vertex3D;
+import au.com.mutopia.acs.util.mesh.clipper.Poly;
 import au.com.mutopia.acs.util.mesh.clipper.PolyDefault;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Doubles;
@@ -8,7 +9,9 @@ import com.google.common.primitives.Ints;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,19 +41,103 @@ public class MeshUtil {
    */
   private static final int MATRIX_SIZE = 16;
 
+  /**
+   * Creates a list of positions forming the flatten mesh.
+   *
+   * @param positions The list of positions forming the mesh.
+   * @return The list of positions forming the flatten mesh.
+   */
+  public List<Double> getFlattenMeshPositions(List<Double> positions) {
+    List<Double> flattenPositions = new ArrayList<>();
+    for (int i = 0; i < positions.size(); i += 3) {
+      // position.x
+      flattenPositions.add(positions.get(i));
+      // position.y
+      flattenPositions.add(positions.get(i + 1));
+      // position height
+      flattenPositions.add(positions.get(0));
+    }
+    return flattenPositions;
+  }
+
+  /**
+   * Converts the list of positions in meters to decimal degrees.
+   *
+   * @param positions The list of positions forming the mesh.
+   * @param lat The latitude of the mesh's geographic location (degree decimal).
+   * @param lon The longitude of the mesh's geographic location (degree decimal).
+   * @param alt The altitude of the mesh's geographic location (meter).
+   * @return The list of positions in meters to decimal degrees.
+   */
+  public List<Double> convertPositionsToDecimalDegrees(List<Double> positions, double lat,
+      double lon, double alt) {
+    List<Double> decimalDegreesPositions = Lists.newArrayList();
+    for (int i = 0; i < positions.size(); i += 3) {
+      Vertex3D vertex3D =
+          toDecimalDegrees(positions.get(i), positions.get(i + 1), positions.get(i + 2), lat, lon,
+              alt);
+      decimalDegreesPositions.add(vertex3D.getLatitude());
+      decimalDegreesPositions.add(vertex3D.getLongitude());
+      decimalDegreesPositions.add(vertex3D.getAltitude());
+    }
+    return decimalDegreesPositions;
+  }
+
+  /**
+   * Creates a {@link Polygon} from mesh positions, triangle indices, polygon height and the
+   * geographic coordinate of the mesh {latitude, longitude, altitude}.
+   *
+   * @param pos The list of positions forming the mesh.
+   * @param tris The list of triangles indices forming the mesh.
+   * @param height The height of the polygon.
+   * @param lat The latitude of the mesh's geographic location (degree decimal).
+   * @param lon The longitude of the mesh's geographic location (degree decimal).
+   * @param alt The altitude of the mesh's geographic location (meter).
+   * @return The {@link Polygon} converted from mesh.
+   */
   public Polygon getPolygon(List<Double> pos, List<Integer> tris, double height,
       double lat, double lon, double alt) {
-    Coordinate[] coordinatesArray =
-        getLatLonCoordinate(getFootprint(pos, tris, height, lat, lon, alt), true);
-    if (coordinatesArray == null) {
-      return null;
-    }
     try {
-      return wktGeoFactory.createPolygon(coordinatesArray);
+      List<Double> newPos = convertPositionsToDecimalDegrees(pos, lat, lon, alt);
+      PolyDefault polyDefault = getPolyDefault(newPos, tris);
+      if (polyDefault == null || polyDefault.isEmpty()) return null;
+      List<LinearRing> outerPolys = new ArrayList<>();
+      List<LinearRing> innerPolys = new ArrayList<>();
+      for (int i = 0; i < polyDefault.getNumInnerPoly(); i++) {
+        Poly poly = polyDefault.getInnerPoly(i);
+        if (poly.isHole()) {
+          innerPolys.add(wktGeoFactory.createLinearRing(getLatLonCoordinatesFromPoly(poly)));
+        } else {
+          outerPolys.add(wktGeoFactory.createLinearRing(getLatLonCoordinatesFromPoly(poly)));
+        }
+      }
+      if (outerPolys.size() != 1) {
+        log.error("Multiple polygons representation is not supported yet.");
+        return null;
+      }
+      return wktGeoFactory.createPolygon(outerPolys.get(0),
+          innerPolys.toArray(new LinearRing[innerPolys.size()]));
     } catch (IllegalArgumentException e) {
-      log.error("Illegal WKT string " + coordinatesArray, e);
+      log.error("Unable to create polygon from mesh positions.", e);
     }
     return null;
+  }
+
+  /**
+   * Gets the Coordinate array representing the {@link Poly} in Latitude/Longitude format.
+   *
+   * @param poly
+   * @return
+   */
+  public Coordinate[] getLatLonCoordinatesFromPoly(Poly poly) {
+    List<Coordinate> coordinates = new ArrayList<>();
+    for (int i = 0; i < poly.getNumPoints(); i++) {
+      coordinates.add(new Coordinate(poly.getX(i), poly.getY(i)));
+    }
+    if (coordinates.get(0) != coordinates.get(coordinates.size() - 1)) {
+      coordinates.add(coordinates.get(0));
+    }
+    return coordinates.toArray(new Coordinate[coordinates.size()]);
   }
 
   /**

@@ -8,6 +8,7 @@ import java.awt.Color;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,6 +83,9 @@ public class ColladaConverter extends AbstractConverter {
 
   /** Constants for COLLADA up-axis field. */
   private static final String X_UP = "X_UP", Y_UP = "Y_UP", Z_UP = "Z_UP";
+
+  /* The maximum vertical offset between mesh vertices to be considered as flat mesh. */
+  private static final double FLAT_MESH_HEIGHT = 0.0001;
 
   /* The minimum height of mesh solid to be considered as flat surface. */
   private static final double FLAT_POLYGON_HEIGHT = 0.3;
@@ -576,25 +580,34 @@ public class ColladaConverter extends AbstractConverter {
     double altitude = meshUtil.getMinHeight(globalPositions);
     double height = meshUtil.getMaxHeight(globalPositions) - altitude;
 
-    Polygon polygon =
-        meshUtil.getPolygon(globalPositions, inputIndices, height, geoLocation.get(1),
-            geoLocation.get(0), altitude);
-
-    // Create a Polygon if mesh is a regular prism and height is 0.
-    if (polygon != null && height == 0) {
-      entity.setType(C3mlEntityType.POLYGON);
-      entity.setCoordinates(getVertex3DPointsFromCoordinates(polygon.getCoordinates(),
-          FLAT_POLYGON_HEIGHT));
-      entity.setAltitude(altitude);
-      entity.setHeight(FLAT_POLYGON_HEIGHT);
-    } else {
-      entity.setType(C3mlEntityType.MESH);
-      entity.setPositions(globalPositions);
-      entity.setNormals(globalNormals);
-      entity.setTriangles(inputIndices);
-      entity.setGeoLocation(defaultGeolocation);
-      if (geoLocation != null) entity.setGeoLocation(geoLocation);
+    // Create a Polygon if mesh is a regular prism and flat.
+    if (height < FLAT_MESH_HEIGHT) {
+      Polygon polygon =
+          meshUtil.getPolygon(meshUtil.getFlattenMeshPositions(globalPositions), inputIndices,
+              height, geoLocation.get(1), geoLocation.get(0), altitude);
+      if (polygon != null) {
+        entity.setType(C3mlEntityType.POLYGON);
+        entity.setCoordinates(
+            getVertex3DPointsFromCoordinates(polygon.getExteriorRing().getCoordinates(),
+                FLAT_POLYGON_HEIGHT)
+        );
+        List<List<Vertex3D>> holes = new ArrayList<>();
+        for (int i = 0; i < polygon.getNumInteriorRing(); i++) {
+          holes.add(getVertex3DPointsFromCoordinates(polygon.getInteriorRingN(i).getCoordinates(),
+              FLAT_POLYGON_HEIGHT));
+        }
+        entity.setHoles(holes);
+        entity.setAltitude(altitude);
+        entity.setHeight(FLAT_POLYGON_HEIGHT);
+        return;
+      }
     }
+    entity.setType(C3mlEntityType.MESH);
+    entity.setPositions(globalPositions);
+    entity.setNormals(globalNormals);
+    entity.setTriangles(inputIndices);
+    entity.setGeoLocation(defaultGeolocation);
+    if (geoLocation != null) entity.setGeoLocation(geoLocation);
   }
 
   /**
