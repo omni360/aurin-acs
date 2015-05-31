@@ -476,13 +476,11 @@ public class ColladaConverter extends AbstractConverter {
       Matrix matrix) throws InvalidColladaException {
     Geometry geom = getGeomFromLibraryGeometries(instanceGeometry.getUrl());
     List<InstanceMaterial> instanceMaterials = instanceGeometry.getInstanceMaterials();
-    Color colorData;
-    if (CollectionUtils.isNullOrEmpty(instanceMaterials)) {
-      colorData = DEFAULT_COLOR;
-    } else {
-      colorData = getColorFromLibraryMaterials(instanceMaterials.get(0).getTarget());
+    Map<String, String> materialSymbolToTargetMap = new HashMap<>();
+    for (InstanceMaterial instanceMaterial : instanceMaterials) {
+      materialSymbolToTargetMap.put(instanceMaterial.getSymbol(), instanceMaterial.getTarget());
     }
-    return buildEntityFromGeometry(geom, matrix, colorData);
+    return buildEntityFromGeometry(geom, matrix, materialSymbolToTargetMap);
   }
 
   /**
@@ -490,10 +488,11 @@ public class ColladaConverter extends AbstractConverter {
    *
    * @param geom The COLLADA geometry representing the shape of the model.
    * @param matrix The matrix transformation to be applied on the model.
-   * @param color The color of the model.
+   * @param materialSymbolToTargetMap
    * @return The created {@link C3mlEntity}.
    */
-  private C3mlEntity buildEntityFromGeometry(Geometry geom, Matrix matrix, Color color) {
+  private C3mlEntity buildEntityFromGeometry(Geometry geom, Matrix matrix,
+      Map<String, String> materialSymbolToTargetMap) {
     Mesh mesh = geom.getMesh();
     // Splines are not supported by dae4j, requires xml parser.
     if (mesh == null) {
@@ -509,15 +508,29 @@ public class ColladaConverter extends AbstractConverter {
     if (CollectionUtils.isNullOrEmpty(primitives)) {
       throw new UnsupportedOperationException("Unable to parse non-mesh COLLADA node");
     }
+    Color colorData = null;
+    if (materialSymbolToTargetMap.size() == 1) {
+      // Set colorData to the only color assigned to this geometry.
+      for (String materialTarget : materialSymbolToTargetMap.values()) {
+        colorData = getColorFromLibraryMaterials(materialTarget);
+      }
+    }
     for (Primitives primitive : mesh.getPrimitives()) {
       if (primitive.getClass().equals(Triangles.class)) {
         type = C3mlEntityType.MESH;
         positions = mesh.getPositionData();
         normals = mesh.getNormalData();
-        inputIndices.addAll(getVerticesFromTriangles(primitive));
+        List<Integer> triangleIndices = getVerticesFromTriangles(primitive);
+        inputIndices.addAll(triangleIndices);
+        if (!meshUtil.isFrontFacing(Floats.asList(normals), triangleIndices)) continue;
+        colorData =
+            getColorFromLibraryMaterials(materialSymbolToTargetMap.get(primitive.getMaterial()));
       } else if (primitive.getClass().equals(PolyList.class)) {
         // TODO(Brandon) extract from polylist, requires polygon triangulation.
       }
+    }
+    if (colorData == null) {
+      colorData = DEFAULT_COLOR;
     }
 
     if (type == null) {
@@ -527,9 +540,9 @@ public class ColladaConverter extends AbstractConverter {
     C3mlEntity c3mlEntity = new C3mlEntity();
     String name = geom.getName();
     c3mlEntity.setName((name != null) ? name : geom.getId());
-    c3mlEntity.setColorData(color);
     if (type.equals(C3mlEntityType.MESH)) {
       buildEntityFromMesh(c3mlEntity, positions, normals, inputIndices, matrix);
+      c3mlEntity.setColorData(colorData);
     }
     return c3mlEntity;
   }

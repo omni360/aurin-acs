@@ -449,4 +449,18 @@ public class MeshUtil {
       positions.add(i, newHeightRatio);
     }
   }
+
+  /**
+   * Check if the mesh normals are front facing. Mesh is facing upwards if normal.z is positive.
+   * Only applicable to flat surface mesh only, i.e. not solids.
+   *
+   * @param normals
+   * @return True if the normals associated with mesh vertices are facing upwards.
+   */
+  public boolean isFrontFacing(List<Float> normals, List<Integer> triangles) {
+    // Vertex is facing down if normal.z axis is negative (pointing downwards).
+    List<Triangle> uniqueTriangles = Lists.newArrayList();
+    int firstZposition = triangles.get(0) * 3 + 2;
+    return normals.get(firstZposition) > 0.f;
+  }
 }
