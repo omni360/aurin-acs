@@ -84,11 +84,11 @@ public class ColladaConverter extends AbstractConverter {
   /** Constants for COLLADA up-axis field. */
   private static final String X_UP = "X_UP", Y_UP = "Y_UP", Z_UP = "Z_UP";
 
-  /* The maximum vertical offset between mesh vertices to be considered as flat mesh. */
-  private static final double FLAT_MESH_HEIGHT = 0.0001;
-
   /* The minimum height of mesh solid to be considered as flat surface. */
   private static final double FLAT_POLYGON_HEIGHT = 0.3;
+
+  /** The minimum height for a mesh to be considered as a mesh. */
+  private static final double MIN_MESH_HEIGH = 0.001;
 
   /** String label specifying the axis of upward direction of COLLADA model. */
   private String upAxis;
@@ -262,7 +262,7 @@ public class ColladaConverter extends AbstractConverter {
    *
    * @param daeFile The COLLADA XML file.
    * @return Map of node IDs to maps of <code>{paramName: paramValue}</code> for custom properties.
-   * 
+   *
    * @see <a href="https://collada.org/mediawiki/index.php/Extension#Extension_by_addition">COLLADA
    *      docs for the &lt;extra&gt; tag</a>
    */
@@ -580,8 +580,8 @@ public class ColladaConverter extends AbstractConverter {
     double altitude = meshUtil.getMinHeight(globalPositions);
     double height = meshUtil.getMaxHeight(globalPositions) - altitude;
 
-    // Create a Polygon if mesh is a regular prism and flat.
-    if (height < FLAT_MESH_HEIGHT) {
+    // Create a Polygon if mesh is a regular prism and height is close to zero.
+    if (height < MIN_MESH_HEIGH) {
       Polygon polygon =
           meshUtil.getPolygon(meshUtil.getFlattenMeshPositions(globalPositions), inputIndices,
               height, geoLocation.get(1), geoLocation.get(0), altitude);
