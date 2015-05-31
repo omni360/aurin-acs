@@ -21,10 +21,12 @@ import au.com.mutopia.acs.exceptions.InvalidColladaException;
 import au.com.mutopia.acs.models.Asset;
 import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
+import au.com.mutopia.acs.models.c3ml.Vertex3D;
 import au.com.mutopia.acs.util.Collada2Gltf;
 import au.com.mutopia.acs.util.ColladaExtraReader;
 import au.com.mutopia.acs.util.CollectionUtils;
 import au.com.mutopia.acs.util.GltfBuilder;
+import au.com.mutopia.acs.util.mesh.MeshUtil;
 import au.com.mutopia.acs.util.mesh.VecMathUtil;
 
 import com.dddviewr.collada.Collada;
@@ -254,7 +256,7 @@ public class ColladaConverter extends AbstractConverter {
    *
    * @param daeFile The COLLADA XML file.
    * @return Map of node IDs to maps of <code>{paramName: paramValue}</code> for custom properties.
-   * 
+   *
    * @see <a href="https://collada.org/mediawiki/index.php/Extension#Extension_by_addition">COLLADA
    *      docs for the &lt;extra&gt; tag</a>
    */
@@ -573,9 +575,13 @@ public class ColladaConverter extends AbstractConverter {
     entity.setPositions(globalPositions);
     entity.setNormals(globalNormals);
     entity.setTriangles(inputIndices);
-    entity.setGeoLocation(defaultGeolocation);
+    List<Double> centroid = MeshUtil.getCentroid(globalPositions);
+    entity.addProperty("centroid",
+        String.format("[%f,%f,%f]", centroid.get(0), centroid.get(1), centroid.get(2)));
 
-    if (geoLocation != null) entity.setGeoLocation(geoLocation);
+    if (geoLocation != null) {
+      entity.setGeoLocation(geoLocation);
+    }
   }
 
   /**

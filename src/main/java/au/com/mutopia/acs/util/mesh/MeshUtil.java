@@ -2,6 +2,7 @@ package au.com.mutopia.acs.util.mesh;
 
 import au.com.mutopia.acs.models.c3ml.Vertex3D;
 import au.com.mutopia.acs.util.mesh.clipper.PolyDefault;
+
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Ints;
@@ -9,10 +10,13 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
+
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
+
 import lombok.extern.log4j.Log4j;
+
 import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
@@ -318,6 +322,22 @@ public class MeshUtil {
       }
     }
     return minHeight;
+  }
+
+  /**
+   * Calculates the centroid, or the arithmetic mean of the given positions.
+   * @param positions List of values in [x, y, z, x, y, z, ...] format.
+   * @return A list of [x, y, z] of the centroid.
+   */
+  public static List<Double> getCentroid(List<Double> positions) {
+    double sumX = 0.0, sumY = 0.0, sumZ = 0.0;
+    for (int i = 0; i < positions.size(); i += 3) {
+      sumX += positions.get(i);
+      sumY += positions.get(i + 1);
+      sumZ += positions.get(i + 2);
+    }
+    int div = positions.size() / 3;
+    return Lists.newArrayList(sumX / div, sumY / div, sumZ / div);
   }
 
   /**

@@ -2,6 +2,8 @@ package au.com.mutopia.acs.models.c3ml;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.Data;
 
 /**
@@ -64,14 +66,17 @@ public class Vertex3D {
     setAltitude(z);
   }
 
+  @JsonIgnore
   public double getX() {
     return longitude;
   }
 
+  @JsonIgnore
   public double getY() {
     return latitude;
   }
 
+  @JsonIgnore
   public double getZ() {
     return altitude;
   }
