@@ -4,6 +4,7 @@ import au.com.mutopia.acs.models.c3ml.Vertex3D;
 import au.com.mutopia.acs.util.mesh.MeshUtil;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
 import java.awt.Color;
 import java.io.File;
 import java.io.FileInputStream;
@@ -599,15 +600,18 @@ public class ColladaConverter extends AbstractConverter {
           meshUtil.getPolygon(meshUtil.getFlattenMeshPositions(globalPositions), inputIndices,
               height, geoLocation.get(1), geoLocation.get(0), altitude);
       if (polygon != null) {
+        Polygon simplePolygon =
+            (Polygon) TopologyPreservingSimplifier.simplify(polygon, 0.000001);
         entity.setType(C3mlEntityType.POLYGON);
         entity.setCoordinates(
-            getVertex3DPointsFromCoordinates(polygon.getExteriorRing().getCoordinates(),
+            getVertex3DPointsFromCoordinates(simplePolygon.getExteriorRing().getCoordinates(),
                 FLAT_POLYGON_HEIGHT)
         );
         List<List<Vertex3D>> holes = new ArrayList<>();
-        for (int i = 0; i < polygon.getNumInteriorRing(); i++) {
-          holes.add(getVertex3DPointsFromCoordinates(polygon.getInteriorRingN(i).getCoordinates(),
-              FLAT_POLYGON_HEIGHT));
+        for (int i = 0; i < simplePolygon.getNumInteriorRing(); i++) {
+          holes.add(
+              getVertex3DPointsFromCoordinates(simplePolygon.getInteriorRingN(i).getCoordinates(),
+                  FLAT_POLYGON_HEIGHT));
         }
         entity.setHoles(holes);
         entity.setAltitude(altitude);
