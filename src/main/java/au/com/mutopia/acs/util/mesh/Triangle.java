@@ -2,6 +2,8 @@ package au.com.mutopia.acs.util.mesh;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Triangle {
   private Point2D vertex1;
@@ -22,52 +24,21 @@ public class Triangle {
     if (o == null || getClass() != o.getClass())
       return false;
     Triangle triangle = (Triangle) o;
-    Triangle temp = new Triangle(getVertex1(), getVertex2(), getVertex3());
-    triangle.ascendingOrder();
-    temp.ascendingOrder();
-    return ((triangle.getVertex1().distance(temp.getVertex1()) == 0) && 
-            (triangle.getVertex2().distance(temp.getVertex2()) == 0) && 
-            (triangle.getVertex3().distance(temp.getVertex3()) == 0));
-  }
-  
-  public void ascendingOrder() {
-    Point2D tempX;
-    if (vertex1.getX() < vertex2.getX()) {
-      if (vertex1.getX() < vertex3.getX()) {
-        if (vertex2.getX() < vertex3.getX()) {
-          // Already in ascending order.
-          return;
-        } else {
-          tempX = vertex2;
-          vertex2 = vertex3;
-          vertex3 = tempX;
-        }
-      } else {
-        tempX = vertex1;
-        vertex1 = vertex3;
-        vertex3 = vertex2;
-        vertex2 = tempX;
-      }
-    } else {
-      if (vertex1.getX() < vertex3.getX()) {
-        tempX = vertex1;
-        vertex1 = vertex2;
-        vertex2 = tempX;
-      } else {
-        if (vertex2.getX() < vertex3.getX()) {
-          tempX = vertex1;
-          vertex1 = vertex2;
-          vertex2 = vertex3;
-          vertex3 = tempX;
-        } else {
-          tempX = vertex1;
-          vertex1 = vertex3;
-          vertex3 = tempX;
-        }
-      }
+    List<Point2D> points = getPoints();
+    for (Point2D point2D : triangle.getPoints()) {
+      if (!points.contains(point2D)) return false;
     }
+    return true;
   }
-  
+
+  public List<Point2D> getPoints() {
+    List<Point2D> points = new ArrayList<>();
+    points.add(vertex1);
+    points.add(vertex2);
+    points.add(vertex3);
+    return points;
+  }
+
   public Coordinate[] getCoordinates() {
     Coordinate[] coords = new Coordinate[4];
     coords[0] = new Coordinate(vertex1.getX(), vertex1.getY(), 0);

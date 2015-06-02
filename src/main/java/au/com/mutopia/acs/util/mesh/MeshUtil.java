@@ -10,13 +10,13 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
+import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.log4j.Log4j;
-import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
  * An utility class for Mesh related actions, such as scale, rotate, transform meshes,
@@ -99,28 +99,106 @@ public class MeshUtil {
       double lat, double lon, double alt) {
     try {
       List<Double> newPos = convertPositionsToDecimalDegrees(pos, lat, lon, alt);
-      PolyDefault polyDefault = getPolyDefault(newPos, tris);
-      if (polyDefault == null || polyDefault.isEmpty()) return null;
-      List<LinearRing> outerPolys = new ArrayList<>();
-      List<LinearRing> innerPolys = new ArrayList<>();
-      for (int i = 0; i < polyDefault.getNumInnerPoly(); i++) {
-        Poly poly = polyDefault.getInnerPoly(i);
-        if (poly.isHole()) {
-          innerPolys.add(wktGeoFactory.createLinearRing(getLatLonCoordinatesFromPoly(poly)));
-        } else {
-          outerPolys.add(wktGeoFactory.createLinearRing(getLatLonCoordinatesFromPoly(poly)));
-        }
+      List<Polygon> polygonsFromMeshData = getPolygonsFromMeshData(newPos, tris);
+      Geometry geometry = CascadedPolygonUnion.union(polygonsFromMeshData);
+      if (geometry instanceof MultiPolygon) {
+        return singlePolygonFromMulti((MultiPolygon) geometry);
       }
-      if (outerPolys.size() != 1) {
-        log.error("Multiple polygons representation is not supported yet.");
+      if (!(geometry instanceof Polygon)) {
+        log.error("Non-polygon representation from mesh is not supported yet.");
         return null;
       }
-      return wktGeoFactory.createPolygon(outerPolys.get(0),
-          innerPolys.toArray(new LinearRing[innerPolys.size()]));
+      return (Polygon) geometry;
     } catch (IllegalArgumentException e) {
       log.error("Unable to create polygon from mesh positions.", e);
     }
     return null;
+  }
+
+  /**
+   * Builds a list of {@link Polygon} from unique triangles that constructs the mesh.
+   *
+   * @param positions The list of positions forming the mesh.
+   * @param triangles The list of triangles indices forming the mesh.
+   * @return A list of {@link Polygon} representing each unique triangles from the mesh.
+   */
+  public List<Polygon> getPolygonsFromMeshData(List<Double> positions, List<Integer> triangles) {
+    if (positions.isEmpty() || triangles.isEmpty()) {
+      return null;
+    }
+    List<Triangle> uniqueTriangles = getUniqueTriangles(Doubles.toArray(positions),
+        Ints.toArray(triangles));
+    List<Polygon> polygons = new ArrayList<>();
+    for (Triangle uniqueTriangle : uniqueTriangles) {
+      polygons.add(wktGeoFactory.createPolygon(uniqueTriangle.getCoordinates()));
+    }
+    return polygons;
+  }
+
+  /**
+   * Attempt to extract single {@link Polygon} from {@link MultiPolygon} if
+   * {@link CascadedPolygonUnion} fails to combine into a single {@link Polygon}. Return null if
+   * there are more than 1 external {@link Polygon}.
+   *
+   * @param multiPolygon The {@link MultiPolygon} resulted from {@link CascadedPolygonUnion}.
+   * @return
+   */
+  public Polygon singlePolygonFromMulti(MultiPolygon multiPolygon) {
+    PolyDefault polyDefault = polyDefaultFromPolygon((Polygon) multiPolygon.getGeometryN(0));
+    for (int i = 1; i < multiPolygon.getNumGeometries(); i++) {
+      polyDefault = (PolyDefault) polyDefault.union(
+              polyDefaultFromPolygon((Polygon) multiPolygon.getGeometryN(i)));
+    }
+    List<LinearRing> outerPolys = new ArrayList<>();
+    List<LinearRing> innerPolys = new ArrayList<>();
+    for (int i = 0; i < polyDefault.getNumInnerPoly(); i++) {
+      Poly poly = polyDefault.getInnerPoly(i);
+      if (poly.isHole()) {
+        innerPolys.add(wktGeoFactory.createLinearRing(getLatLonCoordinatesFromPoly(poly)));
+      } else {
+        outerPolys.add(wktGeoFactory.createLinearRing(getLatLonCoordinatesFromPoly(poly)));
+      }
+    }
+    if (outerPolys.size() == 1) {
+      return wktGeoFactory.createPolygon(outerPolys.get(0),
+          innerPolys.toArray(new LinearRing[innerPolys.size()]));
+    }
+    log.error("Multi-polygon representation from mesh is not supported yet.");
+    return null;
+  }
+
+  /**
+   * Create {@link PolyDefault} from {@link Polygon}, used to perform more accurate geometry union
+   * but with more computational time.
+   *
+   * @param polygon
+   * @return
+   */
+  public PolyDefault polyDefaultFromPolygon(Polygon polygon) {
+    PolyDefault polyDefault = new PolyDefault();
+    PolyDefault exteriorPoly = polyFromCoordinates(polygon.getExteriorRing().getCoordinates());
+    exteriorPoly.setIsHole(false);
+    polyDefault.add(exteriorPoly);
+    for (int i = 0; i < polygon.getNumInteriorRing(); i++) {
+      PolyDefault innerPoly = polyFromCoordinates(polygon.getInteriorRingN(i).getCoordinates());
+      innerPoly.setIsHole(true);
+      polyDefault.add(innerPoly);
+    }
+    return polyDefault;
+  }
+
+  /**
+   * Create {@link PolyDefault} from a list of {@link Coordinate}.
+   *
+   * @param coordinates
+   * @return
+   */
+  public PolyDefault polyFromCoordinates(Coordinate[] coordinates) {
+    PolyDefault polyDefault = new PolyDefault();
+    for (Coordinate coordinate : coordinates) {
+      polyDefault.add(new Point2D.Double(coordinate.x, coordinate.y));
+    }
+    return polyDefault;
   }
 
   /**
