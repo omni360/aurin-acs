@@ -151,7 +151,6 @@ public class KmlBuilder {
         geometryUtils.polygonFromVertices(entity.getCoordinates(), entity.getHoles());
     if (polygonFromVertices == null) return null;
 
-    List<Double> centroid = entity.getCentroid();
     List<Double> rotation = entity.getRotation();
     List<Double> scale = entity.getScale();
     List<Double> translation = entity.getTranslation();
@@ -167,11 +166,11 @@ public class KmlBuilder {
       // Only rotation about z-axis is supported for polygon.
       polygonFromVertices = geometryUtils.rotatePolygon(polygonFromVertices, -rotation.get(2),
           centroidX, centroidY);
-      polygonFromVertices = geometryUtils.translatePolygon(polygonFromVertices, translation.get(0),
-          translation.get(1));
       polygonFromVertices =
           (com.vividsolutions.jts.geom.Polygon) geometryUtils.toGeodeticCoordinates(
               polygonFromVertices);
+      polygonFromVertices = geometryUtils.translatePolygon(polygonFromVertices, translation.get(0),
+          translation.get(1));
     } catch (FactoryException | TransformException e) {
       log.error(e);
       return null;
@@ -189,9 +188,6 @@ public class KmlBuilder {
     for (Coordinate coordinate : polygonFromVertices.getExteriorRing().getCoordinates()) {
       linearRing.addToCoordinates(coordinate.x, coordinate.y, extrudedHeight);
     }
-//    for (Vertex3D point : points) {
-//      linearRing.addToCoordinates(point.getLongitude(), point.getLatitude(), extrudedHeight);
-//    }
 
     // Draw the holes.
     for (int i = 0; i < polygonFromVertices.getNumInteriorRing(); i++) {
@@ -202,13 +198,6 @@ public class KmlBuilder {
         innerLinearRing.addToCoordinates(coordinate.x, coordinate.y, extrudedHeight);
       }
     }
-//    for (List<Vertex3D> hole : entity.getHoles()) {
-//      Boundary innerBoundary = polygon.createAndAddInnerBoundaryIs();
-//      LinearRing innerLinearRing = innerBoundary.createAndSetLinearRing();
-//      for (Vertex3D point : hole) {
-//        innerLinearRing.addToCoordinates(point.getLongitude(), point.getLatitude(), extrudedHeight);
-//      }
-//    }
 
     // Set the style.
     String kmlColorString = getKmlColorString(entity.getColor());
