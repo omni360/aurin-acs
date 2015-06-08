@@ -1,14 +1,23 @@
 package au.com.mutopia.acs.util.geometry;
 
 import au.com.mutopia.acs.models.c3ml.Vertex3D;
+import com.dddviewr.collada.states.geometry;
 import com.google.common.collect.Lists;
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
 import java.util.ArrayList;
 import java.util.List;
+import org.geotools.geometry.jts.JTS;
+import org.geotools.referencing.CRS;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CRSAuthorityFactory;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.MathTransform;
+import org.opengis.referencing.operation.TransformException;
 
 public class GeometryUtils {
   private static final GeometryFactory wktGeoFactory = new GeometryFactory();
@@ -130,5 +139,61 @@ public class GeometryUtils {
       coordinates.add(new Coordinate(vertex3D.getX(), vertex3D.getY(), vertex3D.getZ()));
     }
     return coordinates.toArray(new Coordinate[coordinates.size()]);
+  }
+
+  /**
+   * Converts {@link Geometry} from geodetic CRS to geocentric CRS. Assumes that {@link Geometry} is
+   * in geodetic CRS.
+   *
+   * @param geometry The {@link Geometry} in geodetic CRS.
+   * @return The {@link Geometry} in geocentric CRS.
+   * @throws FactoryException
+   * @throws TransformException
+   */
+  public Geometry toGeocentricCoordinates(Geometry geometry)
+      throws FactoryException, TransformException {
+    CoordinateReferenceSystem geodeticCRS = getGeodeticCRS();
+    CoordinateReferenceSystem geoCentricCRS = getGeoCentricCRS();
+    MathTransform transform = CRS.findMathTransform(geodeticCRS, geoCentricCRS, true);
+    return JTS.transform(geometry, transform);
+  }
+
+  /**
+   * Converts {@link Geometry} from geocentric CRS to geodetic CRS. Assumes that {@link Geometry} is
+   * in geocentric CRS.
+   *
+   * @param geometry The {@link Geometry} in geocentric CRS.
+   * @return The {@link Geometry} in geodetic CRS.
+   * @throws FactoryException
+   * @throws TransformException
+   */
+  public Geometry toGeodeticCoordinates(Geometry geometry)
+      throws FactoryException, TransformException {
+    CoordinateReferenceSystem geoCentricCRS = getGeoCentricCRS();
+    CoordinateReferenceSystem geodeticCRS = getGeodeticCRS();
+    MathTransform transform = CRS.findMathTransform(geoCentricCRS, geodeticCRS, true);
+    return JTS.transform(geometry, transform);
+  }
+
+  /**
+   * @return Default Geodetic Coordinate Reference System coordinates (longitude, latitude, height).
+   * @throws FactoryException
+   */
+  public CoordinateReferenceSystem getGeodeticCRS() throws FactoryException {
+    CoordinateReferenceSystem coordinateReferenceSystem;
+    CRSAuthorityFactory factory = CRS.getAuthorityFactory(true);
+    coordinateReferenceSystem = factory.createCoordinateReferenceSystem("EPSG:4326");
+    return coordinateReferenceSystem;
+  }
+
+  /**
+   * @return Default Geocentric Coordinate Reference System coordinates (x, y, z).
+   * @throws FactoryException
+   */
+  public CoordinateReferenceSystem getGeoCentricCRS() throws FactoryException {
+    CoordinateReferenceSystem coordinateReferenceSystem;
+    CRSAuthorityFactory factory = CRS.getAuthorityFactory(true);
+    coordinateReferenceSystem = factory.createCoordinateReferenceSystem("EPSG:32755");
+    return coordinateReferenceSystem;
   }
 }

@@ -26,6 +26,8 @@ import de.micromata.opengis.kml.v_2_2_0.Model;
 import de.micromata.opengis.kml.v_2_2_0.Placemark;
 import de.micromata.opengis.kml.v_2_2_0.Point;
 import de.micromata.opengis.kml.v_2_2_0.Polygon;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.operation.TransformException;
 
 /**
  * Constructs KML objects. Holds state about the current KML document, so create a new
@@ -150,24 +152,30 @@ public class KmlBuilder {
     if (polygonFromVertices == null) return null;
 
     List<Double> centroid = entity.getCentroid();
-    Double centroidX = centroid.get(0) == null? centroid.get(0) : 0.0;
-    Double centroidY = centroid.get(1) == null? centroid.get(1) : 0.0;
-    if (centroidX == 0 && centroidY == 0) {
-      com.vividsolutions.jts.geom.Point centrePoint = polygonFromVertices.getCentroid();
-      centroidX = centrePoint.getX();
-      centroidY = centrePoint.getY();
-    }
     List<Double> rotation = entity.getRotation();
     List<Double> scale = entity.getScale();
     List<Double> translation = entity.getTranslation();
 
-    polygonFromVertices = geometryUtils.scalePolygon(polygonFromVertices, scale.get(0),
-        scale.get(1), centroidX, centroidY);
-    // Only rotation about z-axis is supported for polygon.
-    polygonFromVertices = geometryUtils.rotatePolygon(polygonFromVertices, -rotation.get(2),
-        centroidX, centroidY);
-    polygonFromVertices = geometryUtils.translatePolygon(polygonFromVertices, translation.get(0),
-        translation.get(1));
+    try {
+      polygonFromVertices =
+          (com.vividsolutions.jts.geom.Polygon) geometryUtils.toGeocentricCoordinates(polygonFromVertices);
+      com.vividsolutions.jts.geom.Point centrePoint = polygonFromVertices.getCentroid();
+      double centroidX = centrePoint.getX();
+      double centroidY = centrePoint.getY();
+      polygonFromVertices = geometryUtils.scalePolygon(polygonFromVertices, scale.get(0),
+          scale.get(1), centroidX, centroidY);
+      // Only rotation about z-axis is supported for polygon.
+      polygonFromVertices = geometryUtils.rotatePolygon(polygonFromVertices, -rotation.get(2),
+          centroidX, centroidY);
+      polygonFromVertices = geometryUtils.translatePolygon(polygonFromVertices, translation.get(0),
+          translation.get(1));
+      polygonFromVertices =
+          (com.vividsolutions.jts.geom.Polygon) geometryUtils.toGeodeticCoordinates(
+              polygonFromVertices);
+    } catch (FactoryException | TransformException e) {
+      log.error(e);
+      return null;
+    }
 
     Polygon polygon = placemark.createAndSetPolygon();
     polygon.setExtrude(entity.getHeight() > 0);
