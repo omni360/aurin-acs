@@ -61,10 +61,10 @@ public class GeometryUtils {
   }
 
   /**
-   * Rotates the {@link Polygon} along the z axis from the given centroid.
+   * Rotates the {@link Polygon} counter clockwise along the z axis from the given centroid.
    *
    * @param polygon The {@link Polygon} to be rotated.
-   * @param rotation The angles of rotation (in degrees around the z axes, counterclockwise).
+   * @param rotation The angles of rotation (in degrees around the z axes, counter clockwise).
    * @param centroidX The x coordinate of the centroid.
    * @param centroidY The y coordinate of the centroid.
    * @return The rotated {@link Polygon}.

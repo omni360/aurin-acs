@@ -164,7 +164,7 @@ public class KmlBuilder {
     polygonFromVertices = geometryUtils.scalePolygon(polygonFromVertices, scale.get(0),
         scale.get(1), centroidX, centroidY);
     // Only rotation about z-axis is supported for polygon.
-    polygonFromVertices = geometryUtils.rotatePolygon(polygonFromVertices, 90,// rotation.get(2),
+    polygonFromVertices = geometryUtils.rotatePolygon(polygonFromVertices, -rotation.get(2),
         centroidX, centroidY);
     polygonFromVertices = geometryUtils.translatePolygon(polygonFromVertices, translation.get(0),
         translation.get(1));
