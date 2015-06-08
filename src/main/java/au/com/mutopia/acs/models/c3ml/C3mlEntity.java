@@ -93,6 +93,17 @@ public class C3mlEntity {
    */
   private List<Double> rotation = ImmutableList.of(0.0, 0.0, 0.0);
 
+  /**
+   * The amount of translation (in degree decimals) by which all coordinates should be moved when
+   * rendered.
+   */
+  private List<Double> translation = ImmutableList.of(0.0, 0.0, 0.0);
+
+  /**
+   * The centre point of the entity.
+   */
+  private List<Double> centroid = ImmutableList.of(0.0, 0.0, 0.0);
+
   /** The extrusion height of the entity. Polygons only. */
   private Double height;
 

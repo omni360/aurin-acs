@@ -1,6 +1,7 @@
 package au.com.mutopia.acs.conversion.impl;
 
 import au.com.mutopia.acs.models.c3ml.Vertex3D;
+import au.com.mutopia.acs.util.geometry.GeometryUtils;
 import au.com.mutopia.acs.util.mesh.MeshUtil;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Polygon;
@@ -65,6 +66,8 @@ import com.google.common.primitives.Floats;
  */
 @Log4j
 public class ColladaConverter extends AbstractConverter {
+  private static final GeometryUtils geometryUtils = new GeometryUtils();
+
   private final MeshUtil meshUtil = new MeshUtil();
 
   /** Default Geographic location for COLLADA model. */
@@ -604,13 +607,13 @@ public class ColladaConverter extends AbstractConverter {
             (Polygon) TopologyPreservingSimplifier.simplify(polygon, 0.000001);
         entity.setType(C3mlEntityType.POLYGON);
         entity.setCoordinates(
-            getVertex3DPointsFromCoordinates(simplePolygon.getExteriorRing().getCoordinates(),
+            geometryUtils.vertex3DsFromCoordinates(simplePolygon.getExteriorRing().getCoordinates(),
                 FLAT_POLYGON_HEIGHT)
         );
         List<List<Vertex3D>> holes = new ArrayList<>();
         for (int i = 0; i < simplePolygon.getNumInteriorRing(); i++) {
           holes.add(
-              getVertex3DPointsFromCoordinates(simplePolygon.getInteriorRingN(i).getCoordinates(),
+              geometryUtils.vertex3DsFromCoordinates(simplePolygon.getInteriorRingN(i).getCoordinates(),
                   FLAT_POLYGON_HEIGHT));
         }
         entity.setHoles(holes);
@@ -735,14 +738,5 @@ public class ColladaConverter extends AbstractConverter {
     return 0;
   }
 
-  /**
-   * @return The list of {@link au.com.mutopia.acs.models.c3ml.Vertex3D} points from a list of coordinates.
-   */
-  private List<Vertex3D> getVertex3DPointsFromCoordinates(Coordinate[] coordinates, double height) {
-    List<Vertex3D> points = Lists.newArrayList();
-    for (Coordinate coord : coordinates) {
-      points.add(new Vertex3D(coord.x, coord.y, height));
-    }
-    return points;
-  }
+
 }

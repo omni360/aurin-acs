@@ -7,6 +7,7 @@ import au.com.mutopia.acs.models.c3ml.C3mlEntity;
 import au.com.mutopia.acs.models.c3ml.C3mlEntityType;
 import au.com.mutopia.acs.models.c3ml.Vertex3D;
 import au.com.mutopia.acs.util.ZipUtils;
+import au.com.mutopia.acs.util.geometry.GeometryUtils;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -188,15 +189,18 @@ public class KmlConverter extends AbstractConverter {
     if (kmlFeature instanceof Folder) {
       Folder folder = (Folder) kmlFeature;
       for (Feature feature : folder.getFeature()) {
-        c3mlEntities.add(buildEntity(feature));
+        C3mlEntity c3mlEntity = buildEntity(feature);
+        if (c3mlEntity != null) c3mlEntities.add(c3mlEntity);
       }
     } else if (kmlFeature instanceof Document) {
       Document document = (Document) kmlFeature;
       for (Feature feature : document.getFeature()) {
-        c3mlEntities.add(buildEntity(feature));
+        C3mlEntity c3mlEntity = buildEntity(feature);
+        if (c3mlEntity != null) c3mlEntities.add(c3mlEntity);
       }
     } else {
-      c3mlEntities.add(buildEntity(kmlFeature));
+      C3mlEntity c3mlEntity = buildEntity(kmlFeature);
+      if (c3mlEntity != null) c3mlEntities.add(c3mlEntity);
     }
     return c3mlEntities;
   }
@@ -230,6 +234,7 @@ public class KmlConverter extends AbstractConverter {
   private C3mlEntity buildEntity(Document document) throws ConversionException {
     C3mlEntity entity = createEntity(document);
     List<Feature> features = document.getFeature();
+    if (features.isEmpty()) return null;
     for (Feature feature : features) {
       C3mlEntity child = buildEntity(feature);
       entity.addChild(child);
@@ -246,6 +251,7 @@ public class KmlConverter extends AbstractConverter {
   private C3mlEntity buildEntity(Folder folder) throws ConversionException {
     C3mlEntity entity = createEntity(folder);
     List<Feature> features = folder.getFeature();
+    if (features.isEmpty()) return null;
     for (Feature feature : features) {
       C3mlEntity child = buildEntity(feature);
       entity.addChild(child);
@@ -353,17 +359,27 @@ public class KmlConverter extends AbstractConverter {
       Polygon polygon = (Polygon) geometry;
       Boundary outerBoundaryIs = polygon.getOuterBoundaryIs();
       LinearRing linearRing = outerBoundaryIs.getLinearRing();
-      entity.setCoordinates(getVertex3DPointsFromCoordinates(linearRing.getCoordinates()));
+      List<Vertex3D> vertex3Ds = getVertex3DPointsFromCoordinates(linearRing.getCoordinates());
+      double maxHeight = GeometryUtils.getMaxHeight(vertex3Ds);
+      entity.setCoordinates(vertex3Ds);
+      if (polygon.isExtrude()) {
+        entity.setAltitude(0.0);
+        entity.setHeight(maxHeight);
+      } else {
+        entity.setAltitude(maxHeight);
+      }
       entity.setType(C3mlEntityType.POLYGON);
 
       // Polygon holes
-      // TODO(Brandon) add support for polygon with holes.
-      // if (!polygon.getInnerBoundaryIs().isEmpty()) {
-      // for (int k = 0; k < polygon.getInnerBoundaryIs().size(); k++) {
-      // Boundary innerBoundaryIs = polygon.getInnerBoundaryIs().get(k);
-      // LinearRing linearRingInner = innerBoundaryIs.getLinearRing();
-      // }
-      // }
+      if (!polygon.getInnerBoundaryIs().isEmpty()) {
+        List<List<Vertex3D>> holes = new ArrayList<>();
+        for (int k = 0; k < polygon.getInnerBoundaryIs().size(); k++) {
+          Boundary innerBoundaryIs = polygon.getInnerBoundaryIs().get(k);
+          LinearRing linearRingInner = innerBoundaryIs.getLinearRing();
+          holes.add(getVertex3DPointsFromCoordinates(linearRingInner.getCoordinates()));
+        }
+        entity.setHoles(holes);
+      }
     }
   }
 

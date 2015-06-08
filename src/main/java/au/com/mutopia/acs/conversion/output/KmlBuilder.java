@@ -1,7 +1,8 @@
 package au.com.mutopia.acs.conversion.output;
 
-import au.com.mutopia.acs.models.Format;
+import au.com.mutopia.acs.util.geometry.GeometryUtils;
 import com.google.common.base.Strings;
+import com.vividsolutions.jts.geom.Coordinate;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ import de.micromata.opengis.kml.v_2_2_0.Polygon;
 @Log4j
 @Getter
 public class KmlBuilder {
+  private static final GeometryUtils geometryUtils = new GeometryUtils();
 
   /** Base model for KML file. */
   private Kml kml;
@@ -143,6 +145,30 @@ public class KmlBuilder {
   public Placemark writePolygon(C3mlEntity entity, Folder parentFolder) {
     Placemark placemark = createPlacemark(entity, parentFolder);
 
+    com.vividsolutions.jts.geom.Polygon polygonFromVertices =
+        geometryUtils.polygonFromVertices(entity.getCoordinates(), entity.getHoles());
+    if (polygonFromVertices == null) return null;
+
+    List<Double> centroid = entity.getCentroid();
+    Double centroidX = centroid.get(0) == null? centroid.get(0) : 0.0;
+    Double centroidY = centroid.get(1) == null? centroid.get(1) : 0.0;
+    if (centroidX == 0 && centroidY == 0) {
+      com.vividsolutions.jts.geom.Point centrePoint = polygonFromVertices.getCentroid();
+      centroidX = centrePoint.getX();
+      centroidY = centrePoint.getY();
+    }
+    List<Double> rotation = entity.getRotation();
+    List<Double> scale = entity.getScale();
+    List<Double> translation = entity.getTranslation();
+
+    polygonFromVertices = geometryUtils.scalePolygon(polygonFromVertices, scale.get(0),
+        scale.get(1), centroidX, centroidY);
+    // Only rotation about z-axis is supported for polygon.
+    polygonFromVertices = geometryUtils.rotatePolygon(polygonFromVertices, 90,// rotation.get(2),
+        centroidX, centroidY);
+    polygonFromVertices = geometryUtils.translatePolygon(polygonFromVertices, translation.get(0),
+        translation.get(1));
+
     Polygon polygon = placemark.createAndSetPolygon();
     polygon.setExtrude(entity.getHeight() > 0);
     polygon.setAltitudeMode(AltitudeMode.RELATIVE_TO_GROUND);
@@ -152,18 +178,29 @@ public class KmlBuilder {
     Boundary outerBoundary = polygon.createAndSetOuterBoundaryIs();
     LinearRing linearRing = outerBoundary.createAndSetLinearRing();
     List<Vertex3D> points = entity.getCoordinates();
-    for (Vertex3D point : points) {
-      linearRing.addToCoordinates(point.getLongitude(), point.getLatitude(), extrudedHeight);
+    for (Coordinate coordinate : polygonFromVertices.getExteriorRing().getCoordinates()) {
+      linearRing.addToCoordinates(coordinate.x, coordinate.y, extrudedHeight);
     }
+//    for (Vertex3D point : points) {
+//      linearRing.addToCoordinates(point.getLongitude(), point.getLatitude(), extrudedHeight);
+//    }
 
     // Draw the holes.
-    for (List<Vertex3D> hole : entity.getHoles()) {
+    for (int i = 0; i < polygonFromVertices.getNumInteriorRing(); i++) {
+      com.vividsolutions.jts.geom.LineString hole = polygonFromVertices.getInteriorRingN(i);
       Boundary innerBoundary = polygon.createAndAddInnerBoundaryIs();
       LinearRing innerLinearRing = innerBoundary.createAndSetLinearRing();
-      for (Vertex3D point : hole) {
-        innerLinearRing.addToCoordinates(point.getLongitude(), point.getLatitude(), extrudedHeight);
+      for (Coordinate coordinate : hole.getCoordinates()) {
+        innerLinearRing.addToCoordinates(coordinate.x, coordinate.y, extrudedHeight);
       }
     }
+//    for (List<Vertex3D> hole : entity.getHoles()) {
+//      Boundary innerBoundary = polygon.createAndAddInnerBoundaryIs();
+//      LinearRing innerLinearRing = innerBoundary.createAndSetLinearRing();
+//      for (Vertex3D point : hole) {
+//        innerLinearRing.addToCoordinates(point.getLongitude(), point.getLatitude(), extrudedHeight);
+//      }
+//    }
 
     // Set the style.
     String kmlColorString = getKmlColorString(entity.getColor());
