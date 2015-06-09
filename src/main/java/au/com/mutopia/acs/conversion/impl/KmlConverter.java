@@ -362,23 +362,26 @@ public class KmlConverter extends AbstractConverter {
       List<Vertex3D> vertex3Ds = getVertex3DPointsFromCoordinates(linearRing.getCoordinates());
       double maxHeight = GeometryUtils.getMaxHeight(vertex3Ds);
       entity.setCoordinates(vertex3Ds);
+      // Polygon holes
+      List<Boundary> innerBoundaries = polygon.getInnerBoundaryIs();
+      if (innerBoundaries != null && !innerBoundaries.isEmpty()) {
+        List<List<Vertex3D>> holes = new ArrayList<>();
+        for (int k = 0; k < innerBoundaries.size(); k++) {
+          Boundary innerBoundary = innerBoundaries.get(k);
+          LinearRing linearRingInner = innerBoundary.getLinearRing();
+          holes.add(getVertex3DPointsFromCoordinates(linearRingInner.getCoordinates()));
+        }
+        entity.setHoles(holes);
+      }
+      entity.setType(C3mlEntityType.POLYGON);
+
+      // Null extrusion due to conversion by ogr2ogr to KML
+      if (polygon.isExtrude() == null) return;
       if (polygon.isExtrude()) {
         entity.setAltitude(0.0);
         entity.setHeight(maxHeight);
       } else {
         entity.setAltitude(maxHeight);
-      }
-      entity.setType(C3mlEntityType.POLYGON);
-
-      // Polygon holes
-      if (!polygon.getInnerBoundaryIs().isEmpty()) {
-        List<List<Vertex3D>> holes = new ArrayList<>();
-        for (int k = 0; k < polygon.getInnerBoundaryIs().size(); k++) {
-          Boundary innerBoundaryIs = polygon.getInnerBoundaryIs().get(k);
-          LinearRing linearRingInner = innerBoundaryIs.getLinearRing();
-          holes.add(getVertex3DPointsFromCoordinates(linearRingInner.getCoordinates()));
-        }
-        entity.setHoles(holes);
       }
     }
   }
