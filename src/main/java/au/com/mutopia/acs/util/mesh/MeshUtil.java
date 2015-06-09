@@ -1,6 +1,7 @@
 package au.com.mutopia.acs.util.mesh;
 
 import au.com.mutopia.acs.models.c3ml.Vertex3D;
+import au.com.mutopia.acs.util.mesh.clipper.Poly;
 import au.com.mutopia.acs.util.mesh.clipper.PolyDefault;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Doubles;
@@ -8,12 +9,14 @@ import com.google.common.primitives.Ints;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LinearRing;
+import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.log4j.Log4j;
-import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
  * An utility class for Mesh related actions, such as scale, rotate, transform meshes,
@@ -38,19 +41,181 @@ public class MeshUtil {
    */
   private static final int MATRIX_SIZE = 16;
 
+  /**
+   * Creates a list of positions forming the flatten mesh.
+   *
+   * @param positions The list of positions forming the mesh.
+   * @return The list of positions forming the flatten mesh.
+   */
+  public List<Double> getFlattenMeshPositions(List<Double> positions) {
+    List<Double> flattenPositions = new ArrayList<>();
+    for (int i = 0; i < positions.size(); i += 3) {
+      // position.x
+      flattenPositions.add(positions.get(i));
+      // position.y
+      flattenPositions.add(positions.get(i + 1));
+      // position height
+      flattenPositions.add(positions.get(0));
+    }
+    return flattenPositions;
+  }
+
+  /**
+   * Converts the list of positions in meters to decimal degrees.
+   *
+   * @param positions The list of positions forming the mesh.
+   * @param lat The latitude of the mesh's geographic location (degree decimal).
+   * @param lon The longitude of the mesh's geographic location (degree decimal).
+   * @param alt The altitude of the mesh's geographic location (meter).
+   * @return The list of positions in meters to decimal degrees.
+   */
+  public List<Double> convertPositionsToDecimalDegrees(List<Double> positions, double lat,
+      double lon, double alt) {
+    List<Double> decimalDegreesPositions = Lists.newArrayList();
+    for (int i = 0; i < positions.size(); i += 3) {
+      Vertex3D vertex3D =
+          toDecimalDegrees(positions.get(i), positions.get(i + 1), positions.get(i + 2), lat, lon,
+              alt);
+      decimalDegreesPositions.add(vertex3D.getLatitude());
+      decimalDegreesPositions.add(vertex3D.getLongitude());
+      decimalDegreesPositions.add(vertex3D.getAltitude());
+    }
+    return decimalDegreesPositions;
+  }
+
+  /**
+   * Creates a {@link Polygon} from mesh positions, triangle indices, polygon height and the
+   * geographic coordinate of the mesh {latitude, longitude, altitude}.
+   *
+   * @param pos The list of positions forming the mesh.
+   * @param tris The list of triangles indices forming the mesh.
+   * @param height The height of the polygon.
+   * @param lat The latitude of the mesh's geographic location (degree decimal).
+   * @param lon The longitude of the mesh's geographic location (degree decimal).
+   * @param alt The altitude of the mesh's geographic location (meter).
+   * @return The {@link Polygon} converted from mesh.
+   */
   public Polygon getPolygon(List<Double> pos, List<Integer> tris, double height,
       double lat, double lon, double alt) {
-    Coordinate[] coordinatesArray =
-        getLatLonCoordinate(getFootprint(pos, tris, height, lat, lon, alt), true);
-    if (coordinatesArray == null) {
-      return null;
-    }
     try {
-      return wktGeoFactory.createPolygon(coordinatesArray);
+      List<Double> newPos = convertPositionsToDecimalDegrees(pos, lat, lon, alt);
+      List<Polygon> polygonsFromMeshData = getPolygonsFromMeshData(newPos, tris);
+      Geometry geometry = CascadedPolygonUnion.union(polygonsFromMeshData);
+      if (geometry instanceof MultiPolygon) {
+        return singlePolygonFromMulti((MultiPolygon) geometry);
+      }
+      if (!(geometry instanceof Polygon)) {
+        log.error("Non-polygon representation from mesh is not supported yet.");
+        return null;
+      }
+      return (Polygon) geometry;
     } catch (IllegalArgumentException e) {
-      log.error("Illegal WKT string " + coordinatesArray, e);
+      log.error("Unable to create polygon from mesh positions.", e);
     }
     return null;
+  }
+
+  /**
+   * Builds a list of {@link Polygon} from unique triangles that constructs the mesh.
+   *
+   * @param positions The list of positions forming the mesh.
+   * @param triangles The list of triangles indices forming the mesh.
+   * @return A list of {@link Polygon} representing each unique triangles from the mesh.
+   */
+  public List<Polygon> getPolygonsFromMeshData(List<Double> positions, List<Integer> triangles) {
+    if (positions.isEmpty() || triangles.isEmpty()) {
+      return null;
+    }
+    List<Triangle> uniqueTriangles = getUniqueTriangles(Doubles.toArray(positions),
+        Ints.toArray(triangles));
+    List<Polygon> polygons = new ArrayList<>();
+    for (Triangle uniqueTriangle : uniqueTriangles) {
+      polygons.add(wktGeoFactory.createPolygon(uniqueTriangle.getCoordinates()));
+    }
+    return polygons;
+  }
+
+  /**
+   * Attempt to extract single {@link Polygon} from {@link MultiPolygon} if
+   * {@link CascadedPolygonUnion} fails to combine into a single {@link Polygon}. Return null if
+   * there are more than 1 external {@link Polygon}.
+   *
+   * @param multiPolygon The {@link MultiPolygon} resulted from {@link CascadedPolygonUnion}.
+   * @return
+   */
+  public Polygon singlePolygonFromMulti(MultiPolygon multiPolygon) {
+    PolyDefault polyDefault = polyDefaultFromPolygon((Polygon) multiPolygon.getGeometryN(0));
+    for (int i = 1; i < multiPolygon.getNumGeometries(); i++) {
+      polyDefault = (PolyDefault) polyDefault.union(
+              polyDefaultFromPolygon((Polygon) multiPolygon.getGeometryN(i)));
+    }
+    List<LinearRing> outerPolys = new ArrayList<>();
+    List<LinearRing> innerPolys = new ArrayList<>();
+    for (int i = 0; i < polyDefault.getNumInnerPoly(); i++) {
+      Poly poly = polyDefault.getInnerPoly(i);
+      if (poly.isHole()) {
+        innerPolys.add(wktGeoFactory.createLinearRing(getLatLonCoordinatesFromPoly(poly)));
+      } else {
+        outerPolys.add(wktGeoFactory.createLinearRing(getLatLonCoordinatesFromPoly(poly)));
+      }
+    }
+    if (outerPolys.size() == 1) {
+      return wktGeoFactory.createPolygon(outerPolys.get(0),
+          innerPolys.toArray(new LinearRing[innerPolys.size()]));
+    }
+    log.error("Multi-polygon representation from mesh is not supported yet.");
+    return null;
+  }
+
+  /**
+   * Create {@link PolyDefault} from {@link Polygon}, used to perform more accurate geometry union
+   * but with more computational time.
+   *
+   * @param polygon
+   * @return
+   */
+  public PolyDefault polyDefaultFromPolygon(Polygon polygon) {
+    PolyDefault polyDefault = new PolyDefault();
+    PolyDefault exteriorPoly = polyFromCoordinates(polygon.getExteriorRing().getCoordinates());
+    exteriorPoly.setIsHole(false);
+    polyDefault.add(exteriorPoly);
+    for (int i = 0; i < polygon.getNumInteriorRing(); i++) {
+      PolyDefault innerPoly = polyFromCoordinates(polygon.getInteriorRingN(i).getCoordinates());
+      innerPoly.setIsHole(true);
+      polyDefault.add(innerPoly);
+    }
+    return polyDefault;
+  }
+
+  /**
+   * Create {@link PolyDefault} from a list of {@link Coordinate}.
+   *
+   * @param coordinates
+   * @return
+   */
+  public PolyDefault polyFromCoordinates(Coordinate[] coordinates) {
+    PolyDefault polyDefault = new PolyDefault();
+    for (Coordinate coordinate : coordinates) {
+      polyDefault.add(new Point2D.Double(coordinate.x, coordinate.y));
+    }
+    return polyDefault;
+  }
+
+  /**
+   * Gets the Coordinate array representing the {@link Poly} in Latitude/Longitude format.
+   *
+   * @param poly
+   * @return
+   */
+  public Coordinate[] getLatLonCoordinatesFromPoly(Poly poly) {
+    List<Coordinate> coordinates = new ArrayList<>();
+    for (int i = 0; i < poly.getNumPoints(); i++) {
+      coordinates.add(new Coordinate(poly.getX(i), poly.getY(i)));
+    }
+    if (coordinates.get(0) != coordinates.get(coordinates.size() - 1)) {
+      coordinates.add(coordinates.get(0));
+    }
+    return coordinates.toArray(new Coordinate[coordinates.size()]);
   }
 
   /**
@@ -361,5 +526,19 @@ public class MeshUtil {
       positions.remove(i);
       positions.add(i, newHeightRatio);
     }
+  }
+
+  /**
+   * Check if the mesh normals are front facing. Mesh is facing upwards if normal.z is positive.
+   * Only applicable to flat surface mesh only, i.e. not solids.
+   *
+   * @param normals
+   * @return True if the normals associated with mesh vertices are facing upwards.
+   */
+  public boolean isFrontFacing(List<Float> normals, List<Integer> triangles) {
+    // Vertex is facing down if normal.z axis is negative (pointing downwards).
+    List<Triangle> uniqueTriangles = Lists.newArrayList();
+    int firstZposition = triangles.get(0) * 3 + 2;
+    return normals.get(firstZposition) > 0.f;
   }
 }

@@ -4,10 +4,12 @@ import au.com.mutopia.acs.models.c3ml.Vertex3D;
 import au.com.mutopia.acs.util.mesh.MeshUtil;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
 import java.awt.Color;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,7 +85,7 @@ public class ColladaConverter extends AbstractConverter {
   /** Constants for COLLADA up-axis field. */
   private static final String X_UP = "X_UP", Y_UP = "Y_UP", Z_UP = "Z_UP";
 
-  /** The default extrusion height of a polygon created from a flat mesh. */
+  /* The minimum height of mesh solid to be considered as flat surface. */
   private static final double FLAT_POLYGON_HEIGHT = 0.3;
 
   /** The minimum height for a mesh to be considered as a mesh. */
@@ -475,13 +477,11 @@ public class ColladaConverter extends AbstractConverter {
       Matrix matrix) throws InvalidColladaException {
     Geometry geom = getGeomFromLibraryGeometries(instanceGeometry.getUrl());
     List<InstanceMaterial> instanceMaterials = instanceGeometry.getInstanceMaterials();
-    Color colorData;
-    if (CollectionUtils.isNullOrEmpty(instanceMaterials)) {
-      colorData = DEFAULT_COLOR;
-    } else {
-      colorData = getColorFromLibraryMaterials(instanceMaterials.get(0).getTarget());
+    Map<String, String> materialSymbolToTargetMap = new HashMap<>();
+    for (InstanceMaterial instanceMaterial : instanceMaterials) {
+      materialSymbolToTargetMap.put(instanceMaterial.getSymbol(), instanceMaterial.getTarget());
     }
-    return buildEntityFromGeometry(geom, matrix, colorData);
+    return buildEntityFromGeometry(geom, matrix, materialSymbolToTargetMap);
   }
 
   /**
@@ -489,10 +489,11 @@ public class ColladaConverter extends AbstractConverter {
    *
    * @param geom The COLLADA geometry representing the shape of the model.
    * @param matrix The matrix transformation to be applied on the model.
-   * @param color The color of the model.
+   * @param materialSymbolToTargetMap
    * @return The created {@link C3mlEntity}.
    */
-  private C3mlEntity buildEntityFromGeometry(Geometry geom, Matrix matrix, Color color) {
+  private C3mlEntity buildEntityFromGeometry(Geometry geom, Matrix matrix,
+      Map<String, String> materialSymbolToTargetMap) {
     Mesh mesh = geom.getMesh();
     // Splines are not supported by dae4j, requires xml parser.
     if (mesh == null) {
@@ -508,15 +509,29 @@ public class ColladaConverter extends AbstractConverter {
     if (CollectionUtils.isNullOrEmpty(primitives)) {
       throw new UnsupportedOperationException("Unable to parse non-mesh COLLADA node");
     }
+    Color colorData = null;
+    if (materialSymbolToTargetMap.size() == 1) {
+      // Set colorData to the only color assigned to this geometry.
+      for (String materialTarget : materialSymbolToTargetMap.values()) {
+        colorData = getColorFromLibraryMaterials(materialTarget);
+      }
+    }
     for (Primitives primitive : mesh.getPrimitives()) {
       if (primitive.getClass().equals(Triangles.class)) {
         type = C3mlEntityType.MESH;
         positions = mesh.getPositionData();
         normals = mesh.getNormalData();
-        inputIndices.addAll(getVerticesFromTriangles(primitive));
+        List<Integer> triangleIndices = getVerticesFromTriangles(primitive);
+        inputIndices.addAll(triangleIndices);
+        if (!meshUtil.isFrontFacing(Floats.asList(normals), triangleIndices)) continue;
+        colorData =
+            getColorFromLibraryMaterials(materialSymbolToTargetMap.get(primitive.getMaterial()));
       } else if (primitive.getClass().equals(PolyList.class)) {
         // TODO(Brandon) extract from polylist, requires polygon triangulation.
       }
+    }
+    if (colorData == null) {
+      colorData = DEFAULT_COLOR;
     }
 
     if (type == null) {
@@ -526,9 +541,9 @@ public class ColladaConverter extends AbstractConverter {
     C3mlEntity c3mlEntity = new C3mlEntity();
     String name = geom.getName();
     c3mlEntity.setName((name != null) ? name : geom.getId());
-    c3mlEntity.setColorData(color);
     if (type.equals(C3mlEntityType.MESH)) {
       buildEntityFromMesh(c3mlEntity, positions, normals, inputIndices, matrix);
+      c3mlEntity.setColorData(colorData);
     }
     return c3mlEntity;
   }
@@ -579,25 +594,37 @@ public class ColladaConverter extends AbstractConverter {
     double altitude = meshUtil.getMinHeight(globalPositions);
     double height = meshUtil.getMaxHeight(globalPositions) - altitude;
 
-    Polygon polygon =
-        meshUtil.getPolygon(globalPositions, inputIndices, height, geoLocation.get(1),
-            geoLocation.get(0), altitude);
-
     // Create a Polygon if mesh is a regular prism and height is close to zero.
-    if (polygon != null && height < MIN_MESH_HEIGH) {
-      entity.setType(C3mlEntityType.POLYGON);
-      entity.setCoordinates(getVertex3DPointsFromCoordinates(polygon.getCoordinates(),
-          FLAT_POLYGON_HEIGHT));
-      entity.setAltitude(altitude);
-      entity.setHeight(FLAT_POLYGON_HEIGHT);
-    } else {
-      entity.setType(C3mlEntityType.MESH);
-      entity.setPositions(globalPositions);
-      entity.setNormals(globalNormals);
-      entity.setTriangles(inputIndices);
-      entity.setGeoLocation(defaultGeolocation);
-      if (geoLocation != null) entity.setGeoLocation(geoLocation);
+    if (height < MIN_MESH_HEIGH) {
+      Polygon polygon =
+          meshUtil.getPolygon(meshUtil.getFlattenMeshPositions(globalPositions), inputIndices,
+              height, geoLocation.get(1), geoLocation.get(0), altitude);
+      if (polygon != null) {
+        Polygon simplePolygon =
+            (Polygon) TopologyPreservingSimplifier.simplify(polygon, 0.000001);
+        entity.setType(C3mlEntityType.POLYGON);
+        entity.setCoordinates(
+            getVertex3DPointsFromCoordinates(simplePolygon.getExteriorRing().getCoordinates(),
+                FLAT_POLYGON_HEIGHT)
+        );
+        List<List<Vertex3D>> holes = new ArrayList<>();
+        for (int i = 0; i < simplePolygon.getNumInteriorRing(); i++) {
+          holes.add(
+              getVertex3DPointsFromCoordinates(simplePolygon.getInteriorRingN(i).getCoordinates(),
+                  FLAT_POLYGON_HEIGHT));
+        }
+        entity.setHoles(holes);
+        entity.setAltitude(altitude);
+        entity.setHeight(FLAT_POLYGON_HEIGHT);
+        return;
+      }
     }
+    entity.setType(C3mlEntityType.MESH);
+    entity.setPositions(globalPositions);
+    entity.setNormals(globalNormals);
+    entity.setTriangles(inputIndices);
+    entity.setGeoLocation(defaultGeolocation);
+    if (geoLocation != null) entity.setGeoLocation(geoLocation);
   }
 
   /**

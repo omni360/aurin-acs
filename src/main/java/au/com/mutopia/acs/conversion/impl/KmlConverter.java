@@ -213,7 +213,8 @@ public class KmlConverter extends AbstractConverter {
     } else if (feature instanceof Document) {
       return buildEntity((Document) feature);
     } else if (feature instanceof Placemark) {
-      return buildEntity((Placemark) feature);
+      Placemark placemark = (Placemark) feature;
+      if (placemark.getGeometry() != null) return buildEntity(placemark);
     } else if (feature instanceof GroundOverlay) {
       log.debug("Image from ground overlay is not supported yet.");
     }
@@ -260,9 +261,7 @@ public class KmlConverter extends AbstractConverter {
    */
   private C3mlEntity buildEntity(Placemark placemark) throws ConversionException {
     C3mlEntity entity = createEntity(placemark);
-    entity.setColorData(getColor(placemark));
-    entity.setBorderColorData(getBorderColor(placemark));
-    writeGeometry(entity, placemark.getGeometry());
+    writeGeometry(entity, placemark, placemark.getGeometry());
     return entity;
   }
 
@@ -311,13 +310,21 @@ public class KmlConverter extends AbstractConverter {
    * @param entity The {@link C3mlEntity} object.
    * @param geometry The geometry embedded in the KML element.
    */
-  private void writeGeometry(C3mlEntity entity, Geometry geometry) throws ConversionException {
-    // Polygon includes children and each child should be an entity.
+  private void writeGeometry(C3mlEntity entity, Placemark placemark, Geometry geometry) throws
+      ConversionException {
+    Color placemarkColor = getColor(placemark);
+    Color placemarkBorderColor = getBorderColor(placemark);
+    // Set colorData to geometries only.
     if (geometry instanceof MultiGeometry) {
-      writeMultiGeometry(entity, (MultiGeometry) geometry);
+      // Each polygon within a MultiGeometry should be an entity.
+      entity.setColorData(placemarkColor);
+      entity.setBorderColorData(placemarkBorderColor);
+      writeMultiGeometry(entity, placemark, (MultiGeometry) geometry);
     } else if (geometry instanceof Model) {
       writeModel(entity, (Model) geometry);
     } else {
+      entity.setColorData(placemarkColor);
+      entity.setBorderColorData(placemarkBorderColor);
       writeSimpleGeometry(entity, geometry);
     }
   }
@@ -367,15 +374,15 @@ public class KmlConverter extends AbstractConverter {
    * @param entity The {@link C3mlEntity} object.
    * @param multiGeometry The multi geometry containing hierarchy of geometries.
    */
-  private void writeMultiGeometry(C3mlEntity entity, MultiGeometry multiGeometry)
-      throws ConversionException {
+  private void writeMultiGeometry(C3mlEntity entity, Placemark placemark,
+      MultiGeometry multiGeometry) throws ConversionException {
     for (int j = 0; j < multiGeometry.getGeometry().size(); j++) {
       C3mlEntity child = new C3mlEntity();
       child.setName(entity.getName() + "_child_" + j);
       child.setColor(entity.getColor());
       child.setBorderColor(entity.getBorderColor());
       Geometry geometryFromMulti = multiGeometry.getGeometry().get(j);
-      writeGeometry(entity, geometryFromMulti);
+      writeGeometry(entity, placemark, geometryFromMulti);
     }
   }
 
