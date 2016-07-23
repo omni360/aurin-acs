@@ -19,7 +19,7 @@ after_success:
   - export VERSION=$(mvn -o org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[')
   # Convert branch names to lower case and replace slashes
   - export TAGS=$(if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest $VERSION"; else echo $TRAVIS_BRANCH | sed 's#/#_#g' | tr '[:upper:]' '[:lower:]' ; fi)
-  - mvn package docker:build -DskipTests -DpushImageTags $(printf " -DdockerImageTag=%s" $TAGS)
+  - mvn package docker:build -DskipTests -DpushImage -DpushImageTags $(printf " -DdockerImageTag=%s" $TAGS)
 
 # Deploy JavaDocs to S3 static site.
 # See http://docs.travis-ci.com/user/deployment/s3/
