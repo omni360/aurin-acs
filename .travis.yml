@@ -1,10 +1,9 @@
 # See http://docs.travis-ci.com/user/languages/javascript-with-nodejs/
-sudo: required
 language: java
-jdk:
-  - oraclejdk8
-services:
-  - docker
+jdk: oraclejdk8
+sudo: required
+services: docker
+install: false
 script: mvn clean test
 after_success:
   - mvn site
