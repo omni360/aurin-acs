@@ -1,11 +1,18 @@
 # See http://docs.travis-ci.com/user/languages/javascript-with-nodejs/
+sudo: required
 language: java
 jdk:
   - oraclejdk8
- 
+services:
+  - docker
+script: mvn clean test
 after_success:
   - mvn site
-  - mvn clean test jacoco:report coveralls:report
+  - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+  - export REPO=urbanetic/aurin-acs
+  - export VERSION=$(mvn -o org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[')
+  - export TAGS=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest $VERSION"; else echo $TRAVIS_BRANCH ; fi`
+  - mvn package docker:build -DskipTests -DpushImageTags $(printf " -DdockerImageTag=%s" $TAGS)
 
 # Deploy JavaDocs to S3 static site.
 # See http://docs.travis-ci.com/user/deployment/s3/
@@ -24,3 +31,14 @@ deploy:
   on:
     all_branches: true
 #    tags: true
+
+
+after_success:
+  - npm run docs
+
+env:
+  global:
+    - secure: Khzo2xwOnc5HXwmqFnjMQmlhIdFvb/5MbVMdhd3cWSu/K+izyjS4WVCT+WVnoHPmFSLqKlnxvz2AGs3TFeaWuJO1gM4mZHpkTHfKJNgn58JkgEGUlU9xmfBEiBwZ0rFDhTV2llPEMIYaryv/mbsUjEBvqY0krJGbf3Xm4pWIc/Q=
+    - secure: S0l5lJhxwX2VKYNUrRydnroJeFpTrxVl6x797jG8NEs5HDs/yWChyBINsN9y20/oAVDL04M1snP/EHr4CGnF0mrEWYlFSrMOii0qSqDD3pL8S3OEUPOB/ZsoQbmkV71GryvZ+3L0B4Uoseu2iLC58CnvhqX+jvQ6RsWFTX3p3Dw=
+    - secure: dHaZMxgyQw2M39gnet6QKO21GLQMIFQHZx/xKymMDs1EzP+2KSaP2j9WufeffpWvheAwqOgH19xhJRi5RGV/pOLZADJbsitjcS3SMfX+diy9DBU1cSOB++ypSn8mbtcIQZOw0BDBXQgIbbyUfGKOfMrPDx2vFu52GMp+CxY2R0o=
+    - COMMIT=${TRAVIS_COMMIT::8}
