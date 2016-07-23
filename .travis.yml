@@ -31,10 +31,6 @@ deploy:
     all_branches: true
 #    tags: true
 
-
-after_success:
-  - npm run docs
-
 env:
   global:
     - secure: Khzo2xwOnc5HXwmqFnjMQmlhIdFvb/5MbVMdhd3cWSu/K+izyjS4WVCT+WVnoHPmFSLqKlnxvz2AGs3TFeaWuJO1gM4mZHpkTHfKJNgn58JkgEGUlU9xmfBEiBwZ0rFDhTV2llPEMIYaryv/mbsUjEBvqY0krJGbf3Xm4pWIc/Q=
