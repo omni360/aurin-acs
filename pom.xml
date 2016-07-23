@@ -488,6 +488,7 @@
             <imageTag>${project.version}</imageTag>
           </imageTags>
           <dockerDirectory>docker</dockerDirectory>
+          <useConfigFile>true</useConfigFile>
           <resources>
             <resource>
               <targetPath>/</targetPath>
